@@ -156,19 +156,41 @@ Frontend will run at → **http://localhost:3000**
 
 ---
 
-## 🏗 Production Build
+## 🏗 Production & Deployment
 
+### Local Production Build (Single Server)
+By default, the backend `server.js` is already configured to serve the compiled React frontend!
+
+1. Build the frontend:
 ```bash
-# Build frontend
 cd frontend
 npm run build
-# Output in frontend/dist/
-
-# Serve frontend from backend (optional)
-# Copy dist/ to backend/public/ and add:
-# app.use(express.static('public'))
-# app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public/index.html')))
 ```
+2. Start the backend:
+```bash
+cd ../backend
+npm start
+```
+Your entire application (Frontend + Backend APIs) will now be running smoothly at **http://localhost:5000**!
+
+### 🌍 Deploy to the Internet (Render.com)
+The easiest way to deploy this app to a live public URL for free:
+
+1. Create a free **MongoDB Atlas** account and get your Database Connection String (`mongodb+srv://...`).
+2. Update your GitHub repository with your latest code.
+3. Sign into **Render.com** and create a new **Web Service**, linking your GitHub repo.
+4. Use the following configuration on Render:
+   - **Root Directory:** `backend`
+   - **Environment:** `Node`
+   - **Build Command:** `npm install && cd ../frontend && npm install && npm run build`
+   - **Start Command:** `node server.js`
+5. Add your `.env` variables under Render's Environment Variables section:
+   - `MONGODB_URI`
+   - `EMAIL_USER`
+   - `EMAIL_PASS`
+   - `EMAIL_FROM`
+
+Your app will build and automatically deploy to a free live URL!
 
 ---
 
