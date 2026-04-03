@@ -281,7 +281,13 @@ export default function GeneratePayslip() {
       toast.success('Payslip created successfully!')
       navigate(`/payslips/${res.data.data._id}`)
     } catch (err) {
-      toast.error(err.message || 'Failed to create payslip')
+      console.error('Payslip creation failed:', err);
+      if (err.response?.data?.errors) {
+        const errorMsgs = Object.values(err.response.data.errors).map(e => e.message).join(', ');
+        toast.error(`Validation Error: ${errorMsgs}`);
+      } else {
+        toast.error(err.response?.data?.message || err.message || 'Failed to create payslip');
+      }
     } finally {
       setSubmitting(false)
     }
