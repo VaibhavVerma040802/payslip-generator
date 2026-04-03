@@ -87,9 +87,19 @@ router.post('/login', async (req, res) => {
 // GET /api/auth/verify-email — Verify account
 // ─────────────────────────────────────────────────────────────
 router.get('/verify-email', async (req, res) => {
+  console.log(`🔍 Verification Request: ${req.url}`);
   try {
-    const { token } = req.query;
-    if (!token) return res.status(400).json({ success: false, message: 'Token is required' });
+    let { token } = req.query;
+    
+    // Fallback: Manually parse if req.query is empty (some Vercel edge cases)
+    if (!token && req.url.includes('token=')) {
+      token = req.url.split('token=')[1];
+    }
+    
+    if (!token) {
+      console.warn('⚠️ Verification Failed: Token missing in request');
+      return res.status(400).json({ success: false, message: 'Token is required', receivedUrl: req.url });
+    }
 
     const user = await User.findOne({
       verificationToken: token,
