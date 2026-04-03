@@ -65,9 +65,8 @@ export default function PayslipList() {
       if (search) params.set('search', search)
       if (filterMonth) params.set('month', filterMonth)
       if (filterYear) params.set('year', filterYear)
-      const res = await api.get(`/payslips?${params}`)
-      setPayslips(res.data.data)
-      setPagination(res.data.pagination)
+      setPayslips(res.data?.data || [])
+      setPagination(res.data?.pagination || { total: 0, totalPages: 1 })
     } catch (err) {
       toast.error('Failed to load payslips')
     } finally {

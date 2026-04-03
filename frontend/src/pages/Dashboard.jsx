@@ -86,8 +86,8 @@ export default function Dashboard() {
           api.get('/payslips/stats/summary'),
           api.get('/payslips?limit=5'),
         ])
-        setStats(statsRes.data.data)
-        setRecent(listRes.data.data)
+        setStats(statsRes.data?.data || null)
+        setRecent(listRes.data?.data || [])
       } catch (e) {
         console.error(e)
       } finally {
