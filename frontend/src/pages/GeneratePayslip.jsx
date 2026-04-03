@@ -84,7 +84,7 @@ function PreviewRow({ label, value, type = 'normal', isDeduction }) {
         fontWeight: type === 'bold' ? 700 : 600,
         color: isDeduction ? '#ef4444' : type === 'bold' ? 'var(--navy)' : 'var(--text)'
       }}>
-        <AnimatedNumber value={parseFloat(value || 0)} decimals={type === 'bold' ? 0 : 0} />
+        {type === 'text' ? value : <AnimatedNumber value={parseFloat(value || 0)} decimals={type === 'bold' ? 0 : 0} />}
       </span>
     </div>
   )
@@ -155,8 +155,8 @@ export default function GeneratePayslip() {
     const empPF = Math.round(basic * 0.12); // Employee standard 12% deduction from basic
     const esi = gross <= 21000 ? Math.ceil(gross * 0.0075) : 0;
     
-    // Professional tax applies only if paid days > 0 (simplification for general standards)
-    const pt = paidDays > 0 ? 200 : 0; 
+    // Professional tax applies only if paid days > 0 and gross is substantial (simplified state logic)
+    const pt = (paidDays > 0 && gross >= 15000) ? 200 : (paidDays > 0 && gross >= 10000) ? 150 : 0; 
     const tds = Math.round(parseFloat(form.tds) || 0);
     const loan = Math.round(parseFloat(form.loanDeduction) || 0);
 
