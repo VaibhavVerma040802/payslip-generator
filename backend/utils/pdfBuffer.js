@@ -1,4 +1,6 @@
 const PDFDocument = require('pdfkit');
+const path = require('path');
+const fs = require('fs');
 
 // Reusing the same layout logic as pdfGenerator.js but returns a Buffer
 const COLORS = {
@@ -63,10 +65,25 @@ function generatePayslipPDFBuffer(payslip) {
     // Header
     doc.rect(0, 0, PAGE_W, 110).fill(COLORS.navy);
     doc.rect(0, 0, PAGE_W, 4).fill(COLORS.gold);
-    doc.font('Helvetica-Bold').fontSize(22).fillColor(COLORS.white).text(payslip.companyName.toUpperCase(), MARGIN, 24, { width: CONTENT_W * 0.65 });
-    doc.font('Helvetica').fontSize(8.5).fillColor(COLORS.lightGold).text(payslip.companyAddress, MARGIN, 52, { width: CONTENT_W * 0.65 });
+
+    // Logo (if exists)
+    const logoPath = path.join(__dirname, '../assets/logo.png');
+    let hasLogo = false;
+    if (fs.existsSync(logoPath)) {
+      try {
+        doc.image(logoPath, MARGIN, 24, { height: 45 });
+        hasLogo = true;
+      } catch (e) {
+        console.error('Error loading logo:', e);
+      }
+    }
+
+    const textX = hasLogo ? MARGIN + 60 : MARGIN;
+
+    doc.font('Helvetica-Bold').fontSize(18).fillColor(COLORS.white).text(payslip.companyName.toUpperCase(), textX, 28, { width: CONTENT_W * 0.55 });
+    doc.font('Helvetica').fontSize(8).fillColor(COLORS.lightGold).text(payslip.companyAddress, textX, 50, { width: CONTENT_W * 0.55 });
     if (payslip.companyEmail) {
-      doc.text(payslip.companyEmail + (payslip.companyPhone ? '  |  ' + payslip.companyPhone : ''), MARGIN, 65, { width: CONTENT_W * 0.65 });
+      doc.text(payslip.companyEmail + (payslip.companyPhone ? '  |  ' + payslip.companyPhone : ''), textX, 62, { width: CONTENT_W * 0.55 });
     }
     doc.font('Helvetica-Bold').fontSize(14).fillColor(COLORS.gold).text('SALARY SLIP', MARGIN + CONTENT_W * 0.67, 28, { width: CONTENT_W * 0.33, align: 'right' });
     doc.font('Helvetica').fontSize(10).fillColor(COLORS.lightGold).text(`${payslip.month.toUpperCase()} ${payslip.year}`, MARGIN + CONTENT_W * 0.67, 48, { width: CONTENT_W * 0.33, align: 'right' });

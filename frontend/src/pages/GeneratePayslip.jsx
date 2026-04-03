@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { Building2, User, Calendar, TrendingUp, Minus, ChevronRight, ChevronLeft, CheckCircle2, Loader2 } from 'lucide-react'
 import api from '../api'
@@ -26,6 +26,8 @@ const INITIAL = {
   loanDeduction: '', otherDeductions: '', otherDeductionsLabel: 'Other Deductions',
   notes: '',
 }
+
+const COMPANY_KEYS = ['companyName', 'companyAddress', 'companyEmail', 'companyPhone', 'companyCIN']
 
 const STEPS = [
   { label: 'Company', icon: Building2 },
@@ -223,9 +225,28 @@ function SalarySummary({ form }) {
 
 export default function GeneratePayslip() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [step, setStep] = useState(0)
-  const [form, setForm] = useState(INITIAL)
+  const [form, setForm] = useState(() => {
+    // 1. Check if we are duplicating
+    if (location.state?.duplicateData) {
+      return { ...INITIAL, ...location.state.duplicateData }
+    }
+    
+    // 2. Check for saved company info
+    const saved = localStorage.getItem('payslip_company_info')
+    if (saved) {
+      try {
+        const company = JSON.parse(saved)
+        return { ...INITIAL, ...company }
+      } catch (e) {
+        return INITIAL
+      }
+    }
+    return INITIAL
+  })
   const [submitting, setSubmitting] = useState(false)
+  const [saveDefaults, setSaveDefaults] = useState(true)
 
   const next = () => setStep(s => Math.min(s + 1, STEPS.length - 1))
   const prev = () => setStep(s => Math.max(s - 1, 0))
@@ -252,6 +273,13 @@ export default function GeneratePayslip() {
         otherDeductions: parseFloat(form.otherDeductions) || 0,
       }
       const res = await api.post('/payslips', payload)
+      
+      if (saveDefaults) {
+        const companyInfo = {}
+        COMPANY_KEYS.forEach(key => companyInfo[key] = form[key])
+        localStorage.setItem('payslip_company_info', JSON.stringify(companyInfo))
+      }
+
       toast.success('Payslip created successfully!')
       navigate(`/payslips/${res.data.data._id}`)
     } catch (err) {
@@ -332,6 +360,19 @@ export default function GeneratePayslip() {
                   <Field label="Company Phone" name="companyPhone" form={form} setForm={setForm} placeholder="+91 98765 43210" />
                 </Row>
                 <Field label="CIN / Registration No." name="companyCIN" form={form} setForm={setForm} placeholder="U72900MH2020PTC123456" />
+                
+                <div style={{ marginTop: 24, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <input 
+                    type="checkbox" 
+                    id="save_defaults" 
+                    checked={saveDefaults} 
+                    onChange={e => setSaveDefaults(e.target.checked)}
+                    style={{ width: 14, height: 14, accentColor: 'var(--navy)', cursor: 'pointer' }}
+                  />
+                  <label htmlFor="save_defaults" style={{ fontSize: 13, color: 'var(--text-muted)', cursor: 'pointer' }}>
+                    Save these company details for next time
+                  </label>
+                </div>
               </FieldGroup>
             </div>
           )}

@@ -30,10 +30,12 @@ router.get('/', async (req, res) => {
 
     const filter = {};
     if (search) {
+      // Escape regex special characters to prevent injection
+      const sanitizedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       filter.$or = [
-        { employeeName: { $regex: search, $options: 'i' } },
-        { employeeId: { $regex: search, $options: 'i' } },
-        { department: { $regex: search, $options: 'i' } },
+        { employeeName: { $regex: sanitizedSearch, $options: 'i' } },
+        { employeeId: { $regex: sanitizedSearch, $options: 'i' } },
+        { department: { $regex: sanitizedSearch, $options: 'i' } },
       ];
     }
     if (month && month !== 'All Months') filter.month = month;

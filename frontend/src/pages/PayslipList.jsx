@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, Filter, Eye, Download, Mail, Trash2, FileText, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
+import { Search, Filter, Eye, Download, Mail, Trash2, FileText, ChevronLeft, ChevronRight, Loader2, Copy } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../api'
 
@@ -65,9 +65,11 @@ export default function PayslipList() {
       if (search) params.set('search', search)
       if (filterMonth) params.set('month', filterMonth)
       if (filterYear) params.set('year', filterYear)
+      const res = await api.get('/payslips?' + params.toString())
       setPayslips(res.data?.data || [])
       setPagination(res.data?.pagination || { total: 0, totalPages: 1 })
     } catch (err) {
+      console.error('Fetch payslips error:', err)
       toast.error('Failed to load payslips')
     } finally {
       setLoading(false)
@@ -121,6 +123,24 @@ export default function PayslipList() {
       toast.error('Delete failed')
     } finally {
       setDeleting(null)
+    }
+  }
+
+  const handleDuplicate = async (id) => {
+    setActionLoading(a => ({ ...a, [`dup_${id}`]: true }))
+    try {
+      const res = await api.get(`/payslips/${id}`)
+      const data = res.data.data
+      
+      // Remove DB specific fields
+      const { _id, createdAt, updatedAt, emailSent, emailSentAt, __v, ...duplicateData } = data
+      
+      // Navigate to generate page with state
+      navigate('/generate', { state: { duplicateData } })
+    } catch (err) {
+      toast.error('Failed to duplicate payslip')
+    } finally {
+      setActionLoading(a => ({ ...a, [`dup_${id}`]: false }))
     }
   }
 
@@ -315,6 +335,12 @@ export default function PayslipList() {
                   <td style={{ padding: '12px 16px' }}>
                     <div style={{ display: 'flex', gap: 2 }}>
                       <ActionBtn icon={Eye} label="View" onClick={() => navigate(`/payslips/${p._id}`)} color="var(--navy)" />
+                      <ActionBtn
+                        icon={Copy} label="Duplicate"
+                        loading={actionLoading[`dup_${p._id}`]}
+                        onClick={() => handleDuplicate(p._id)}
+                        color="var(--gold)"
+                      />
                       <ActionBtn
                         icon={Download} label="Download PDF"
                         loading={actionLoading[`dl_${p._id}`]}

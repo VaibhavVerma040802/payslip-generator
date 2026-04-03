@@ -1,4 +1,6 @@
 const PDFDocument = require('pdfkit');
+const path = require('path');
+const fs = require('fs');
 
 // Color palette
 const COLORS = {
@@ -89,19 +91,33 @@ function generatePayslipPDF(payslip, res) {
   // Gold accent line at very top
   doc.rect(0, 0, PAGE_W, 4).fill(COLORS.gold);
 
+  // Logo (if exists)
+  const logoPath = path.join(__dirname, '../assets/logo.png');
+  let hasLogo = false;
+  if (fs.existsSync(logoPath)) {
+    try {
+      doc.image(logoPath, MARGIN, 24, { height: 45 });
+      hasLogo = true;
+    } catch (e) {
+      console.error('Error loading logo:', e);
+    }
+  }
+
+  const textX = hasLogo ? MARGIN + 60 : MARGIN;
+
   // Company Name
   doc
     .font('Helvetica-Bold')
-    .fontSize(22)
+    .fontSize(18)
     .fillColor(COLORS.white)
-    .text(payslip.companyName.toUpperCase(), MARGIN, 24, { width: CONTENT_W * 0.65 });
+    .text(payslip.companyName.toUpperCase(), textX, 28, { width: CONTENT_W * 0.55 });
 
   // Company contact info
   doc
     .font('Helvetica')
-    .fontSize(8.5)
+    .fontSize(8)
     .fillColor(COLORS.lightGold)
-    .text(payslip.companyAddress, MARGIN, 52, { width: CONTENT_W * 0.65 });
+    .text(payslip.companyAddress, textX, 50, { width: CONTENT_W * 0.55 });
 
   if (payslip.companyEmail) {
     doc.text(payslip.companyEmail + (payslip.companyPhone ? '  |  ' + payslip.companyPhone : ''), MARGIN, 65, {
