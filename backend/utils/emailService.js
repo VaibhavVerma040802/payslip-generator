@@ -15,19 +15,19 @@ function createTransporter() {
   });
 }
 
-const APP_URL = 'https://payslip-generator-hdz45f91h-vaibhavverma040802s-projects.vercel.app';
-
 /**
  * Send welcome email with verification link
  */
-async function sendVerificationEmail(user, token) {
+async function sendVerificationEmail(user, token, origin) {
+  const finalAppUrl = origin || 'https://payslip-generator-itv8zzdtv-vaibhavverma040802s-projects.vercel.app';
+  
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
     console.error('❌ Email Verification Skipped: Missing EMAIL_USER or EMAIL_PASS');
     return;
   }
 
   const transporter = createTransporter();
-  const verifyUrl = `${APP_URL}/api/auth/verify-email?token=${token}`;
+  const verifyUrl = `${finalAppUrl}/api/auth/verify-email?token=${token}`;
   
   console.log(`✉️ Attempting to send verification email to: ${user.email}`);
 

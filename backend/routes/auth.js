@@ -43,7 +43,8 @@ router.post('/register', async (req, res) => {
 
     // Send verification email (awaiting for Vercel stability)
     try {
-      await sendVerificationEmail(user, verificationToken);
+      const origin = req.get('origin') || `${req.protocol}://${req.get('host')}`;
+      await sendVerificationEmail(user, verificationToken, origin);
     } catch (emailErr) {
       console.error('📧 Email failed to send:', emailErr);
     }
