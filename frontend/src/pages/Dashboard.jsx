@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FileText, Send, DollarSign, TrendingUp, PlusCircle, ArrowRight, Calendar } from 'lucide-react'
+import { FileText, Send, DollarSign, TrendingUp, PlusCircle, ArrowRight, Calendar, Building2 } from 'lucide-react'
 import api from '../api'
+import { useAuth } from '../context/AuthContext'
 
 function StatCard({ icon: Icon, label, value, sub, color, delay = 0 }) {
   return (
@@ -74,6 +75,7 @@ function RecentRow({ p, navigate }) {
 }
 
 export default function Dashboard() {
+  const { user } = useAuth()
   const navigate = useNavigate()
   const [stats, setStats] = useState(null)
   const [recent, setRecent] = useState([])
@@ -110,10 +112,10 @@ export default function Dashboard() {
             {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
           </div>
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 30, fontWeight: 700, color: 'var(--navy)', lineHeight: 1.1 }}>
-            Dashboard
+            {user?.companyName || 'Dashboard'}
           </h1>
           <p style={{ color: 'var(--text-muted)', marginTop: 6, fontSize: 14 }}>
-            Welcome back — here's your payroll overview.
+            {!user?.companyName ? "Welcome back — here's your payroll overview." : `Welcome back, ${user.companyName}. Here's your payroll overview.`}
           </p>
         </div>
         <button

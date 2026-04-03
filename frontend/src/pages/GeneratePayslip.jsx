@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import toast from 'react-hot-toast'
 import { Building2, User, Calendar, TrendingUp, Minus, ChevronRight, ChevronLeft, CheckCircle2, Loader2 } from 'lucide-react'
 import api from '../api'
@@ -10,7 +10,7 @@ const YEARS = Array.from({ length: 5 }, (_, i) => CURRENT_YEAR - 2 + i)
 
 const INITIAL = {
   // Company
-  companyName: '', companyAddress: '', companyEmail: '', companyPhone: '', companyCIN: '',
+  companyName: '', companyAddress: '', companyEmail: '', companyPhone: '', companyCIN: '', companyLogo: '',
   // Employee
   employeeName: '', employeeId: '', designation: '', department: '', employeeEmail: '',
   dateOfJoining: '', bankAccount: '', bankName: '', panNumber: '', pfNumber: '',
@@ -224,29 +224,32 @@ function SalarySummary({ form }) {
 }
 
 export default function GeneratePayslip() {
+  const { user } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const [step, setStep] = useState(0)
+  const [step, setStep] = useState(user?.companyName ? 1 : 0) // Skip to employee if profile exists
   const [form, setForm] = useState(() => {
     // 1. Check if we are duplicating
     if (location.state?.duplicateData) {
       return { ...INITIAL, ...location.state.duplicateData }
     }
     
-    // 2. Check for saved company info
-    const saved = localStorage.getItem('payslip_company_info')
-    if (saved) {
-      try {
-        const company = JSON.parse(saved)
-        return { ...INITIAL, ...company }
-      } catch (e) {
-        return INITIAL
+    // 2. Check for profile data
+    if (user) {
+      return {
+        ...INITIAL,
+        companyName: user.companyName || '',
+        companyAddress: user.companyAddress || '',
+        companyEmail: user.companyEmail || '',
+        companyPhone: user.companyPhone || '',
+        companyCIN: user.companyCIN || '',
+        companyLogo: user.companyLogo || ''
       }
     }
+
     return INITIAL
   })
   const [submitting, setSubmitting] = useState(false)
-  const [saveDefaults, setSaveDefaults] = useState(true)
 
   const next = () => setStep(s => Math.min(s + 1, STEPS.length - 1))
   const prev = () => setStep(s => Math.max(s - 1, 0))
@@ -274,12 +277,6 @@ export default function GeneratePayslip() {
       }
       const res = await api.post('/payslips', payload)
       
-      if (saveDefaults) {
-        const companyInfo = {}
-        COMPANY_KEYS.forEach(key => companyInfo[key] = form[key])
-        localStorage.setItem('payslip_company_info', JSON.stringify(companyInfo))
-      }
-
       toast.success('Payslip created successfully!')
       navigate(`/payslips/${res.data.data._id}`)
     } catch (err) {
@@ -351,6 +348,13 @@ export default function GeneratePayslip() {
           {step === 0 && (
             <div>
               <FieldGroup label="Company Information">
+                {!user?.companyLogo && !user?.companyName && (
+                  <div style={{ padding: '12px 16px', background: 'rgba(201,168,76,0.1)', borderLeft: '3px solid var(--gold)', borderRadius: 6, marginBottom: 20 }}>
+                    <p style={{ fontSize: 13, color: 'var(--navy)', margin: 0 }}>
+                      Your company profile is incomplete. <Link to="/profile" style={{ fontWeight: 700, color: 'var(--navy)' }}>Complete Profile</Link> to auto-fill these details.
+                    </p>
+                  </div>
+                )}
                 <Field label="Company Name" name="companyName" form={form} setForm={setForm} required placeholder="Acme Technologies Pvt. Ltd." />
                 <div style={{ marginTop: 14 }}>
                   <Field label="Company Address" name="companyAddress" form={form} setForm={setForm} required placeholder="123 Business Park, Mumbai, Maharashtra 400001" />
@@ -360,19 +364,6 @@ export default function GeneratePayslip() {
                   <Field label="Company Phone" name="companyPhone" form={form} setForm={setForm} placeholder="+91 98765 43210" />
                 </Row>
                 <Field label="CIN / Registration No." name="companyCIN" form={form} setForm={setForm} placeholder="U72900MH2020PTC123456" />
-                
-                <div style={{ marginTop: 24, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <input 
-                    type="checkbox" 
-                    id="save_defaults" 
-                    checked={saveDefaults} 
-                    onChange={e => setSaveDefaults(e.target.checked)}
-                    style={{ width: 14, height: 14, accentColor: 'var(--navy)', cursor: 'pointer' }}
-                  />
-                  <label htmlFor="save_defaults" style={{ fontSize: 13, color: 'var(--text-muted)', cursor: 'pointer' }}>
-                    Save these company details for next time
-                  </label>
-                </div>
               </FieldGroup>
             </div>
           )}

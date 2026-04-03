@@ -3,13 +3,17 @@ const router = express.Router();
 const Payslip = require('../models/Payslip');
 const { generatePayslipPDF } = require('../utils/pdfGenerator');
 const { sendPayslipEmail } = require('../utils/emailService');
+const { auth } = require('./auth');
+
+// Apply auth middleware to all routes
+router.use(auth);
 
 // ─────────────────────────────────────────────────────────────
 // POST /api/payslips — Create a new payslip
 // ─────────────────────────────────────────────────────────────
 router.post('/', async (req, res) => {
   try {
-    const payslip = new Payslip(req.body);
+    const payslip = new Payslip({ ...req.body, user: req.user._id });
     await payslip.save();
     res.status(201).json({ success: true, message: 'Payslip created successfully', data: payslip });
   } catch (err) {
@@ -28,7 +32,7 @@ router.get('/', async (req, res) => {
   try {
     const { search, month, year, page = 1, limit = 10 } = req.query;
 
-    const filter = {};
+    const filter = { user: req.user._id };
     if (search) {
       // Escape regex special characters to prevent injection
       const sanitizedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -73,7 +77,7 @@ router.get('/', async (req, res) => {
 // ─────────────────────────────────────────────────────────────
 router.get('/:id', async (req, res) => {
   try {
-    const payslip = await Payslip.findById(req.params.id);
+    const payslip = await Payslip.findOne({ _id: req.params.id, user: req.user._id });
     if (!payslip) {
       return res.status(404).json({ success: false, message: 'Payslip not found' });
     }
@@ -89,7 +93,7 @@ router.get('/:id', async (req, res) => {
 // ─────────────────────────────────────────────────────────────
 router.put('/:id', async (req, res) => {
   try {
-    const payslip = await Payslip.findById(req.params.id);
+    const payslip = await Payslip.findOne({ _id: req.params.id, user: req.user._id });
     if (!payslip) {
       return res.status(404).json({ success: false, message: 'Payslip not found' });
     }
@@ -107,7 +111,7 @@ router.put('/:id', async (req, res) => {
 // ─────────────────────────────────────────────────────────────
 router.delete('/:id', async (req, res) => {
   try {
-    const payslip = await Payslip.findByIdAndDelete(req.params.id);
+    const payslip = await Payslip.findOneAndDelete({ _id: req.params.id, user: req.user._id });
     if (!payslip) {
       return res.status(404).json({ success: false, message: 'Payslip not found' });
     }
@@ -123,7 +127,7 @@ router.delete('/:id', async (req, res) => {
 // ─────────────────────────────────────────────────────────────
 router.get('/:id/download', async (req, res) => {
   try {
-    const payslip = await Payslip.findById(req.params.id);
+    const payslip = await Payslip.findOne({ _id: req.params.id, user: req.user._id });
     if (!payslip) {
       return res.status(404).json({ success: false, message: 'Payslip not found' });
     }
@@ -139,7 +143,7 @@ router.get('/:id/download', async (req, res) => {
 // ─────────────────────────────────────────────────────────────
 router.post('/:id/email', async (req, res) => {
   try {
-    const payslip = await Payslip.findById(req.params.id);
+    const payslip = await Payslip.findOne({ _id: req.params.id, user: req.user._id });
     if (!payslip) {
       return res.status(404).json({ success: false, message: 'Payslip not found' });
     }
@@ -174,15 +178,17 @@ router.post('/:id/email', async (req, res) => {
 // ─────────────────────────────────────────────────────────────
 router.get('/stats/summary', async (req, res) => {
   try {
-    const total = await Payslip.countDocuments();
+    const filter = { user: req.user._id };
+    const total = await Payslip.countDocuments(filter);
     const thisMonth = new Date();
     const monthName = thisMonth.toLocaleString('en-US', { month: 'long' });
     const year = thisMonth.getFullYear();
 
-    const thisMonthCount = await Payslip.countDocuments({ month: monthName, year });
-    const emailsSent = await Payslip.countDocuments({ emailSent: true });
+    const thisMonthCount = await Payslip.countDocuments({ ...filter, month: monthName, year });
+    const emailsSent = await Payslip.countDocuments({ ...filter, emailSent: true });
 
     const netSalaryAgg = await Payslip.aggregate([
+      { $match: { user: req.user._id } },
       { $group: { _id: null, totalNet: { $sum: '$netSalary' }, avgNet: { $avg: '$netSalary' } } },
     ]);
 

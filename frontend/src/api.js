@@ -6,6 +6,15 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
+// Request interceptor to add bearer token
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token')
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
+
 // Response interceptor for consistent error handling
 api.interceptors.response.use(
   (res) => res,

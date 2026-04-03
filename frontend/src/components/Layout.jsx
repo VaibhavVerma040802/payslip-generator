@@ -1,15 +1,19 @@
 import { useState } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, FileText, PlusCircle, List, Menu, X, FileSpreadsheet } from 'lucide-react'
+import { LayoutDashboard, FileText, PlusCircle, List, Menu, X, FileSpreadsheet, Settings, LogOut, User } from 'lucide-react'
+import { useAuth } from '../context/AuthContext'
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/generate', label: 'Generate Payslip', icon: PlusCircle },
   { to: '/payslips', label: 'All Payslips', icon: List },
+  { to: '/profile', label: 'Company Profile', icon: Settings },
 ]
 
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg)' }}>
@@ -89,9 +93,26 @@ export default function Layout() {
         <div style={{
           padding: '16px 22px',
           borderTop: '1px solid rgba(255,255,255,0.08)',
-          fontSize: 11, color: 'rgba(255,255,255,0.3)',
+          display: 'flex', flexDirection: 'column', gap: 12
         }}>
-          v1.0.0 · PaySlip Pro
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ width: 24, height: 24, borderRadius: 6, background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <User size={12} color="white" />
+            </div>
+            <div style={{ fontSize: 11, color: 'white', fontWeight: 600 }}>{user?.companyName || 'My Company'}</div>
+          </div>
+          <button 
+            onClick={logout}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none',
+              padding: 0, color: 'rgba(255,255,255,0.4)', fontSize: 11, cursor: 'pointer',
+              fontWeight: 600, transition: 'color 0.2s'
+            }}
+            onMouseOver={e => e.target.style.color = 'var(--gold)'}
+            onMouseOut={e => e.target.style.color = 'rgba(255,255,255,0.4)'}
+          >
+            <LogOut size={12} /> Sign Out
+          </button>
         </div>
       </aside>
 
