@@ -7,8 +7,10 @@ import PayslipDetail from './pages/PayslipDetail'
 import { useAuth } from './context/AuthContext'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import Register from './pages/Register'
 import Profile from './pages/Profile'
 import VerifyEmail from './pages/VerifyEmail'
+import VerifyAction from './pages/VerifyAction'
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -23,6 +25,7 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
+      <Route path="/verify" element={<VerifyAction />} />
 
       <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route index element={<Dashboard />} />

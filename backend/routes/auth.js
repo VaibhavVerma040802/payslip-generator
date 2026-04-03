@@ -121,11 +121,22 @@ router.get('/verify-email', async (req, res) => {
     user.verificationExpires = undefined;
     await user.save();
 
+    const isApiRequest = req.headers.accept && req.headers.accept.includes('application/json');
+    if (isApiRequest) {
+      return res.json({ success: true, message: 'Email Verified Successfully!' });
+    }
+
+    const fallbackUrl = process.env.FRONTEND_URL || 'https://payslip-generator-itv8zzdtv-vaibhavverma040802s-projects.vercel.app';
     res.send(`
       <div style="font-family: sans-serif; text-align: center; padding: 50px;">
         <h1 style="color: #10b981;">Email Verified Successfully!</h1>
-        <p>You can now log in to your account.</p>
-        <a href="/login" style="display: inline-block; background: #1e3a5f; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 20px;">Go to Login</a>
+        <p>Redirecting you to the login page...</p>
+        <script>
+          setTimeout(() => {
+            window.location.href = window.location.hostname === 'localhost' ? 'http://localhost:3000/login' : '${fallbackUrl}/login';
+          }, 2000);
+        </script>
+        <a href="${fallbackUrl}/login" style="display: inline-block; background: #1e3a5f; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 20px;">Go to Login</a>
       </div>
     `);
   } catch (err) {

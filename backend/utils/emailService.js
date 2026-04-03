@@ -27,7 +27,9 @@ async function sendVerificationEmail(user, token, origin) {
   }
 
   const transporter = createTransporter();
-  const verifyUrl = `${finalAppUrl}/api/auth/verify-email?token=${token}`;
+  // Focus new generation links specifically towards the frontend verify route
+  // In development, origin will be http://localhost:3000. On prod, it's the vercel URL.
+  const verifyUrl = `${finalAppUrl}/verify?token=${token}`;
   
   console.log(`✉️ Attempting to send verification email to: ${user.email}`);
 

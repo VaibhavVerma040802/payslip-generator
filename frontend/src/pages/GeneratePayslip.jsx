@@ -22,7 +22,6 @@ const INITIAL = {
   month: MONTHS[new Date().getMonth()], year: CURRENT_YEAR,
   payDate: new Date().toISOString().split('T')[0],
   workingDays: 26, paidDays: 26,
-  employmentType: 'regular', annualCTC: '', stipend: '', employerPF: '',
   basicSalary: '0', hra: '0', specialAllowance: '0', otherEarnings: '0',
   providentFund: '0', esi: '0', professionalTax: '0', tds: '0',
   loanDeduction: '0', otherDeductions: '0', notes: '',
@@ -110,30 +109,65 @@ export default function GeneratePayslip() {
 
   // STATUTORY ENGINE (2026 Standards)
   const totals = useMemo(() => {
-    const ctc = parseFloat(form.annualCTC) || 0;
-    const monthlyCTC = Math.round(ctc / 12);
+    const annualCTC = parseFloat(form.annualCTC) || 0;
     
+    // Proration logic
+    const workingDays = parseInt(form.workingDays) || 26;
+    const paidDays = parseInt(form.paidDays) || workingDays;
+    const prorationFactor = workingDays > 0 ? (paidDays / workingDays) : 1;
+
     if (form.employmentType === 'intern') {
+      const monthlyCTC = Math.round(annualCTC / 12);
+      const proratedGross = Math.round(monthlyCTC * prorationFactor);
       return {
-        basic: 0, hra: 0, special: 0, gross: monthlyCTC,
-        pf: 0, esi: 0, pt: 0, deductions: 0, net: monthlyCTC
+        basic: 0, hra: 0, special: 0, gross: proratedGross,
+        pf: 0, esi: 0, pt: 0, deductions: 0, net: proratedGross
       }
     }
 
-    const basic = Math.round(monthlyCTC * 0.5);
-    const hra = Math.round(basic * 0.5); // 50% Metro Rule (latest request)
-    const empPF = Math.min(Math.round(basic * 0.12), 1800);
-    const special = monthlyCTC - (basic + hra + empPF);
+    // 2026 INDIAN STATUTORY LOGIC
+    // 1. Basic is exactly 50% of CTC
+    const basicAnnual = annualCTC * 0.5;
+    // 2. HRA is 40% of Basic (Standard non-metro / flexible)
+    const hraAnnual = basicAnnual * 0.4;
+    // 3. Retirals based strictly on Basic Pay
+    const employerPFAnnual = basicAnnual * 0.12; 
+    const gratuityAnnual = basicAnnual * 0.0481;
+    const retiralsAnnual = employerPFAnnual + gratuityAnnual;
+    
+    // 4. Fixed & Variable Gross Calculations
+    const grossAnnual = annualCTC - retiralsAnnual;
+    // 5. Special Allowance = Balancing figure
+    const specialAnnual = grossAnnual - (basicAnnual + hraAnnual);
+
+    // Monthly standard values
+    const standardBasic = Math.round(basicAnnual / 12);
+    const standardHra = Math.round(hraAnnual / 12);
+    const standardSpecial = Math.round(specialAnnual / 12);
+
+    // PRORATED Earnings
+    const basic = Math.round(standardBasic * prorationFactor);
+    const hra = Math.round(standardHra * prorationFactor);
+    const special = Math.round(standardSpecial * prorationFactor);
     const gross = basic + hra + special;
+
+    // Deductions (Calculated strictly against prorated values)
+    const empPF = Math.round(basic * 0.12); // Employee standard 12% deduction from basic
     const esi = gross <= 21000 ? Math.ceil(gross * 0.0075) : 0;
-    const pt = 200;
-    const deductions = empPF + esi + pt + (parseFloat(form.tds) || 0) + (parseFloat(form.loanDeduction) || 0);
+    
+    // Professional tax applies only if paid days > 0 (simplification for general standards)
+    const pt = paidDays > 0 ? 200 : 0; 
+    const tds = Math.round(parseFloat(form.tds) || 0);
+    const loan = Math.round(parseFloat(form.loanDeduction) || 0);
+
+    const deductions = empPF + esi + pt + tds + loan;
+    const net = Math.round(gross - deductions);
 
     return {
       basic, hra, special, gross,
-      pf: empPF, esi, pt, deductions, net: gross - deductions
+      pf: empPF, esi, pt, deductions, net
     }
-  }, [form.annualCTC, form.employmentType, form.tds, form.loanDeduction]);
+  }, [form.annualCTC, form.employmentType, form.workingDays, form.paidDays, form.tds, form.loanDeduction]);
 
   // Sync derived values to form for persistence
   useEffect(() => {
@@ -193,6 +227,32 @@ export default function GeneratePayslip() {
                   animate={{ opacity: 1, x: 0 }} 
                   exit={{ opacity: 0, x: 10 }}
                 >
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 8 }}>Employment Type</label>
+                  <div style={{ display: 'flex', gap: 8, marginBottom: 24, background: '#f1f5f9', padding: 4, borderRadius: 12 }}>
+                    <button 
+                      type="button"
+                      onClick={() => setForm({...form, employmentType: 'regular'})}
+                      style={{ 
+                        flex: 1, padding: '10px', borderRadius: 10, border: 'none', fontSize: 13, fontWeight: 700,
+                        background: form.employmentType === 'regular' ? 'white' : 'transparent',
+                        color: form.employmentType === 'regular' ? 'var(--navy)' : 'var(--text-muted)',
+                        boxShadow: form.employmentType === 'regular' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none',
+                        cursor: 'pointer', transition: 'all 0.2s'
+                      }}
+                    >Regular Employee</button>
+                    <button 
+                      type="button"
+                      onClick={() => setForm({...form, employmentType: 'intern'})}
+                      style={{ 
+                        flex: 1, padding: '10px', borderRadius: 10, border: 'none', fontSize: 13, fontWeight: 700,
+                        background: form.employmentType === 'intern' ? 'white' : 'transparent',
+                        color: form.employmentType === 'intern' ? 'var(--navy)' : 'var(--text-muted)',
+                        boxShadow: form.employmentType === 'intern' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none',
+                        cursor: 'pointer', transition: 'all 0.2s'
+                      }}
+                    >Intern</button>
+                  </div>
+
                   <InputField label="Employee Name" required value={form.employeeName} onChange={e => setForm({...form, employeeName: e.target.value})} placeholder="e.g. Aryan Sharma" icon={User} />
                   <InputField label="Employee ID" required value={form.employeeId} onChange={e => setForm({...form, employeeId: e.target.value})} placeholder="e.g. PS-001" icon={FileText} />
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
@@ -247,28 +307,7 @@ export default function GeneratePayslip() {
                   animate={{ opacity: 1, x: 0 }} 
                   exit={{ opacity: 0, x: 10 }}
                 >
-                  <div style={{ display: 'flex', gap: 8, marginBottom: 24, background: '#f1f5f9', padding: 4, borderRadius: 12 }}>
-                    <button 
-                      type="button"
-                      onClick={() => setForm({...form, employmentType: 'regular'})}
-                      style={{ 
-                        flex: 1, padding: '8px', borderRadius: 10, border: 'none', fontSize: 12, fontWeight: 700,
-                        background: form.employmentType === 'regular' ? 'white' : 'transparent',
-                        color: form.employmentType === 'regular' ? 'var(--navy)' : 'var(--text-muted)',
-                        boxShadow: form.employmentType === 'regular' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none'
-                      }}
-                    >Regular Employee</button>
-                    <button 
-                      type="button"
-                      onClick={() => setForm({...form, employmentType: 'intern'})}
-                      style={{ 
-                        flex: 1, padding: '8px', borderRadius: 10, border: 'none', fontSize: 12, fontWeight: 700,
-                        background: form.employmentType === 'intern' ? 'white' : 'transparent',
-                        color: form.employmentType === 'intern' ? 'var(--navy)' : 'var(--text-muted)',
-                        boxShadow: form.employmentType === 'intern' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none'
-                      }}
-                    >Intern</button>
-                  </div>
+
 
                   <InputField label="Annual CTC" required type="number" value={form.annualCTC} onChange={e => setForm({...form, annualCTC: e.target.value})} placeholder="e.g. 600000" icon={IndianRupee} />
                   
