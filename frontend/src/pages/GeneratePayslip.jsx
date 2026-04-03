@@ -22,6 +22,7 @@ const INITIAL = {
   month: MONTHS[new Date().getMonth()], year: CURRENT_YEAR,
   payDate: new Date().toISOString().split('T')[0],
   workingDays: 26, paidDays: 26,
+  employmentType: 'regular', annualCTC: '', stipend: '', employerPF: '',
   basicSalary: '0', hra: '0', specialAllowance: '0', otherEarnings: '0',
   providentFund: '0', esi: '0', professionalTax: '0', tds: '0',
   loanDeduction: '0', otherDeductions: '0', notes: '',
@@ -101,9 +102,12 @@ export default function GeneratePayslip() {
   
   const [step, setStep] = useState(user?.companyName ? 1 : 0)
   const [form, setForm] = useState(() => {
-    if (location.state?.duplicateData) return { ...INITIAL, ...location.state.duplicateData }
-    if (user) return { ...INITIAL, ...user }
-    return INITIAL
+    if (location.state?.duplicateData) {
+      const { _id, createdAt, updatedAt, __v, user, ...rest } = location.state.duplicateData;
+      return { ...INITIAL, ...rest };
+    }
+    if (user) return { ...INITIAL, ...user };
+    return INITIAL;
   })
   const [submitting, setSubmitting] = useState(false)
 

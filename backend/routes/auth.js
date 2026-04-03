@@ -107,6 +107,10 @@ router.get('/verify-email', async (req, res) => {
     });
 
     if (!user) {
+      const isApiRequest = req.headers.accept && req.headers.accept.includes('application/json');
+      if (isApiRequest) {
+        return res.status(400).json({ success: false, message: 'The link is invalid or has expired.' });
+      }
       return res.status(400).send(`
         <div style="font-family: sans-serif; text-align: center; padding: 50px;">
           <h1 style="color: #ef4444;">Verification Failed</h1>
