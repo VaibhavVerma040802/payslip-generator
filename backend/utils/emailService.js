@@ -94,9 +94,14 @@ async function sendVerificationEmail(user, token) {
     `,
   };
 
-  const result = await transporter.sendMail(mailOptions);
-  console.log(`✅ Verification email sent successfully to: ${user.email}`);
-  return result;
+  try {
+    const result = await transporter.sendMail(mailOptions);
+    console.log(`✅ Verification email sent successfully to: ${user.email}`);
+    return result;
+  } catch (err) {
+    console.error(`❌ SMTP Error for ${user.email}:`, err);
+    throw err;
+  }
 }
 
 /**

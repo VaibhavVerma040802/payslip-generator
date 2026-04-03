@@ -41,8 +41,12 @@ router.post('/register', async (req, res) => {
     const user = new User({ email, password, companyName, verificationToken, verificationExpires });
     await user.save();
 
-    // Send verification email (non-blocking)
-    sendVerificationEmail(user, verificationToken).catch(console.error);
+    // Send verification email (awaiting for Vercel stability)
+    try {
+      await sendVerificationEmail(user, verificationToken);
+    } catch (emailErr) {
+      console.error('📧 Email failed to send:', emailErr);
+    }
     
     res.status(201).json({ 
       success: true, 
@@ -50,7 +54,7 @@ router.post('/register', async (req, res) => {
     });
   } catch (err) {
     console.error('Register error:', err);
-    res.status(500).json({ success: false, message: 'Registration failed' });
+    res.status(500).json({ success: false, message: err.message || 'Registration failed' });
   }
 });
 
