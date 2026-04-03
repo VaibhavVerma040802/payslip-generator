@@ -21,10 +21,15 @@ const APP_URL = 'https://payslip-generator-hdz45f91h-vaibhavverma040802s-project
  * Send welcome email with verification link
  */
 async function sendVerificationEmail(user, token) {
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) return;
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.error('❌ Email Verification Skipped: Missing EMAIL_USER or EMAIL_PASS');
+    return;
+  }
 
   const transporter = createTransporter();
   const verifyUrl = `${APP_URL}/api/auth/verify-email?token=${token}`;
+  
+  console.log(`✉️ Attempting to send verification email to: ${user.email}`);
 
   const mailOptions = {
     from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
@@ -90,6 +95,7 @@ async function sendVerificationEmail(user, token) {
   };
 
   const result = await transporter.sendMail(mailOptions);
+  console.log(`✅ Verification email sent successfully to: ${user.email}`);
   return result;
 }
 
@@ -125,6 +131,7 @@ async function sendPayslipEmail(payslip) {
   };
 
   const result = await transporter.sendMail(mailOptions);
+  console.log(`✅ Payslip email sent successfully to: ${payslip.employeeEmail}`);
   return result;
 }
 
