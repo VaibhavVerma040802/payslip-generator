@@ -17,7 +17,7 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Validation error', errors: err.errors });
     }
     console.error('Create payslip error:', err);
-    res.status(500).json({ success: false, message: 'Failed to create payslip' });
+    res.status(500).json({ success: false, message: 'Failed to create payslip', error: err.message });
   }
 });
 
@@ -59,7 +59,7 @@ router.get('/', async (req, res) => {
     });
   } catch (err) {
     console.error('List payslips error:', err);
-    res.status(500).json({ success: false, message: 'Failed to fetch payslips' });
+    res.status(500).json({ success: false, message: 'Failed to fetch payslips', error: err.message });
   }
 });
 
@@ -193,7 +193,7 @@ router.get('/stats/summary', async (req, res) => {
     });
   } catch (err) {
     console.error('Stats error:', err);
-    res.status(500).json({ success: false, message: 'Failed to fetch stats' });
+    res.status(500).json({ success: false, message: 'Failed to fetch stats', error: err.message });
   }
 });
 
