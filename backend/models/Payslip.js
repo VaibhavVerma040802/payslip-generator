@@ -7,6 +7,14 @@ const payslipSchema = new mongoose.Schema(
       ref: 'User',
       required: true,
     },
+    employmentType: {
+      type: String,
+      enum: ['regular', 'intern'],
+      default: 'regular',
+    },
+    annualCTC: { type: Number, default: 0 },
+    employerPF: { type: Number, default: 0 },
+    stipend: { type: Number, default: 0 },
     // ── Company Info ─────────────────────────────────
     companyName: { type: String, required: true, trim: true },
     companyAddress: { type: String, required: true, trim: true },

@@ -264,8 +264,18 @@ export default function PayslipDetail() {
               )}
             </div>
             <p style={{ color: 'var(--text-muted)', marginTop: 5, fontSize: 14 }}>
-              {p.designation} · {p.department} · {p.month} {p.year}
+              {p.employmentType === 'intern' ? 'Intern' : 'Regular Employee'} · {p.designation} · {p.department}
             </p>
+            <div style={{ marginTop: 8, display: 'flex', gap: 10 }}>
+              <span className="badge" style={{ background: 'var(--surface-2)', color: 'var(--navy)' }}>
+                {p.month} {p.year}
+              </span>
+              {p.annualCTC > 0 && (
+                <span className="badge" style={{ background: 'var(--gold-pale)', color: 'var(--navy-dark)' }}>
+                  Annual CTC: ₹{p.annualCTC.toLocaleString('en-IN')}
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Action Buttons */}
@@ -342,13 +352,20 @@ export default function PayslipDetail() {
             <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 6 }}>
               Earnings
             </div>
-            <SalaryRow label="Basic Salary" amount={p.basicSalary} type="earning" />
-            <SalaryRow label="House Rent Allowance" amount={p.hra} type="earning" />
-            <SalaryRow label="Conveyance Allowance" amount={p.conveyanceAllowance} type="earning" />
-            <SalaryRow label="Medical Allowance" amount={p.medicalAllowance} type="earning" />
-            <SalaryRow label="Special Allowance" amount={p.specialAllowance} type="earning" />
-            <SalaryRow label={p.otherEarningsLabel || 'Other Earnings'} amount={p.otherEarnings} type="earning" />
-            <SalaryRow label="Gross Earnings" amount={p.grossEarnings} type="earning" bold />
+            {p.employmentType === 'intern' ? (
+              <SalaryRow label="Monthly Stipend" amount={p.stipend || p.grossEarnings} type="earning" bold />
+            ) : (
+              <>
+                <SalaryRow label="Basic Salary (50%)" amount={p.basicSalary} type="earning" />
+                <SalaryRow label="House Rent Allowance (40%)" amount={p.hra} type="earning" />
+                <SalaryRow label="Special Allowance" amount={p.specialAllowance} type="earning" />
+                <SalaryRow label="Employer PF Contribution" amount={p.employerPF} type="earning" />
+                <SalaryRow label="Gross Earnings" amount={p.grossEarnings} type="earning" bold />
+              </>
+            )}
+            {p.otherEarnings > 0 && (
+              <SalaryRow label={p.otherEarningsLabel || 'Other Earnings'} amount={p.otherEarnings} type="earning" />
+            )}
           </div>
 
           <div style={{ height: 1, background: 'var(--border)', margin: '12px 0' }} />

@@ -17,8 +17,13 @@ const INITIAL = {
   dateOfJoining: '', bankAccount: '', bankName: '', panNumber: '', pfNumber: '',
   // Period
   month: MONTHS[new Date().getMonth()], year: CURRENT_YEAR,
-  payDate: new Date().toISOString().split('T')[0],
+  payDate: new Date().toISOString().split('T').pop(),
   workingDays: 26, paidDays: 26,
+  // Payroll Logic
+  employmentType: 'regular',
+  annualCTC: '',
+  stipend: '',
+  employerPF: '',
   // Earnings
   basicSalary: '', hra: '', conveyanceAllowance: '', medicalAllowance: '',
   specialAllowance: '', otherEarnings: '', otherEarningsLabel: 'Other Earnings',
@@ -255,24 +260,71 @@ export default function GeneratePayslip() {
   const next = () => setStep(s => Math.min(s + 1, STEPS.length - 1))
   const prev = () => setStep(s => Math.max(s - 1, 0))
 
+  // Automated Indian Payroll Engine (2026 Standards)
+  useEffect(() => {
+    const ctc = parseFloat(form.annualCTC) || 0;
+    if (!ctc) return;
+
+    const monthlyCTC = Math.round(ctc / 12);
+    
+    if (form.employmentType === 'regular') {
+      const basic = Math.round(monthlyCTC * 0.5);
+      const hra = Math.round(basic * 0.4); // 40% Non-Metro Standard
+      const empPF = Math.min(Math.round(basic * 0.12), 1800);
+      const special = monthlyCTC - (basic + hra + empPF);
+      const gross = basic + hra + special;
+      
+      // Deductions
+      const esi = gross <= 21000 ? Math.ceil(gross * 0.0075) : 0;
+      const pt = 200;
+
+      setForm(f => ({
+        ...f,
+        basicSalary: basic.toString(),
+        hra: hra.toString(),
+        employerPF: empPF.toString(),
+        specialAllowance: special.toString(),
+        providentFund: empPF.toString(), // Match Employer PF
+        esi: esi.toString(),
+        professionalTax: pt.toString(),
+        stipend: '',
+      }));
+    } else {
+      // Intern Logic
+      setForm(f => ({
+        ...f,
+        stipend: monthlyCTC.toString(),
+        basicSalary: '0',
+        hra: '0',
+        employerPF: '0',
+        specialAllowance: '0',
+        providentFund: '0',
+        esi: '0',
+        professionalTax: '0',
+      }));
+    }
+  }, [form.annualCTC, form.employmentType]);
+
   const handleSubmit = async () => {
     setSubmitting(true)
     try {
       const payload = {
         ...form,
+        employmentType: form.employmentType,
+        annualCTC: parseFloat(form.annualCTC) || 0,
+        employerPF: parseFloat(form.employerPF) || 0,
+        stipend: parseFloat(form.stipend) || 0,
         workingDays: parseInt(form.workingDays),
         paidDays: parseInt(form.paidDays),
         year: parseInt(form.year),
         basicSalary: parseFloat(form.basicSalary) || 0,
         hra: parseFloat(form.hra) || 0,
-        conveyanceAllowance: parseFloat(form.conveyanceAllowance) || 0,
-        medicalAllowance: parseFloat(form.medicalAllowance) || 0,
         specialAllowance: parseFloat(form.specialAllowance) || 0,
         otherEarnings: parseFloat(form.otherEarnings) || 0,
         providentFund: parseFloat(form.providentFund) || 0,
         esi: parseFloat(form.esi) || 0,
-        tds: parseFloat(form.tds) || 0,
         professionalTax: parseFloat(form.professionalTax) || 0,
+        tds: parseFloat(form.tds) || 0,
         loanDeduction: parseFloat(form.loanDeduction) || 0,
         otherDeductions: parseFloat(form.otherDeductions) || 0,
       }
@@ -420,24 +472,54 @@ export default function GeneratePayslip() {
             </FieldGroup>
           )}
 
-          {/* Step 3: Earnings */}
+          {/* Step 3: Earnings (CTC Focused) */}
           {step === 3 && (
-            <FieldGroup label="Earnings">
-              <Row>
-                <NumberField label="Basic Salary" name="basicSalary" form={form} setForm={setForm} />
-                <NumberField label="HRA" name="hra" form={form} setForm={setForm} />
-              </Row>
-              <Row>
-                <NumberField label="Conveyance Allowance" name="conveyanceAllowance" form={form} setForm={setForm} />
-                <NumberField label="Medical Allowance" name="medicalAllowance" form={form} setForm={setForm} />
-              </Row>
-              <Row>
-                <NumberField label="Special Allowance" name="specialAllowance" form={form} setForm={setForm} />
-                <NumberField label="Other Earnings" name="otherEarnings" form={form} setForm={setForm} />
-              </Row>
-              {parseFloat(form.otherEarnings) > 0 && (
-                <Field label="Other Earnings Label" name="otherEarningsLabel" form={form} setForm={setForm} placeholder="Bonus / Incentive" />
-              )}
+            <FieldGroup label="Compensation Structure">
+              <div style={{ display: 'flex', gap: 12, marginBottom: 20, background: 'var(--surface-2)', padding: 12, borderRadius: 10 }}>
+                <div 
+                  onClick={() => setForm(f => ({ ...f, employmentType: 'regular' }))}
+                  style={{
+                    flex: 1, textAlign: 'center', padding: '10px', borderRadius: 8, cursor: 'pointer',
+                    background: form.employmentType === 'regular' ? 'var(--navy)' : 'transparent',
+                    color: form.employmentType === 'regular' ? 'white' : 'var(--text-muted)',
+                    fontWeight: 600, fontSize: 13, transition: 'all 0.2s',
+                    border: form.employmentType === 'regular' ? 'none' : '1px solid var(--border)'
+                  }}
+                >Regular Employee</div>
+                <div 
+                  onClick={() => setForm(f => ({ ...f, employmentType: 'intern' }))}
+                  style={{
+                    flex: 1, textAlign: 'center', padding: '10px', borderRadius: 8, cursor: 'pointer',
+                    background: form.employmentType === 'intern' ? 'var(--navy)' : 'transparent',
+                    color: form.employmentType === 'intern' ? 'white' : 'var(--text-muted)',
+                    fontWeight: 600, fontSize: 13, transition: 'all 0.2s',
+                    border: form.employmentType === 'intern' ? 'none' : '1px solid var(--border)'
+                  }}
+                >Intern</div>
+              </div>
+
+              <NumberField label="Annual CTC" name="annualCTC" form={form} setForm={setForm} placeholder="e.g. 600000" />
+              
+              <div style={{ marginTop: 24, padding: 18, background: 'rgba(30,58,95,0.03)', borderRadius: 12, border: '1px dashed var(--border)' }}>
+                {form.employmentType === 'regular' ? (
+                  <>
+                    <Row>
+                      <NumberField label="Basic Salary (50% CTC)" name="basicSalary" form={form} setForm={setForm} />
+                      <NumberField label="HRA (40% Basic)" name="hra" form={form} setForm={setForm} />
+                    </Row>
+                    <Row>
+                      <NumberField label="Special Allowance" name="specialAllowance" form={form} setForm={setForm} />
+                      <NumberField label="Employer PF (Capped)" name="employerPF" form={form} setForm={setForm} />
+                    </Row>
+                  </>
+                ) : (
+                  <NumberField label="Monthly Stipend" name="stipend" form={form} setForm={setForm} />
+                )}
+              </div>
+              
+              <div style={{ marginTop: 20 }}>
+                <NumberField label="Additional Other Earnings" name="otherEarnings" form={form} setForm={setForm} />
+              </div>
             </FieldGroup>
           )}
 

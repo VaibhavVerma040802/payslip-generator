@@ -145,11 +145,22 @@ function generatePayslipPDF(payslip, res) {
       align: 'right',
     });
 
+  if (payslip.annualCTC > 0) {
+    doc
+      .font('Helvetica-Bold')
+      .fontSize(8)
+      .fillColor(COLORS.gold)
+      .text(`ANNUAL CTC: ${formatINR(payslip.annualCTC)}`, MARGIN + CONTENT_W * 0.67, 60, {
+        width: CONTENT_W * 0.33,
+        align: 'right',
+      });
+  }
+
   doc
     .font('Helvetica')
-    .fontSize(9)
+    .fontSize(8)
     .fillColor('#aac4e0')
-    .text(`Pay Date: ${payslip.payDate}`, MARGIN + CONTENT_W * 0.67, 63, {
+    .text(`Pay Date: ${payslip.payDate}`, MARGIN + CONTENT_W * 0.67, 72, {
       width: CONTENT_W * 0.33,
       align: 'right',
     });
@@ -258,20 +269,29 @@ function generatePayslipPDF(payslip, res) {
 
   y += 22;
 
-  const earnings = [
-    ['Basic Salary', payslip.basicSalary],
-    ['House Rent Allowance', payslip.hra],
-    ['Conveyance Allowance', payslip.conveyanceAllowance],
-    ['Medical Allowance', payslip.medicalAllowance],
-    ['Special Allowance', payslip.specialAllowance],
-    [payslip.otherEarningsLabel || 'Other Earnings', payslip.otherEarnings],
-  ].filter((e) => e[1] > 0);
+  let earnings = [];
+  if (payslip.employmentType === 'intern') {
+    earnings = [
+      ['Monthly Stipend', payslip.stipend || payslip.grossEarnings],
+    ];
+  } else {
+    earnings = [
+      ['Basic Salary (50%)', payslip.basicSalary],
+      ['House Rent Allowance (40%)', payslip.hra],
+      ['Special Allowance', payslip.specialAllowance],
+      ['Employer PF Contribution', payslip.employerPF],
+    ];
+  }
+
+  if (payslip.otherEarnings > 0) {
+    earnings.push([payslip.otherEarningsLabel || 'Other Earnings', payslip.otherEarnings]);
+  }
 
   const deductions = [
-    ['Provident Fund (PF)', payslip.providentFund],
+    ['Employee PF', payslip.providentFund],
     ['ESI', payslip.esi],
-    ['Tax Deducted (TDS)', payslip.tds],
     ['Professional Tax', payslip.professionalTax],
+    ['Tax Deducted (TDS)', payslip.tds],
     ['Loan Deduction', payslip.loanDeduction],
     [payslip.otherDeductionsLabel || 'Other Deductions', payslip.otherDeductions],
   ].filter((d) => d[1] > 0);
