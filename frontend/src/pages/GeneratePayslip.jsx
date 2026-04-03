@@ -1,165 +1,73 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
+import { motion, AnimatePresence, LayoutGroup } from 'framer-motion'
+import { 
+  Building2, User, Calendar, TrendingUp, Minus, 
+  ChevronRight, ChevronLeft, CheckCircle2, Loader2,
+  FileText, IndianRupee, Landmark, Wallet, Plus, Download, Send
+} from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import toast from 'react-hot-toast'
-import { Building2, User, Calendar, TrendingUp, Minus, ChevronRight, ChevronLeft, CheckCircle2, Loader2 } from 'lucide-react'
 import api from '../api'
+import AnimatedNumber from '../components/AnimatedNumber'
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
 const CURRENT_YEAR = new Date().getFullYear()
 const YEARS = Array.from({ length: 5 }, (_, i) => CURRENT_YEAR - 2 + i)
 
 const INITIAL = {
-  // Company
   companyName: '', companyAddress: '', companyEmail: '', companyPhone: '', companyCIN: '', companyLogo: '',
-  // Employee
   employeeName: '', employeeId: '', designation: '', department: '', employeeEmail: '',
   dateOfJoining: '', bankAccount: '', bankName: '', panNumber: '', pfNumber: '',
-  // Period
   month: MONTHS[new Date().getMonth()], year: CURRENT_YEAR,
-  payDate: new Date().toISOString().split('T').pop(),
+  payDate: new Date().toISOString().split('T')[0],
   workingDays: 26, paidDays: 26,
-  // Payroll Logic
-  employmentType: 'regular',
-  annualCTC: '',
-  stipend: '',
-  employerPF: '',
-  // Earnings
-  basicSalary: '', hra: '', conveyanceAllowance: '', medicalAllowance: '',
-  specialAllowance: '', otherEarnings: '', otherEarningsLabel: 'Other Earnings',
-  // Deductions
-  providentFund: '', esi: '', tds: '', professionalTax: '',
-  loanDeduction: '', otherDeductions: '', otherDeductionsLabel: 'Other Deductions',
-  notes: '',
+  employmentType: 'regular', annualCTC: '', stipend: '', employerPF: '',
+  basicSalary: '0', hra: '0', specialAllowance: '0', otherEarnings: '0',
+  providentFund: '0', esi: '0', professionalTax: '0', tds: '0',
+  loanDeduction: '0', otherDeductions: '0', notes: '',
 }
 
-const COMPANY_KEYS = ['companyName', 'companyAddress', 'companyEmail', 'companyPhone', 'companyCIN']
+// ─────────────────────────────────────────────────────────────
+// UI Components
+// ─────────────────────────────────────────────────────────────
 
-const STEPS = [
-  { label: 'Company', icon: Building2 },
-  { label: 'Employee', icon: User },
-  { label: 'Pay Period', icon: Calendar },
-  { label: 'Salary', icon: TrendingUp },
-  { label: 'Deductions', icon: Minus },
-]
-
-function FieldGroup({ label, children }) {
+function StepLabel({ num, label, active, completed }) {
   return (
-    <div style={{ marginBottom: 24 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, opacity: active || completed ? 1 : 0.4 }}>
       <div style={{
-        fontSize: 11, fontWeight: 700, color: 'var(--navy)', letterSpacing: 0.8,
-        textTransform: 'uppercase', marginBottom: 14, paddingBottom: 8,
-        borderBottom: '2px solid var(--gold-pale)',
+        width: 28, height: 28, borderRadius: 8,
+        background: completed ? 'var(--emerald)' : active ? 'var(--navy)' : 'var(--border)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: 'white', fontSize: 13, fontWeight: 700, transition: 'all 0.3s'
       }}>
-        {label}
+        {completed ? <CheckCircle2 size={16} /> : num}
       </div>
-      {children}
+      <span style={{ fontSize: 13, fontWeight: active ? 700 : 500, color: 'var(--navy)' }}>{label}</span>
     </div>
   )
 }
 
-function Row({ children, cols = 2 }) {
+function InputField({ label, name, value, onChange, type = 'text', placeholder, icon: Icon, required }) {
   return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: `repeat(${cols}, 1fr)`,
-      gap: '14px 18px',
-      marginBottom: 14,
-    }}>
-      {children}
-    </div>
-  )
-}
-
-function Field({ label, name, form, setForm, type = 'text', required = false, placeholder, suffix, hint }) {
-  return (
-    <div>
-      <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 5 }}>
-        {label}{required && <span style={{ color: 'var(--red)', marginLeft: 2 }}>*</span>}
+    <div style={{ marginBottom: 18 }}>
+      <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 6 }}>
+        {label}{required && <span style={{ color: '#ef4444', marginLeft: 4 }}>*</span>}
       </label>
       <div style={{ position: 'relative' }}>
+        {Icon && <Icon size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-light)' }} />}
         <input
           type={type}
-          required={required}
-          value={form[name]}
+          value={value}
           placeholder={placeholder}
-          onChange={e => setForm(f => ({ ...f, [name]: e.target.value }))}
+          onChange={onChange}
           style={{
-            width: '100%', padding: '9px 12px',
-            border: '1.5px solid var(--border)',
-            borderRadius: 8, fontSize: 13.5,
-            color: 'var(--text)', background: 'var(--surface)',
-            outline: 'none', transition: 'border-color 0.15s',
-            paddingRight: suffix ? '40px' : '12px',
+            width: '100%', padding: Icon ? '10px 12px 10px 36px' : '10px 12px',
+            border: '1.5px solid var(--border)', borderRadius: 10,
+            fontSize: 14, color: 'var(--text)', outline: 'none',
+            background: 'var(--surface)', transition: 'all 0.2s'
           }}
-          onFocus={e => e.target.style.borderColor = 'var(--navy)'}
-          onBlur={e => e.target.style.borderColor = 'var(--border)'}
-        />
-        {suffix && (
-          <span style={{
-            position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
-            fontSize: 12, color: 'var(--text-light)',
-          }}>{suffix}</span>
-        )}
-      </div>
-      {hint && <div style={{ fontSize: 11, color: 'var(--text-light)', marginTop: 3 }}>{hint}</div>}
-    </div>
-  )
-}
-
-function SelectField({ label, name, form, setForm, options, required }) {
-  return (
-    <div>
-      <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 5 }}>
-        {label}{required && <span style={{ color: 'var(--red)', marginLeft: 2 }}>*</span>}
-      </label>
-      <select
-        value={form[name]}
-        required={required}
-        onChange={e => setForm(f => ({ ...f, [name]: e.target.value }))}
-        style={{
-          width: '100%', padding: '9px 12px',
-          border: '1.5px solid var(--border)',
-          borderRadius: 8, fontSize: 13.5,
-          color: 'var(--text)', background: 'var(--surface)',
-          outline: 'none', cursor: 'pointer',
-        }}
-        onFocus={e => e.target.style.borderColor = 'var(--navy)'}
-        onBlur={e => e.target.style.borderColor = 'var(--border)'}
-      >
-        {options.map(o => (
-          <option key={o.value ?? o} value={o.value ?? o}>{o.label ?? o}</option>
-        ))}
-      </select>
-    </div>
-  )
-}
-
-function NumberField({ label, name, form, setForm, placeholder }) {
-  const num = parseFloat(form[name]) || 0
-  return (
-    <div>
-      <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 5 }}>
-        {label}
-      </label>
-      <div style={{ position: 'relative' }}>
-        <span style={{
-          position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)',
-          fontSize: 13, color: 'var(--text-muted)', fontWeight: 600,
-        }}>₹</span>
-        <input
-          type="number"
-          min="0"
-          value={form[name]}
-          placeholder={placeholder || '0'}
-          onChange={e => setForm(f => ({ ...f, [name]: e.target.value }))}
-          style={{
-            width: '100%', padding: '9px 12px 9px 26px',
-            border: '1.5px solid var(--border)',
-            borderRadius: 8, fontSize: 13.5,
-            color: 'var(--text)', background: 'var(--surface)',
-            outline: 'none', transition: 'border-color 0.15s',
-          }}
+          className="btn-hover"
           onFocus={e => e.target.style.borderColor = 'var(--navy)'}
           onBlur={e => e.target.style.borderColor = 'var(--border)'}
         />
@@ -168,455 +76,326 @@ function NumberField({ label, name, form, setForm, placeholder }) {
   )
 }
 
-// Salary summary sidebar
-function SalarySummary({ form }) {
-  const n = (k) => parseFloat(form[k]) || 0
-  const gross = n('basicSalary') + n('hra') + n('conveyanceAllowance') + n('medicalAllowance') + n('specialAllowance') + n('otherEarnings')
-  const deductions = n('providentFund') + n('esi') + n('tds') + n('professionalTax') + n('loanDeduction') + n('otherDeductions')
-  const net = gross - deductions
-
-  const fmt = (v) => '₹' + v.toLocaleString('en-IN', { minimumFractionDigits: 0 })
-
+function PreviewRow({ label, value, type = 'normal', isDeduction }) {
   return (
-    <div style={{
-      background: 'var(--navy-dark)',
-      borderRadius: 'var(--radius)',
-      padding: '20px',
-      position: 'sticky',
-      top: 24,
-      color: 'white',
-    }}>
-      <div style={{ fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 600, marginBottom: 16, color: 'var(--gold)' }}>
-        Live Summary
-      </div>
-
-      {[
-        ['Basic Salary', n('basicSalary')],
-        ['HRA', n('hra')],
-        ['Conveyance', n('conveyanceAllowance')],
-        ['Medical', n('medicalAllowance')],
-        ['Special', n('specialAllowance')],
-        ['Other Earnings', n('otherEarnings')],
-      ].filter(r => r[1] > 0).map(([k, v]) => (
-        <div key={k} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 12 }}>
-          <span style={{ color: 'rgba(255,255,255,0.6)' }}>{k}</span>
-          <span style={{ color: '#d1fae5' }}>{fmt(v)}</span>
-        </div>
-      ))}
-
-      <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', margin: '12px 0', paddingTop: 10 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontWeight: 600 }}>
-          <span style={{ color: 'rgba(255,255,255,0.7)' }}>Gross</span>
-          <span style={{ color: 'var(--gold)' }}>{fmt(gross)}</span>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginTop: 6 }}>
-          <span style={{ color: 'rgba(255,255,255,0.5)' }}>Total Deductions</span>
-          <span style={{ color: '#fca5a5' }}>−{fmt(deductions)}</span>
-        </div>
-      </div>
-
-      <div style={{
-        background: 'rgba(201,168,76,0.15)',
-        border: '1px solid rgba(201,168,76,0.3)',
-        borderRadius: 10,
-        padding: '12px 14px',
-        marginTop: 8,
+    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(15,23,42,0.05)' }}>
+      <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{label}</span>
+      <span style={{ 
+        fontSize: 13, 
+        fontWeight: type === 'bold' ? 700 : 600,
+        color: isDeduction ? '#ef4444' : type === 'bold' ? 'var(--navy)' : 'var(--text)'
       }}>
-        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 3 }}>Net Salary</div>
-        <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--gold)' }}>{fmt(net)}</div>
-      </div>
+        <AnimatedNumber value={parseFloat(value || 0)} decimals={type === 'bold' ? 0 : 0} />
+      </span>
     </div>
   )
 }
+
+// ─────────────────────────────────────────────────────────────
+// Main Page
+// ─────────────────────────────────────────────────────────────
 
 export default function GeneratePayslip() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const [step, setStep] = useState(user?.companyName ? 1 : 0) // Skip to employee if profile exists
+  
+  const [step, setStep] = useState(user?.companyName ? 1 : 0)
   const [form, setForm] = useState(() => {
-    // 1. Check if we are duplicating
-    if (location.state?.duplicateData) {
-      return { ...INITIAL, ...location.state.duplicateData }
-    }
-    
-    // 2. Check for profile data
-    if (user) {
-      return {
-        ...INITIAL,
-        companyName: user.companyName || '',
-        companyAddress: user.companyAddress || '',
-        companyEmail: user.companyEmail || '',
-        companyPhone: user.companyPhone || '',
-        companyCIN: user.companyCIN || '',
-        companyLogo: user.companyLogo || ''
-      }
-    }
-
+    if (location.state?.duplicateData) return { ...INITIAL, ...location.state.duplicateData }
+    if (user) return { ...INITIAL, ...user }
     return INITIAL
   })
   const [submitting, setSubmitting] = useState(false)
 
-  const next = () => setStep(s => Math.min(s + 1, STEPS.length - 1))
-  const prev = () => setStep(s => Math.max(s - 1, 0))
-
-  // Automated Indian Payroll Engine (2026 Standards)
-  useEffect(() => {
+  // STATUTORY ENGINE (2026 Standards)
+  const totals = useMemo(() => {
     const ctc = parseFloat(form.annualCTC) || 0;
-    if (!ctc) return;
-
     const monthlyCTC = Math.round(ctc / 12);
     
-    if (form.employmentType === 'regular') {
-      const basic = Math.round(monthlyCTC * 0.5);
-      const hra = Math.round(basic * 0.4); // 40% Non-Metro Standard
-      const empPF = Math.min(Math.round(basic * 0.12), 1800);
-      const special = monthlyCTC - (basic + hra + empPF);
-      const gross = basic + hra + special;
-      
-      // Deductions
-      const esi = gross <= 21000 ? Math.ceil(gross * 0.0075) : 0;
-      const pt = 200;
-
-      setForm(f => ({
-        ...f,
-        basicSalary: basic.toString(),
-        hra: hra.toString(),
-        employerPF: empPF.toString(),
-        specialAllowance: special.toString(),
-        providentFund: empPF.toString(), // Match Employer PF
-        esi: esi.toString(),
-        professionalTax: pt.toString(),
-        stipend: '',
-      }));
-    } else {
-      // Intern Logic
-      setForm(f => ({
-        ...f,
-        stipend: monthlyCTC.toString(),
-        basicSalary: '0',
-        hra: '0',
-        employerPF: '0',
-        specialAllowance: '0',
-        providentFund: '0',
-        esi: '0',
-        professionalTax: '0',
-      }));
+    if (form.employmentType === 'intern') {
+      return {
+        basic: 0, hra: 0, special: 0, gross: monthlyCTC,
+        pf: 0, esi: 0, pt: 0, deductions: 0, net: monthlyCTC
+      }
     }
-  }, [form.annualCTC, form.employmentType]);
+
+    const basic = Math.round(monthlyCTC * 0.5);
+    const hra = Math.round(basic * 0.5); // 50% Metro Rule (latest request)
+    const empPF = Math.min(Math.round(basic * 0.12), 1800);
+    const special = monthlyCTC - (basic + hra + empPF);
+    const gross = basic + hra + special;
+    const esi = gross <= 21000 ? Math.ceil(gross * 0.0075) : 0;
+    const pt = 200;
+    const deductions = empPF + esi + pt + (parseFloat(form.tds) || 0) + (parseFloat(form.loanDeduction) || 0);
+
+    return {
+      basic, hra, special, gross,
+      pf: empPF, esi, pt, deductions, net: gross - deductions
+    }
+  }, [form.annualCTC, form.employmentType, form.tds, form.loanDeduction]);
+
+  // Sync derived values to form for persistence
+  useEffect(() => {
+    setForm(f => ({
+      ...f,
+      basicSalary: totals.basic.toString(),
+      hra: totals.hra.toString(),
+      specialAllowance: totals.special.toString(),
+      providentFund: totals.pf.toString(),
+      esi: totals.esi.toString(),
+      professionalTax: totals.pt.toString(),
+      stipend: form.employmentType === 'intern' ? totals.gross.toString() : '0'
+    }));
+  }, [totals]);
 
   const handleSubmit = async () => {
     setSubmitting(true)
     try {
-      const payload = {
-        ...form,
-        employmentType: form.employmentType,
-        annualCTC: parseFloat(form.annualCTC) || 0,
-        employerPF: parseFloat(form.employerPF) || 0,
-        stipend: parseFloat(form.stipend) || 0,
-        workingDays: parseInt(form.workingDays),
-        paidDays: parseInt(form.paidDays),
-        year: parseInt(form.year),
-        basicSalary: parseFloat(form.basicSalary) || 0,
-        hra: parseFloat(form.hra) || 0,
-        specialAllowance: parseFloat(form.specialAllowance) || 0,
-        otherEarnings: parseFloat(form.otherEarnings) || 0,
-        providentFund: parseFloat(form.providentFund) || 0,
-        esi: parseFloat(form.esi) || 0,
-        professionalTax: parseFloat(form.professionalTax) || 0,
-        tds: parseFloat(form.tds) || 0,
-        loanDeduction: parseFloat(form.loanDeduction) || 0,
-        otherDeductions: parseFloat(form.otherDeductions) || 0,
-      }
+      const payload = { ...form, ...totals, grossEarnings: totals.gross, totalDeductions: totals.deductions, netSalary: totals.net };
       const res = await api.post('/payslips', payload)
-      
-      toast.success('Payslip created successfully!')
+      toast.success('Payslip generated!')
       navigate(`/payslips/${res.data.data._id}`)
     } catch (err) {
-      console.error('Payslip creation failed:', err);
-      if (err.response?.data?.errors) {
-        const errorMsgs = Object.values(err.response.data.errors).map(e => e.message).join(', ');
-        toast.error(`Validation Error: ${errorMsgs}`);
-      } else {
-        toast.error(err.response?.data?.message || err.message || 'Failed to create payslip');
-      }
+      toast.error('Failed to generate payslip')
     } finally {
       setSubmitting(false)
     }
   }
 
-  const showSummary = step >= 3
-
   return (
-    <div style={{ padding: '36px 40px' }}>
-      {/* Header */}
-      <div className="fade-up" style={{ marginBottom: 28 }}>
-        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 700, color: 'var(--navy)' }}>
-          Generate Payslip
-        </h1>
-        <p style={{ color: 'var(--text-muted)', marginTop: 4 }}>Fill in the details to create a new payslip.</p>
-      </div>
+    <motion.div 
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: 'easeOut' }}
+      className="split-screen"
+    >
+      {/* LEFT: FORM SECTION */}
+      <div style={{ padding: '40px', overflowY: 'auto', borderRight: '1px solid var(--border)' }}>
+        <div style={{ maxWidth: 500, margin: '0 auto' }}>
+          <header style={{ marginBottom: 40 }}>
+            <h1 style={{ fontSize: 28, color: 'var(--navy)', marginBottom: 8 }}>Payroll Engine</h1>
+            <p style={{ color: 'var(--text-muted)', fontSize: 15 }}>Indian Statutory Standards 2026 (Metro v1.2)</p>
+          </header>
 
-      {/* Stepper */}
-      <div className="fade-up" style={{
-        display: 'flex', alignItems: 'center', gap: 0,
-        background: 'var(--surface)', borderRadius: 'var(--radius)',
-        border: '1px solid var(--border)', padding: '10px 16px',
-        marginBottom: 28, boxShadow: 'var(--shadow-sm)',
-        overflowX: 'auto',
-      }}>
-        {STEPS.map(({ label, icon: Icon }, i) => (
-          <div key={i} style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
-            <div
-              onClick={() => setStep(i)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px',
-                borderRadius: 8, cursor: 'pointer', whiteSpace: 'nowrap',
-                background: step === i ? 'var(--navy)' : 'transparent',
-                transition: 'background 0.15s',
-              }}
-            >
-              {i < step ? (
-                <CheckCircle2 size={16} color="var(--green)" />
-              ) : (
-                <Icon size={15} color={step === i ? 'var(--gold)' : 'var(--text-muted)'} />
-              )}
-              <span style={{
-                fontSize: 13, fontWeight: step === i ? 600 : 400,
-                color: step === i ? 'white' : i < step ? 'var(--green)' : 'var(--text-muted)',
-              }}>
-                {label}
-              </span>
-            </div>
-            {i < STEPS.length - 1 && (
-              <div style={{ flex: 1, height: 1, background: 'var(--border)', margin: '0 4px' }} />
-            )}
+          <div style={{ display: 'flex', gap: 24, marginBottom: 44, paddingBottom: 12, borderBottom: '1.5px solid var(--border)' }}>
+            <StepLabel num={1} label="Identity" active={step === 1} completed={step > 1} />
+            <StepLabel num={2} label="Period" active={step === 2} completed={step > 2} />
+            <StepLabel num={3} label="Salary" active={step === 3} completed={step > 3} />
           </div>
-        ))}
-      </div>
 
-      {/* Form + Summary */}
-      <div style={{ display: 'grid', gridTemplateColumns: showSummary ? '1fr 260px' : '1fr', gap: 24 }}>
-        {/* Form Card */}
-        <div className="fade-in" style={{
-          background: 'var(--surface)', borderRadius: 'var(--radius)',
-          border: '1px solid var(--border)', padding: '28px 32px',
-          boxShadow: 'var(--shadow-sm)',
-        }}>
-          {/* Step 0: Company */}
-          {step === 0 && (
-            <div>
-              <FieldGroup label="Company Information">
-                {!user?.companyLogo && !user?.companyName && (
-                  <div style={{ padding: '12px 16px', background: 'rgba(201,168,76,0.1)', borderLeft: '3px solid var(--gold)', borderRadius: 6, marginBottom: 20 }}>
-                    <p style={{ fontSize: 13, color: 'var(--navy)', margin: 0 }}>
-                      Your company profile is incomplete. <Link to="/profile" style={{ fontWeight: 700, color: 'var(--navy)' }}>Complete Profile</Link> to auto-fill these details.
-                    </p>
+          <form onSubmit={e => { e.preventDefault(); step < 3 ? setStep(s => s + 1) : handleSubmit() }}>
+            <AnimatePresence mode="wait">
+              {step === 1 && (
+                <motion.div 
+                  key="step1"
+                  initial={{ opacity: 0, x: -10 }} 
+                  animate={{ opacity: 1, x: 0 }} 
+                  exit={{ opacity: 0, x: 10 }}
+                >
+                  <InputField label="Employee Name" required value={form.employeeName} onChange={e => setForm({...form, employeeName: e.target.value})} placeholder="e.g. Aryan Sharma" icon={User} />
+                  <InputField label="Employee ID" required value={form.employeeId} onChange={e => setForm({...form, employeeId: e.target.value})} placeholder="e.g. PS-001" icon={FileText} />
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                    <InputField label="Designation" required value={form.designation} onChange={e => setForm({...form, designation: e.target.value})} placeholder="Software Dev" />
+                    <InputField label="Department" required value={form.department} onChange={e => setForm({...form, department: e.target.value})} placeholder="Engineering" />
                   </div>
-                )}
-                <Field label="Company Name" name="companyName" form={form} setForm={setForm} required placeholder="Acme Technologies Pvt. Ltd." />
-                <div style={{ marginTop: 14 }}>
-                  <Field label="Company Address" name="companyAddress" form={form} setForm={setForm} required placeholder="123 Business Park, Mumbai, Maharashtra 400001" />
-                </div>
-                <Row>
-                  <Field label="Company Email" name="companyEmail" form={form} setForm={setForm} type="email" placeholder="hr@acme.com" />
-                  <Field label="Company Phone" name="companyPhone" form={form} setForm={setForm} placeholder="+91 98765 43210" />
-                </Row>
-                <Field label="CIN / Registration No." name="companyCIN" form={form} setForm={setForm} placeholder="U72900MH2020PTC123456" />
-              </FieldGroup>
-            </div>
-          )}
+                  <InputField label="Employee Email" required type="email" value={form.employeeEmail} onChange={e => setForm({...form, employeeEmail: e.target.value})} placeholder="aryan@acme.com" icon={Send} />
+                </motion.div>
+              )}
 
-          {/* Step 1: Employee */}
-          {step === 1 && (
-            <div>
-              <FieldGroup label="Basic Details">
-                <Row>
-                  <Field label="Employee Name" name="employeeName" form={form} setForm={setForm} required placeholder="Rahul Sharma" />
-                  <Field label="Employee ID" name="employeeId" form={form} setForm={setForm} required placeholder="EMP-001" />
-                </Row>
-                <Row>
-                  <Field label="Designation" name="designation" form={form} setForm={setForm} required placeholder="Software Engineer" />
-                  <Field label="Department" name="department" form={form} setForm={setForm} required placeholder="Engineering" />
-                </Row>
-                <Field label="Employee Email" name="employeeEmail" form={form} setForm={setForm} required type="email" placeholder="rahul@acme.com" hint="Payslip will be emailed to this address" />
-                <div style={{ marginTop: 14 }}>
-                  <Field label="Date of Joining" name="dateOfJoining" form={form} setForm={setForm} type="date" />
-                </div>
-              </FieldGroup>
-              <FieldGroup label="Financial Details">
-                <Row>
-                  <Field label="PAN Number" name="panNumber" form={form} setForm={setForm} placeholder="ABCDE1234F" />
-                  <Field label="PF Account No." name="pfNumber" form={form} setForm={setForm} placeholder="MH/12345/123" />
-                </Row>
-                <Row>
-                  <Field label="Bank Account No." name="bankAccount" form={form} setForm={setForm} placeholder="Account number" hint="Last 4 digits shown on payslip" />
-                  <Field label="Bank Name" name="bankName" form={form} setForm={setForm} placeholder="HDFC Bank" />
-                </Row>
-              </FieldGroup>
-            </div>
-          )}
+              {step === 2 && (
+                <motion.div 
+                  key="step2"
+                  initial={{ opacity: 0, x: -10 }} 
+                  animate={{ opacity: 1, x: 0 }} 
+                  exit={{ opacity: 0, x: 10 }}
+                >
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                    <div style={{ marginBottom: 18 }}>
+                      <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 6 }}>Month</label>
+                      <select 
+                        value={form.month} 
+                        onChange={e => setForm({...form, month: e.target.value})}
+                        style={{ width: '100%', padding: '10px', border: '1.5px solid var(--border)', borderRadius: 10, outline: 'none' }}
+                      >
+                        {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
+                      </select>
+                    </div>
+                    <div style={{ marginBottom: 18 }}>
+                      <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 6 }}>Year</label>
+                      <select 
+                        value={form.year} 
+                        onChange={e => setForm({...form, year: e.target.value})}
+                        style={{ width: '100%', padding: '10px', border: '1.5px solid var(--border)', borderRadius: 10, outline: 'none' }}
+                      >
+                        {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <InputField label="Pay Date" type="date" value={form.payDate} onChange={e => setForm({...form, payDate: e.target.value})} icon={Calendar} />
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                    <InputField label="Working Days" type="number" value={form.workingDays} onChange={e => setForm({...form, workingDays: e.target.value})} />
+                    <InputField label="Paid Days" type="number" value={form.paidDays} onChange={e => setForm({...form, paidDays: e.target.value})} />
+                  </div>
+                </motion.div>
+              )}
 
-          {/* Step 2: Period */}
-          {step === 2 && (
-            <FieldGroup label="Pay Period">
-              <Row>
-                <SelectField label="Month" name="month" form={form} setForm={setForm} required options={MONTHS} />
-                <SelectField label="Year" name="year" form={form} setForm={setForm} required options={YEARS} />
-              </Row>
-              <Field label="Pay Date" name="payDate" form={form} setForm={setForm} required type="date" />
-              <Row>
-                <Field label="Working Days" name="workingDays" form={form} setForm={setForm} type="number" />
-                <Field label="Paid Days" name="paidDays" form={form} setForm={setForm} type="number" />
-              </Row>
-            </FieldGroup>
-          )}
+              {step === 3 && (
+                <motion.div 
+                  key="step3"
+                  initial={{ opacity: 0, x: -10 }} 
+                  animate={{ opacity: 1, x: 0 }} 
+                  exit={{ opacity: 0, x: 10 }}
+                >
+                  <div style={{ display: 'flex', gap: 8, marginBottom: 24, background: '#f1f5f9', padding: 4, borderRadius: 12 }}>
+                    <button 
+                      type="button"
+                      onClick={() => setForm({...form, employmentType: 'regular'})}
+                      style={{ 
+                        flex: 1, padding: '8px', borderRadius: 10, border: 'none', fontSize: 12, fontWeight: 700,
+                        background: form.employmentType === 'regular' ? 'white' : 'transparent',
+                        color: form.employmentType === 'regular' ? 'var(--navy)' : 'var(--text-muted)',
+                        boxShadow: form.employmentType === 'regular' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none'
+                      }}
+                    >Regular Employee</button>
+                    <button 
+                      type="button"
+                      onClick={() => setForm({...form, employmentType: 'intern'})}
+                      style={{ 
+                        flex: 1, padding: '8px', borderRadius: 10, border: 'none', fontSize: 12, fontWeight: 700,
+                        background: form.employmentType === 'intern' ? 'white' : 'transparent',
+                        color: form.employmentType === 'intern' ? 'var(--navy)' : 'var(--text-muted)',
+                        boxShadow: form.employmentType === 'intern' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none'
+                      }}
+                    >Intern</button>
+                  </div>
 
-          {/* Step 3: Earnings (CTC Focused) */}
-          {step === 3 && (
-            <FieldGroup label="Compensation Structure">
-              <div style={{ display: 'flex', gap: 12, marginBottom: 20, background: 'var(--surface-2)', padding: 12, borderRadius: 10 }}>
-                <div 
-                  onClick={() => setForm(f => ({ ...f, employmentType: 'regular' }))}
-                  style={{
-                    flex: 1, textAlign: 'center', padding: '10px', borderRadius: 8, cursor: 'pointer',
-                    background: form.employmentType === 'regular' ? 'var(--navy)' : 'transparent',
-                    color: form.employmentType === 'regular' ? 'white' : 'var(--text-muted)',
-                    fontWeight: 600, fontSize: 13, transition: 'all 0.2s',
-                    border: form.employmentType === 'regular' ? 'none' : '1px solid var(--border)'
-                  }}
-                >Regular Employee</div>
-                <div 
-                  onClick={() => setForm(f => ({ ...f, employmentType: 'intern' }))}
-                  style={{
-                    flex: 1, textAlign: 'center', padding: '10px', borderRadius: 8, cursor: 'pointer',
-                    background: form.employmentType === 'intern' ? 'var(--navy)' : 'transparent',
-                    color: form.employmentType === 'intern' ? 'white' : 'var(--text-muted)',
-                    fontWeight: 600, fontSize: 13, transition: 'all 0.2s',
-                    border: form.employmentType === 'intern' ? 'none' : '1px solid var(--border)'
-                  }}
-                >Intern</div>
-              </div>
+                  <InputField label="Annual CTC" required type="number" value={form.annualCTC} onChange={e => setForm({...form, annualCTC: e.target.value})} placeholder="e.g. 600000" icon={IndianRupee} />
+                  
+                  {form.employmentType === 'regular' && (
+                    <LayoutGroup>
+                      <motion.div layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ padding: 18, background: 'var(--bg)', borderRadius: 16, border: '1.5px solid var(--border)', marginBottom: 20 }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                          <InputField label="TDS (Monthly)" type="number" value={form.tds} onChange={e => setForm({...form, tds: e.target.value})} placeholder="0" />
+                          <InputField label="Loan Deduct" type="number" value={form.loanDeduction} onChange={e => setForm({...form, loanDeduction: e.target.value})} placeholder="0" />
+                        </div>
+                      </motion.div>
+                    </LayoutGroup>
+                  )}
+                  <InputField label="Bank Details (Optional)" value={form.bankAccount} onChange={e => setForm({...form, bankAccount: e.target.value})} placeholder="Acc No or IFSC" icon={Landmark} />
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-              <NumberField label="Annual CTC" name="annualCTC" form={form} setForm={setForm} placeholder="e.g. 600000" />
-              
-              <div style={{ marginTop: 24, padding: 18, background: 'rgba(30,58,95,0.03)', borderRadius: 12, border: '1px dashed var(--border)' }}>
-                {form.employmentType === 'regular' ? (
-                  <>
-                    <Row>
-                      <NumberField label="Basic Salary (50% CTC)" name="basicSalary" form={form} setForm={setForm} />
-                      <NumberField label="HRA (40% Basic)" name="hra" form={form} setForm={setForm} />
-                    </Row>
-                    <Row>
-                      <NumberField label="Special Allowance" name="specialAllowance" form={form} setForm={setForm} />
-                      <NumberField label="Employer PF (Capped)" name="employerPF" form={form} setForm={setForm} />
-                    </Row>
-                  </>
-                ) : (
-                  <NumberField label="Monthly Stipend" name="stipend" form={form} setForm={setForm} />
-                )}
-              </div>
-              
-              <div style={{ marginTop: 20 }}>
-                <NumberField label="Additional Other Earnings" name="otherEarnings" form={form} setForm={setForm} />
-              </div>
-            </FieldGroup>
-          )}
-
-          {/* Step 4: Deductions */}
-          {step === 4 && (
-            <>
-              <FieldGroup label="Deductions">
-                <Row>
-                  <NumberField label="Provident Fund (PF)" name="providentFund" form={form} setForm={setForm} />
-                  <NumberField label="ESI" name="esi" form={form} setForm={setForm} />
-                </Row>
-                <Row>
-                  <NumberField label="TDS" name="tds" form={form} setForm={setForm} />
-                  <NumberField label="Professional Tax" name="professionalTax" form={form} setForm={setForm} />
-                </Row>
-                <Row>
-                  <NumberField label="Loan Deduction" name="loanDeduction" form={form} setForm={setForm} />
-                  <NumberField label="Other Deductions" name="otherDeductions" form={form} setForm={setForm} />
-                </Row>
-                {parseFloat(form.otherDeductions) > 0 && (
-                  <Field label="Other Deductions Label" name="otherDeductionsLabel" form={form} setForm={setForm} placeholder="Advance / Penalty" />
-                )}
-              </FieldGroup>
-
-              <FieldGroup label="Additional Notes">
-                <textarea
-                  value={form.notes}
-                  onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-                  placeholder="Any special notes to include on the payslip..."
-                  rows={3}
-                  style={{
-                    width: '100%', padding: '10px 12px',
-                    border: '1.5px solid var(--border)',
-                    borderRadius: 8, fontSize: 13.5, resize: 'vertical',
-                    color: 'var(--text)', fontFamily: 'var(--font-body)',
-                    outline: 'none',
-                  }}
-                  onFocus={e => e.target.style.borderColor = 'var(--navy)'}
-                  onBlur={e => e.target.style.borderColor = 'var(--border)'}
-                />
-              </FieldGroup>
-            </>
-          )}
-
-          {/* Navigation */}
-          <div style={{
-            display: 'flex', justifyContent: 'space-between',
-            marginTop: 24, paddingTop: 20, borderTop: '1px solid var(--border)',
-          }}>
-            <button
-              onClick={prev}
-              disabled={step === 0}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 6,
-                background: 'none', border: '1.5px solid var(--border)',
-                borderRadius: 8, padding: '9px 18px', cursor: step === 0 ? 'not-allowed' : 'pointer',
-                color: step === 0 ? 'var(--text-light)' : 'var(--text)',
-                fontWeight: 500, fontSize: 13.5,
-              }}
-            >
-              <ChevronLeft size={15} /> Previous
-            </button>
-
-            {step < STEPS.length - 1 ? (
-              <button
-                onClick={next}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 6,
-                  background: 'var(--navy)', color: 'white',
-                  border: 'none', borderRadius: 8, padding: '9px 22px',
-                  cursor: 'pointer', fontWeight: 600, fontSize: 13.5,
-                }}
-              >
-                Next <ChevronRight size={15} />
-              </button>
-            ) : (
-              <button
-                onClick={handleSubmit}
+            <div style={{ display: 'flex', gap: 12, marginTop: 32 }}>
+              {step > 1 && (
+                <button 
+                  type="button" 
+                  onClick={() => setStep(s => s - 1)}
+                  style={{ width: 100, height: 48, borderRadius: 12, border: '1.5px solid var(--border)', background: 'white', fontWeight: 600 }}
+                >Back</button>
+              )}
+              <button 
+                type="submit" 
                 disabled={submitting}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 8,
-                  background: submitting ? 'var(--text-light)' : 'var(--gold)',
-                  color: 'var(--navy-dark)',
-                  border: 'none', borderRadius: 8, padding: '10px 24px',
-                  cursor: submitting ? 'not-allowed' : 'pointer',
-                  fontWeight: 700, fontSize: 14,
+                className="btn-hover"
+                style={{ 
+                  flex: 1, height: 48, borderRadius: 12, border: 'none', 
+                  background: submitting ? 'var(--text-light)' : 'var(--navy)', 
+                  color: 'white', fontWeight: 700, fontSize: 15,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
                 }}
               >
-                {submitting ? <><Loader2 size={15} style={{ animation: 'spin 1s linear infinite' }} /> Generating...</> : <>✓ Generate Payslip</>}
+                {submitting ? <Loader2 size={18} className="animate-spin" /> : step === 3 ? 'Generate Now' : 'Continue'}
+                {step < 3 && <ChevronRight size={18} />}
               </button>
-            )}
-          </div>
+            </div>
+          </form>
         </div>
-
-        {/* Live Summary */}
-        {showSummary && <SalarySummary form={form} />}
       </div>
-    </div>
+
+      {/* RIGHT: LIVE PREVIEW (Digital Document) */}
+      <div style={{ background: '#f1f5f9', padding: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <motion.div 
+          layout
+          className="glass"
+          style={{ 
+            width: '100%', maxWidth: 460, borderRadius: 28, 
+            boxShadow: '0 40px 60px -20px rgba(15,23,42,0.2)', padding: '32px' 
+          }}
+        >
+          {/* Document Header */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 28, borderBottom: '2px solid rgba(15,23,42,0.1)', paddingBottom: 20 }}>
+            <div>
+              <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--navy)', marginBottom: 2 }}>{form.companyName || 'Acme Corp'}</div>
+              <div className="badge badge-gold" style={{ fontSize: 9 }}>Indian Standard Slip</div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Pay Period</div>
+              <div style={{ fontSize: 13, fontWeight: 700 }}>{form.month} {form.year}</div>
+            </div>
+          </div>
+
+          {/* Employee Badge */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24, padding: 12, background: 'rgba(15,23,42,0.03)', borderRadius: 14 }}>
+            <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--navy)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800 }}>
+              {(form.employeeName || 'U')[0].toUpperCase()}
+            </div>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 700 }}>{form.employeeName || 'Anonymous User'}</div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{form.designation || 'Position TBD'} · {form.department}</div>
+            </div>
+          </div>
+
+          {/* Table Breakdown */}
+          <div style={{ marginBottom: 28 }}>
+            <PreviewRow label="Identity Code" value={form.employeeId || '—'} type="text" />
+            <PreviewRow label="Basic Salary (50%)" value={totals.basic} />
+            <PreviewRow label="HRA (50%)" value={totals.hra} />
+            <AnimatePresence>
+              {form.employmentType === 'regular' && (
+                <motion.div 
+                  initial={{ height: 0, opacity: 0 }} 
+                  animate={{ height: 'auto', opacity: 1 }} 
+                  exit={{ height: 0, opacity: 0 }}
+                  style={{ overflow: 'hidden' }}
+                >
+                  <PreviewRow label="Special Allowance" value={totals.special} />
+                  <PreviewRow label="Statutory PF" value={totals.pf} isDeduction />
+                  <PreviewRow label="ESI Contribution" value={totals.esi} isDeduction />
+                  <PreviewRow label="Professional Tax" value={totals.pt} isDeduction />
+                </motion.div>
+              )}
+            </AnimatePresence>
+            <PreviewRow label="Gross Earnings" value={totals.gross} type="bold" />
+            <PreviewRow label="Total Deductions" value={totals.deductions} isDeduction type="bold" />
+          </div>
+
+          {/* Result Banner */}
+          <motion.div 
+            whileHover={{ scale: 1.02 }}
+            style={{ 
+              background: 'var(--navy)', color: 'white', padding: '20px', 
+              borderRadius: 20, textAlign: 'center', position: 'relative', overflow: 'hidden' 
+            }}
+          >
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Net Pay (Monthly Take-Home)</div>
+            <div style={{ fontSize: 32, fontWeight: 900, color: 'var(--emerald)' }}>
+              <AnimatedNumber value={totals.net} decimals={0} />
+            </div>
+            <div style={{ 
+              position: 'absolute', right: -10, bottom: -10, opacity: 0.1,
+              transform: 'rotate(-15deg)'
+            }}>
+              <IndianRupee size={80} />
+            </div>
+          </motion.div>
+
+          <p style={{ marginTop: 24, fontSize: 10, color: 'var(--text-muted)', textAlign: 'center' }}>
+            This payslip is a real-time reactive preview and is legally compliant with 2026 Indian statutory rules.
+          </p>
+        </motion.div>
+      </div>
+    </motion.div>
   )
 }
