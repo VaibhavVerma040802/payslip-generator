@@ -59,12 +59,18 @@ mongoose
   .connect(MONGO_URI)
   .then(() => {
     console.log('✅ Connected to MongoDB');
-    app.listen(PORT, () => {
-      console.log(`🚀 Server running → http://localhost:${PORT}`);
-      console.log(`📋 API Health   → http://localhost:${PORT}/api/health`);
-    });
+    // Vercel handles starting the server internally, so we only listen on a port if NOT on Vercel
+    if (!process.env.VERCEL) {
+      app.listen(PORT, () => {
+        console.log(`🚀 Server running → http://localhost:${PORT}`);
+        console.log(`📋 API Health   → http://localhost:${PORT}/api/health`);
+      });
+    }
   })
   .catch((err) => {
     console.error('❌ MongoDB connection failed:', err.message);
     process.exit(1);
   });
+
+// Export the app so Vercel Serverless Functions can use it
+module.exports = app;
