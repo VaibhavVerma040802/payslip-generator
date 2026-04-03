@@ -17,7 +17,7 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Validation error', errors: err.errors });
     }
     console.error('Create payslip error:', err);
-    res.status(500).json({ success: false, message: 'Failed to create payslip', error: err.message });
+    res.status(500).json({ success: false, message: 'Failed to create payslip' });
   }
 });
 
@@ -36,8 +36,11 @@ router.get('/', async (req, res) => {
         { department: { $regex: search, $options: 'i' } },
       ];
     }
-    if (month) filter.month = month;
-    if (year) filter.year = parseInt(year);
+    if (month && month !== 'All Months') filter.month = month;
+    if (year && year !== 'All Years') {
+      const yearNum = parseInt(year);
+      if (!isNaN(yearNum)) filter.year = yearNum;
+    }
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const total = await Payslip.countDocuments(filter);
@@ -59,7 +62,7 @@ router.get('/', async (req, res) => {
     });
   } catch (err) {
     console.error('List payslips error:', err);
-    res.status(500).json({ success: false, message: 'Failed to fetch payslips', error: err.message });
+    res.status(500).json({ success: false, message: 'Failed to fetch payslips' });
   }
 });
 
@@ -193,7 +196,7 @@ router.get('/stats/summary', async (req, res) => {
     });
   } catch (err) {
     console.error('Stats error:', err);
-    res.status(500).json({ success: false, message: 'Failed to fetch stats', error: err.message });
+    res.status(500).json({ success: false, message: 'Failed to fetch stats' });
   }
 });
 
