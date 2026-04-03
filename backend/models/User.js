@@ -37,6 +37,12 @@ const userSchema = new mongoose.Schema({
   companyLogo: {
     type: String, // Base64 string
   },
+  isVerified: {
+    type: Boolean,
+    default: false,
+  },
+  verificationToken: String,
+  verificationExpires: Date,
   createdAt: {
     type: Date,
     default: Date.now,

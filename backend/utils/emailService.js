@@ -15,6 +15,84 @@ function createTransporter() {
   });
 }
 
+const APP_URL = 'https://payslip-generator-hdz45f91h-vaibhavverma040802s-projects.vercel.app';
+
+/**
+ * Send welcome email with verification link
+ */
+async function sendVerificationEmail(user, token) {
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) return;
+
+  const transporter = createTransporter();
+  const verifyUrl = `${APP_URL}/api/auth/verify-email?token=${token}`;
+
+  const mailOptions = {
+    from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+    to: user.email,
+    subject: `Verify Your PaySlip Pro Account — ${user.companyName}`,
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f6fa; margin: 0; padding: 0; }
+    .wrapper { max-width: 600px; margin: 30px auto; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+    .gold-bar { height: 6px; background: #c9a84c; }
+    .header { background: #1e3a5f; padding: 40px 45px; text-align: center; }
+    .header h1 { color: #fff; margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
+    .header h1 span { color: #c9a84c; }
+    .body { padding: 40px 45px; color: #374151; line-height: 1.6; }
+    .greeting { font-size: 18px; font-weight: 700; color: #1e3a5f; margin-bottom: 12px; }
+    .message { font-size: 15px; color: #4b5563; margin-bottom: 30px; }
+    .btn-container { text-align: center; margin: 35px 0; }
+    .btn { background: #1e3a5f; color: #ffffff !important; padding: 16px 32px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 15px; display: inline-block; box-shadow: 0 4px 15px rgba(30,58,95,0.25); border: 2px solid #c9a84c; transition: all 0.2s; }
+    .token-text { background: #f8f9fa; padding: 12px; border-radius: 8px; font-family: monospace; font-size: 12px; color: #6b7280; text-align: center; margin-top: 25px; }
+    .footer { background: #f9fafb; padding: 25px 45px; border-top: 1px solid #f1f5f9; text-align: center; }
+    .footer p { color: #9ca3af; font-size: 12px; margin: 0; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="gold-bar"></div>
+    <div class="header">
+      <h1>PaySlip<span>Pro</span></h1>
+    </div>
+    <div class="body">
+      <div class="greeting">Welcome to the future of payroll!</div>
+      <div class="message">
+        Hi <strong>${user.companyName}</strong>,<br><br>
+        Thank you for choosing PaySlip Pro. We're excited to help you streamline your payroll management. To get started and secure your account, please verify your email address by clicking the button below.
+      </div>
+
+      <div class="btn-container">
+        <a href="${verifyUrl}" class="btn">Verify Account</a>
+      </div>
+
+      <div class="message" style="font-size:13px;">
+        If the button above doesn't work, you can copy and paste this link into your browser:
+        <br><br>
+        <a href="${verifyUrl}" style="color:#1e3a5f;">${verifyUrl}</a>
+      </div>
+
+      <div class="token-text">
+        This link will expire in 24 hours.
+      </div>
+    </div>
+    <div class="footer">
+      <p>&copy; 2026 PaySlip Pro. All rights reserved.</p>
+      <p>Professional Payroll Management Simplified.</p>
+    </div>
+  </div>
+</body>
+</html>
+    `,
+  };
+
+  const result = await transporter.sendMail(mailOptions);
+  return result;
+}
+
 /**
  * Send payslip as PDF attachment to the employee's email
  * @param {Object} payslip - Payslip document from MongoDB
@@ -127,4 +205,4 @@ function buildEmailHTML(payslip) {
   `;
 }
 
-module.exports = { sendPayslipEmail };
+module.exports = { sendPayslipEmail, sendVerificationEmail };

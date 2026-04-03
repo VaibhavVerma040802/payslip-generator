@@ -22,11 +22,10 @@ export default function Register() {
     setLoading(true)
     try {
       const res = await api.post('/auth/register', form)
-      login(res.data.token, res.data.user)
-      toast.success('Registration successful!')
-      navigate('/profile') // Redirect to profile to complete setup
+      toast.success(res.data.message || 'Registration successful!')
+      navigate('/verify-email') // Redirect to verification landing page
     } catch (err) {
-      toast.error(err.message || 'Registration failed')
+      toast.error(err.response?.data?.message || 'Registration failed')
     } finally {
       setLoading(false)
     }
