@@ -112,21 +112,48 @@ async function sendVerificationEmail(user, token, origin) {
  * @returns {Promise<Object>} Nodemailer send result
  */
 async function sendPayslipEmail(payslip) {
+  console.log(`✉️ Initializing delivery for: ${payslip.employeeEmail}`);
+  
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    throw new Error('Email credentials not configured. Please set EMAIL_USER and EMAIL_PASS in .env');
+    throw new Error('Email credentials missing. Please set EMAIL_USER and EMAIL_PASS in Vercel Dashboard.');
   }
 
   // Generate PDF as buffer
   const pdfBuffer = await generatePayslipPDFBuffer(payslip);
+  
+  if (!pdfBuffer || pdfBuffer.length < 100) {
+    throw new Error('PDF Attachment generation failed or produced a corrupted file.');
+  }
 
-  const transporter = createTransporter();
+  // Use explicit SMTP configuration for better production reliability
+  const transporter = nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true, // Use SSL
+    auth: {
+      user: (process.env.EMAIL_USER || '').trim(),
+      pass: (process.env.EMAIL_PASS || '').trim(),
+    },
+    debug: false,
+    logger: false 
+  });
+
+  // Verify connection before attempting to send
+  try {
+    console.log('🔌 Verifying SMTP Connection...');
+    await transporter.verify();
+    console.log('✅ SMTP Connection State: Valid');
+  } catch (verifyErr) {
+    console.error('❌ SMTP Auth Failure:', verifyErr.message);
+    throw new Error(`SMTP Delivery Failed: ${verifyErr.message}. Verify that you are using a 16-character APP PASSWORD, not your standard Google password.`);
+  }
 
   const fileName = `Payslip_${payslip.employeeName.replace(/\s+/g, '_')}_${payslip.month}_${payslip.year}.pdf`;
 
   const mailOptions = {
     from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
     to: payslip.employeeEmail,
-    subject: `Salary Slip for ${payslip.month} ${payslip.year} — ${payslip.companyName}`,
+    subject: `Monthly Payslip - ${payslip.month} ${payslip.year} — ${payslip.companyName}`,
     html: buildEmailHTML(payslip),
     attachments: [
       {
@@ -137,8 +164,9 @@ async function sendPayslipEmail(payslip) {
     ],
   };
 
+  console.log('🚀 Sending mail...');
   const result = await transporter.sendMail(mailOptions);
-  console.log(`✅ Payslip email sent successfully to: ${payslip.employeeEmail}`);
+  console.log(`✅ Transmission Success: ${result.messageId}`);
   return result;
 }
 

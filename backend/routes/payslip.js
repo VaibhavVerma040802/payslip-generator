@@ -195,6 +195,7 @@ router.post('/:id/email', async (req, res) => {
     const payslipToSend = { ...payslip.toObject(), employeeEmail: targetEmail };
 
     await sendPayslipEmail(payslipToSend);
+    console.log(`✅ Email process completed for: ${targetEmail}`);
 
     // Mark email as sent
     payslip.emailSent = true;
@@ -207,11 +208,12 @@ router.post('/:id/email', async (req, res) => {
       sentTo: targetEmail,
     });
   } catch (err) {
-    console.error('📧 Email payslip error:', err);
+    console.error('📧 Email Transmission CRASH:', err);
     res.status(500).json({ 
       success: false, 
-      message: err.message || 'Failed to send email',
-      hint: 'If generation worked but email failed, check your Vercel Environment Variables for EMAIL_USER and EMAIL_PASS.'
+      message: err.message || 'Server encountered an error while sending email.',
+      error: err.toString(),
+      hint: 'Ensure your Gmail App Password is correct and added to Vercel Environment Variables.'
     });
   }
 });

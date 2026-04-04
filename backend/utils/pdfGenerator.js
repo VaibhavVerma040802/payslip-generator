@@ -123,13 +123,16 @@ function drawPayslip(doc, payslip) {
   doc.rect(0, 0, PAGE_W, 4).fill(COLORS.gold);
 
   let hasLogo = false;
-  if (payslip.companyLogo) {
+  if (payslip.companyLogo && typeof payslip.companyLogo === 'string' && payslip.companyLogo.startsWith('data:image')) {
     try {
-      const logoBuffer = Buffer.from(payslip.companyLogo.split(',')[1] || payslip.companyLogo, 'base64');
-      doc.image(logoBuffer, MARGIN, 24, { fit: [80, 50] });
-      hasLogo = true;
+      const logoData = payslip.companyLogo.split(',')[1];
+      if (logoData) {
+        const logoBuffer = Buffer.from(logoData, 'base64');
+        doc.image(logoBuffer, MARGIN, 24, { fit: [80, 50] });
+        hasLogo = true;
+      }
     } catch (e) {
-      console.error('Logo render failed:', e.message);
+      console.warn('⚠️ Logo render failed (Fallback to text):', e.message);
     }
   }
 

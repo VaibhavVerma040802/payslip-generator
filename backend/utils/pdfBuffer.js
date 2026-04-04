@@ -24,16 +24,23 @@ function generatePayslipPDFBuffer(payslip) {
       });
 
       const chunks = [];
-      doc.on('data', (chunk) => chunks.push(chunk));
-      doc.on('end', () => resolve(Buffer.concat(chunks)));
+      doc.on('data', (chunk) => {
+        chunks.push(chunk);
+      });
+      doc.on('end', () => {
+        const finalBuffer = Buffer.concat(chunks);
+        console.log(`📑 PDF Generation Complete. Buffer Size: ${finalBuffer.length} bytes`);
+        resolve(finalBuffer);
+      });
       doc.on('error', (err) => {
-        console.error('PDF Buffer Stream Error:', err);
+        console.error('❌ PDF Kit Internal Error:', err);
         reject(err);
       });
 
       // Execute unified drawing logic
-      // Note: doc.end() is called inside drawPayslip
+      console.log('🎨 Starting PDF Drawing Engine...');
       drawPayslip(doc, payslip);
+      console.log('🏁 PDF Drawing Instructions Sent to Stream');
     } catch (err) {
       console.error('CRITICAL: PDF Buffer Generation Exception:', err);
       reject(err);
