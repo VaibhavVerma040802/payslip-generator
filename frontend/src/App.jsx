@@ -1,3 +1,4 @@
+// PaySlip Pro - Enterprise Statutory Payroll Engine (Final Deployment Trigger)
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Layout from './components/Layout'
 import Dashboard from './pages/Dashboard'
