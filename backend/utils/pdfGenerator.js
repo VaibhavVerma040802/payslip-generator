@@ -21,15 +21,16 @@ const COLORS = {
   totalNetRow: '#DDE7D3', 
 };
 
-// Font paths
-const FONT_REGULAR_PATH = path.join(__dirname, '../assets/fonts/Inter-Regular.ttf');
-const FONT_BOLD_PATH = path.join(__dirname, '../assets/fonts/Inter-Bold.ttf');
+// Font paths (Using process.cwd() for Vercel/production resilience)
+const FONT_REGULAR_PATH = path.resolve(process.cwd(), 'backend/assets/fonts/Inter-Regular.ttf');
+const FONT_BOLD_PATH = path.resolve(process.cwd(), 'backend/assets/fonts/Inter-Bold.ttf');
 
 /**
  * Format a number as Indian Rupee string
  */
 function formatINR(amount) {
   const num = parseFloat(amount) || 0;
+  if (isNaN(num)) return 'Rs. 0.00';
   return 'Rs. ' + num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
@@ -37,13 +38,16 @@ function formatINR(amount) {
  * Convert number to words (Indian system)
  */
 function numberToWords(num) {
+  const amount = parseFloat(num) || 0;
+  if (isNaN(amount) || amount === 0) return 'Zero';
+
   const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
     'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen',
     'Seventeen', 'Eighteen', 'Nineteen'];
   const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
 
   function convert(n) {
-    if (n === 0) return '';
+    if (isNaN(n) || n === 0) return '';
     if (n < 20) return ones[n] + ' ';
     if (n < 100) return tens[Math.floor(n / 10)] + ' ' + ones[n % 10] + ' ';
     if (n < 1000) return ones[Math.floor(n / 100)] + ' Hundred ' + convert(n % 100);
@@ -52,8 +56,8 @@ function numberToWords(num) {
     return convert(Math.floor(n / 10000000)) + 'Crore ' + convert(n % 10000000);
   }
 
-  const integer = Math.floor(num);
-  const decimal = Math.round((num - integer) * 100);
+  const integer = Math.floor(amount);
+  const decimal = Math.round((amount - integer) * 100);
   let words = convert(integer).trim() || 'Zero';
   words = words + ' Rupees';
   if (decimal > 0) words += ' and ' + convert(decimal).trim() + ' Paise';

@@ -13,8 +13,29 @@ router.use(auth);
 // ─────────────────────────────────────────────────────────────
 router.post('/', async (req, res) => {
   try {
-    const payslipData = { ...req.body, user: req.user._id };
+    const userId = req.user ? req.user._id : null;
+    if (!userId) {
+      console.error('❌ Create payslip error: req.user is undefined');
+      return res.status(401).json({ success: false, message: 'Authentication required' });
+    }
+
+    console.log(`📝 Creating payslip for employee: ${req.body.employeeName} (User ID: ${userId})`);
     
+    // Defensive numeric casting
+    const numericFields = [
+      'annualCTC', 'stipend', 'employerPF', 'basicSalary', 'hra', 
+      'conveyanceAllowance', 'medicalAllowance', 'specialAllowance', 'otherEarnings',
+      'providentFund', 'esi', 'tds', 'professionalTax', 'loanDeduction', 'otherDeductions',
+      'workingDays', 'paidDays', 'year'
+    ];
+
+    const payslipData = { ...req.body, user: userId };
+    
+    numericFields.forEach(field => {
+      const val = parseFloat(payslipData[field]);
+      payslipData[field] = isNaN(val) ? 0 : val;
+    });
+
     // Automatically inherit branding if missing in payload
     if (!payslipData.companyLogo && req.user.companyLogo) {
       payslipData.companyLogo = req.user.companyLogo;
@@ -22,17 +43,26 @@ router.post('/', async (req, res) => {
     
     const payslip = new Payslip(payslipData);
     await payslip.save();
+    
+    console.log(`✅ Payslip saved successfully: ${payslip._id}`);
     res.status(201).json({ success: true, message: 'Payslip created successfully', data: payslip });
   } catch (err) {
+    console.error('❌ Create payslip CRASH:', err);
+    
+    // Explicitly handle validation errors to help the user
     if (err.name === 'ValidationError') {
-      return res.status(400).json({ success: false, message: 'Validation error', errors: err.errors });
+      const errors = Object.values(err.errors).map(e => e.message);
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Validation failed: ' + errors.join(', '),
+        details: err.errors 
+      });
     }
-    console.error('Create payslip error:', err);
+
     res.status(500).json({ 
       success: false, 
-      message: 'Failed to create payslip',
-      error: err.message,
-      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined 
+      message: 'Critical error: ' + err.message,
+      type: err.name
     });
   }
 });

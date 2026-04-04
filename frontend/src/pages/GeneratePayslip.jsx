@@ -175,7 +175,7 @@ export default function GeneratePayslip() {
       toast.success('Payslip generated!')
       navigate(`/payslips/${res.data.data._id}`)
     } catch (err) {
-      toast.error('Failed to generate payslip')
+      toast.error(err.message || 'Failed to generate payslip')
     } finally {
       setSubmitting(false)
     }
