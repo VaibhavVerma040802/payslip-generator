@@ -366,4 +366,10 @@ function generatePayslipPDF(payslip, res) {
   }
 }
 
-module.exports = { generatePayslipPDF, drawPayslip };
+/**
+ * Main PDF drawing function (Internal & Exported)
+ */
+module.exports = { 
+  generatePayslipPDF,
+  drawPayslip 
+};

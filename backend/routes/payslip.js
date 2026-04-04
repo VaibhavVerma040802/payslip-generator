@@ -207,11 +207,12 @@ router.post('/:id/email', async (req, res) => {
       sentTo: targetEmail,
     });
   } catch (err) {
-    console.error('Email payslip error:', err);
-    const message = err.message.includes('credentials')
-      ? err.message
-      : 'Failed to send email. Check your email credentials in .env';
-    res.status(500).json({ success: false, message });
+    console.error('📧 Email payslip error:', err);
+    res.status(500).json({ 
+      success: false, 
+      message: err.message || 'Failed to send email',
+      hint: 'If generation worked but email failed, check your Vercel Environment Variables for EMAIL_USER and EMAIL_PASS.'
+    });
   }
 });
 

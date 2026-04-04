@@ -1,5 +1,9 @@
 const PDFDocument = require('pdfkit');
-const { drawPayslip } = require('./pdfGenerator');
+const generator = require('./pdfGenerator');
+const { drawPayslip } = generator;
+
+console.log('PDF Generator Keys:', Object.keys(generator));
+console.log('drawPayslip type:', typeof drawPayslip);
 
 /**
  * Generates payslip PDF as a Buffer (for email attachments)
