@@ -22,8 +22,8 @@ const COLORS = {
 };
 
 // Font paths
-const FONT_REGULAR = path.join(__dirname, '../assets/fonts/Inter-Regular.ttf');
-const FONT_BOLD = path.join(__dirname, '../assets/fonts/Inter-Bold.ttf');
+const FONT_REGULAR_PATH = path.join(__dirname, '../assets/fonts/Inter-Regular.ttf');
+const FONT_BOLD_PATH = path.join(__dirname, '../assets/fonts/Inter-Bold.ttf');
 
 /**
  * Format a number as Indian Rupee string
@@ -63,16 +63,32 @@ function numberToWords(num) {
 
 /**
  * Core drawing logic shared between direct download and email attachments.
- * Embeds custom fonts for layout stability.
+ * Embeds custom fonts for layout stability with robust fallback.
  */
 function drawPayslip(doc, payslip) {
-  // Register and set default font
+  let fontRegular = 'Helvetica';
+  let fontBold = 'Helvetica-Bold';
+
+  // Register fonts defensively
   try {
-    doc.registerFont('Inter', FONT_REGULAR);
-    doc.registerFont('Inter-Bold', FONT_BOLD);
-    doc.font('Inter');
+    if (fs.existsSync(FONT_REGULAR_PATH)) {
+      doc.registerFont('Inter', FONT_REGULAR_PATH);
+      fontRegular = 'Inter';
+    } else {
+      console.warn('Inter Regular font file missing at:', FONT_REGULAR_PATH);
+    }
+
+    if (fs.existsSync(FONT_BOLD_PATH)) {
+      doc.registerFont('Inter-Bold', FONT_BOLD_PATH);
+      fontBold = 'Inter-Bold';
+    } else {
+      console.warn('Inter Bold font file missing at:', FONT_BOLD_PATH);
+    }
+    
+    // Set default if Inter is available
+    doc.font(fontRegular);
   } catch (err) {
-    console.warn('Custom fonts not found, falling back to Helvetica:', err.message);
+    console.warn('Graceful font fallback initiated:', err.message);
   }
 
   const PAGE_W = 595.28;
@@ -91,20 +107,20 @@ function drawPayslip(doc, payslip) {
       doc.image(logoBuffer, MARGIN, 24, { fit: [80, 50] });
       hasLogo = true;
     } catch (e) {
-      console.error('Error loading company logo:', e);
+      console.error('Logo render failed:', e.message);
     }
   }
 
   const textX = hasLogo ? MARGIN + 95 : MARGIN;
 
   doc
-    .font('Inter-Bold')
+    .font(fontBold)
     .fontSize(18)
     .fillColor(COLORS.white)
     .text(payslip.companyName.toUpperCase(), textX, 28, { width: CONTENT_W * 0.55 });
 
   doc
-    .font('Inter')
+    .font(fontRegular)
     .fontSize(8)
     .fillColor(COLORS.lightGold)
     .text(payslip.companyAddress, textX, 50, { width: CONTENT_W * 0.55 });
@@ -119,13 +135,13 @@ function drawPayslip(doc, payslip) {
   }
 
   doc
-    .font('Inter-Bold')
+    .font(fontBold)
     .fontSize(14)
     .fillColor(COLORS.gold)
     .text('SALARY SLIP', MARGIN + CONTENT_W * 0.67, 28, { width: CONTENT_W * 0.33, align: 'right' });
 
   doc
-    .font('Inter')
+    .font(fontRegular)
     .fontSize(10)
     .fillColor(COLORS.lightGold)
     .text(`${payslip.month.toUpperCase()} ${payslip.year}`, MARGIN + CONTENT_W * 0.67, 48, {
@@ -135,7 +151,7 @@ function drawPayslip(doc, payslip) {
 
   if (payslip.annualCTC > 0) {
     doc
-      .font('Inter-Bold')
+      .font(fontBold)
       .fontSize(8)
       .fillColor(COLORS.gold)
       .text(`ANNUAL CTC: ${formatINR(payslip.annualCTC)}`, MARGIN + CONTENT_W * 0.67, 60, {
@@ -145,7 +161,7 @@ function drawPayslip(doc, payslip) {
   }
 
   doc
-    .font('Inter')
+    .font(fontRegular)
     .fontSize(8)
     .fillColor('#aac4e0')
     .text(`Pay Date: ${payslip.payDate}`, MARGIN + CONTENT_W * 0.67, 72, {
@@ -156,7 +172,7 @@ function drawPayslip(doc, payslip) {
   // ── EMPLOYEE INFO SECTION ────────────────────────────────────────────────
   let y = 120;
   doc.rect(MARGIN, y, CONTENT_W, 105).fill(COLORS.offWhite).stroke(COLORS.lightGray);
-  doc.font('Inter-Bold').fontSize(9).fillColor(COLORS.navy).text('EMPLOYEE DETAILS', MARGIN + 10, y + 8);
+  doc.font(fontBold).fontSize(9).fillColor(COLORS.navy).text('EMPLOYEE DETAILS', MARGIN + 10, y + 8);
   doc.rect(MARGIN + 10, y + 19, 100, 1.5).fill(COLORS.gold);
   y += 28;
 
@@ -180,8 +196,8 @@ function drawPayslip(doc, payslip) {
     const fx = MARGIN + col * colW + 10;
     const fy = y + row * 17;
 
-    doc.font('Inter').fontSize(8).fillColor(COLORS.gray).text(field[0] + ':', fx, fy, { width: 90 });
-    doc.font('Inter-Bold').fontSize(8.5).fillColor(COLORS.darkGray).text(field[1], fx + 95, fy, { width: colW - 115 });
+    doc.font(fontRegular).fontSize(8).fillColor(COLORS.gray).text(field[0] + ':', fx, fy, { width: 90 });
+    doc.font(fontBold).fontSize(8.5).fillColor(COLORS.darkGray).text(field[1], fx + 95, fy, { width: colW - 115 });
   });
 
   // ── WORKING DAYS ─────────────────────────────────────────────────────────
@@ -197,12 +213,12 @@ function drawPayslip(doc, payslip) {
     const bx = MARGIN + i * (daysBoxW + 10);
     doc.rect(bx, y, daysBoxW, 30).fill(i === 0 ? COLORS.navy : COLORS.offWhite).stroke(COLORS.lightGray);
     doc
-      .font('Inter')
+      .font(fontRegular)
       .fontSize(7.5)
       .fillColor(i === 0 ? COLORS.lightGold : COLORS.gray)
       .text(item[0], bx + 8, y + 5, { width: daysBoxW - 16 });
     doc
-      .font('Inter-Bold')
+      .font(fontBold)
       .fontSize(13)
       .fillColor(i === 0 ? COLORS.white : COLORS.navy)
       .text(String(item[1]), bx + 8, y + 14, { width: daysBoxW - 16 });
@@ -218,7 +234,7 @@ function drawPayslip(doc, payslip) {
 
   doc.rect(MARGIN, y, tableW, 22).fill(COLORS.navy);
   doc
-    .font('Inter-Bold').fontSize(9).fillColor(COLORS.gold)
+    .font(fontBold).fontSize(9).fillColor(COLORS.gold)
     .text('EARNINGS', COL.earning + 10, y + 7)
     .text('AMOUNT (Rs.)', COL.earningAmt, y + 7, { width: 80, align: 'right' })
     .text('DEDUCTIONS', COL.deduction + 10, y + 7)
@@ -256,12 +272,12 @@ function drawPayslip(doc, payslip) {
     doc.moveTo(MARGIN + tableW * 0.5, y).lineTo(MARGIN + tableW * 0.5, y + ROW_H).strokeColor(COLORS.lightGray).lineWidth(0.3).stroke();
 
     if (earnings[i]) {
-      doc.font('Inter').fontSize(8.5).fillColor(COLORS.darkGray).text(earnings[i][0], COL.earning + 10, y + 5);
-      doc.font('Inter-Bold').fontSize(8.5).fillColor('#065f46').text(formatINR(earnings[i][1]), COL.earningAmt, y + 5, { width: 80, align: 'right' });
+      doc.font(fontRegular).fontSize(8.5).fillColor(COLORS.darkGray).text(earnings[i][0], COL.earning + 10, y + 5);
+      doc.font(fontBold).fontSize(8.5).fillColor('#065f46').text(formatINR(earnings[i][1]), COL.earningAmt, y + 5, { width: 80, align: 'right' });
     }
     if (deductions[i]) {
-      doc.font('Inter').fontSize(8.5).fillColor(COLORS.darkGray).text(deductions[i][0], COL.deduction + 10, y + 5);
-      doc.font('Inter-Bold').fontSize(8.5).fillColor('#7f1d1d').text(formatINR(deductions[i][1]), COL.deductionAmt, y + 5, { width: 80, align: 'right' });
+      doc.font(fontRegular).fontSize(8.5).fillColor(COLORS.darkGray).text(deductions[i][0], COL.deduction + 10, y + 5);
+      doc.font(fontBold).fontSize(8.5).fillColor('#7f1d1d').text(formatINR(deductions[i][1]), COL.deductionAmt, y + 5, { width: 80, align: 'right' });
     }
     y += ROW_H;
   }
@@ -269,7 +285,7 @@ function drawPayslip(doc, payslip) {
   doc.rect(MARGIN, y, tableW, 22).fill('#e8f0fe');
   doc.moveTo(MARGIN + tableW * 0.5, y).lineTo(MARGIN + tableW * 0.5, y + 22).strokeColor(COLORS.lightGray).lineWidth(0.5).stroke();
   doc
-    .font('Inter-Bold').fontSize(9).fillColor(COLORS.navy)
+    .font(fontBold).fontSize(9).fillColor(COLORS.navy)
     .text('GROSS EARNINGS', COL.earning + 10, y + 7)
     .text(formatINR(payslip.grossEarnings), COL.earningAmt, y + 7, { width: 80, align: 'right' })
     .text('TOTAL DEDUCTIONS', COL.deduction + 10, y + 7)
@@ -280,19 +296,19 @@ function drawPayslip(doc, payslip) {
   // ── NET SALARY BAND ──────────────────────────────────────────────────────
   doc.rect(MARGIN, y, tableW, 48).fill(COLORS.navy);
   doc.rect(MARGIN, y, 4, 48).fill(COLORS.gold);
-  doc.font('Inter-Bold').fontSize(11).fillColor(COLORS.gold).text('NET SALARY PAYABLE', MARGIN + 16, y + 8);
+  doc.font(fontBold).fontSize(11).fillColor(COLORS.gold).text('NET SALARY PAYABLE', MARGIN + 16, y + 8);
   doc
-    .font('Inter-Bold').fontSize(18).fillColor(COLORS.white)
+    .font(fontBold).fontSize(18).fillColor(COLORS.white)
     .text(formatINR(payslip.netSalary), MARGIN + CONTENT_W * 0.45, y + 14, { width: CONTENT_W * 0.5, align: 'right' });
   doc
-    .font('Inter').fontSize(8).fillColor('#aac4e0')
+    .font(fontRegular).fontSize(8).fillColor('#aac4e0')
     .text('(' + numberToWords(payslip.netSalary) + ')', MARGIN + 16, y + 30, { width: CONTENT_W - 20 });
 
   // Notes
   if (payslip.notes) {
     y += 58;
-    doc.font('Inter-Bold').fontSize(8).fillColor(COLORS.navy).text('Notes:', MARGIN, y);
-    doc.font('Inter').fontSize(8).fillColor(COLORS.gray).text(payslip.notes, MARGIN + 40, y, { width: CONTENT_W - 40 });
+    doc.font(fontBold).fontSize(8).fillColor(COLORS.navy).text('Notes:', MARGIN, y);
+    doc.font(fontRegular).fontSize(8).fillColor(COLORS.gray).text(payslip.notes, MARGIN + 40, y, { width: CONTENT_W - 40 });
   }
 
   // Signature
@@ -300,7 +316,7 @@ function drawPayslip(doc, payslip) {
   doc.moveTo(MARGIN, y).lineTo(MARGIN + 130, y).strokeColor(COLORS.lightGray).lineWidth(1).stroke();
   doc.moveTo(PAGE_W - MARGIN - 130, y).lineTo(PAGE_W - MARGIN, y).stroke();
   doc
-    .font('Inter').fontSize(8).fillColor(COLORS.gray)
+    .font(fontRegular).fontSize(8).fillColor(COLORS.gray)
     .text("Employee's Signature", MARGIN, y + 5, { width: 130, align: 'center' })
     .text("Authorized Signatory", PAGE_W - MARGIN - 130, y + 5, { width: 130, align: 'center' });
 
@@ -308,9 +324,10 @@ function drawPayslip(doc, payslip) {
   doc.rect(0, PAGE_H - 32, PAGE_W, 32).fill(COLORS.navy);
   doc.rect(0, PAGE_H - 32, PAGE_W, 2).fill(COLORS.gold);
   doc
-    .font('Inter').fontSize(7.5).fillColor('#aac4e0')
+    .font(fontRegular).fontSize(7.5).fillColor('#aac4e0')
     .text('This is a computer-generated payslip and does not require a physical signature.  |  ' + payslip.companyName, 0, PAGE_H - 22, { width: PAGE_W, align: 'center' });
 
+  // IMPORTANT: Ensure the document stream is closed
   doc.end();
 }
 
@@ -338,9 +355,9 @@ function generatePayslipPDF(payslip, res) {
   try {
     drawPayslip(doc, payslip);
   } catch (err) {
-    console.error('PDF drawing error:', err);
+    console.error('CRITICAL: PDF drawing error:', err);
     if (!res.headersSent) {
-      res.status(500).send('Error drawing PDF');
+      res.status(500).json({ error: 'Critical error during PDF generation', details: err.message });
     }
   }
 }

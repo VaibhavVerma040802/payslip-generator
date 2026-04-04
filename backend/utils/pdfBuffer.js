@@ -4,6 +4,7 @@ const { drawPayslip } = require('./pdfGenerator');
 /**
  * Generates payslip PDF as a Buffer (for email attachments)
  * Uses the SAME unified drawing logic as direct downloads.
+ * Hardened with error resilience for serverless environments.
  */
 function generatePayslipPDFBuffer(payslip) {
   return new Promise((resolve, reject) => {
@@ -27,9 +28,10 @@ function generatePayslipPDFBuffer(payslip) {
       });
 
       // Execute unified drawing logic
+      // Note: doc.end() is called inside drawPayslip
       drawPayslip(doc, payslip);
     } catch (err) {
-      console.error('PDF Buffer Generation Exception:', err);
+      console.error('CRITICAL: PDF Buffer Generation Exception:', err);
       reject(err);
     }
   });
