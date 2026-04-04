@@ -20,6 +20,10 @@ const COLORS = {
   netBg: '#1e3a5f',
 };
 
+// Font paths
+const FONT_REGULAR = path.join(__dirname, '../assets/fonts/Inter-Regular.ttf');
+const FONT_BOLD = path.join(__dirname, '../assets/fonts/Inter-Bold.ttf');
+
 /**
  * Format a number as Indian Rupee string
  */
@@ -57,41 +61,28 @@ function numberToWords(num) {
 }
 
 /**
- * Generate a payslip PDF and pipe it to the response
- * @param {Object} payslip - Payslip document from MongoDB
- * @param {Object} res - Express response object
+ * Core drawing logic shared between direct download and email attachments.
+ * Embeds custom fonts for layout stability.
  */
-function generatePayslipPDF(payslip, res) {
-  const doc = new PDFDocument({
-    size: 'A4',
-    margin: 0,
-    info: {
-      Title: `Payslip - ${payslip.employeeName} - ${payslip.month} ${payslip.year}`,
-      Author: payslip.companyName,
-      Subject: 'Salary Slip',
-    },
-  });
+function drawPayslip(doc, payslip) {
+  // Register and set default font
+  try {
+    doc.registerFont('Inter', FONT_REGULAR);
+    doc.registerFont('Inter-Bold', FONT_BOLD);
+    doc.font('Inter');
+  } catch (err) {
+    console.warn('Custom fonts not found, falling back to Helvetica:', err.message);
+  }
 
   const PAGE_W = 595.28;
   const PAGE_H = 841.89;
   const MARGIN = 40;
   const CONTENT_W = PAGE_W - MARGIN * 2;
 
-  // Pipe to response
-  res.setHeader('Content-Type', 'application/pdf');
-  res.setHeader(
-    'Content-Disposition',
-    `attachment; filename="Payslip_${payslip.employeeName.replace(/\s+/g, '_')}_${payslip.month}_${payslip.year}.pdf"`
-  );
-  doc.pipe(res);
-
   // ── HEADER BAND ──────────────────────────────────────────────────────────
   doc.rect(0, 0, PAGE_W, 110).fill(COLORS.navy);
-
-  // Gold accent line at very top
   doc.rect(0, 0, PAGE_W, 4).fill(COLORS.gold);
 
-  // Company Logo (from Base64 or defaults to text)
   let hasLogo = false;
   if (payslip.companyLogo) {
     try {
@@ -105,16 +96,14 @@ function generatePayslipPDF(payslip, res) {
 
   const textX = hasLogo ? MARGIN + 95 : MARGIN;
 
-  // Company Name
   doc
-    .font('Helvetica-Bold')
+    .font('Inter-Bold')
     .fontSize(18)
     .fillColor(COLORS.white)
     .text(payslip.companyName.toUpperCase(), textX, 28, { width: CONTENT_W * 0.55 });
 
-  // Company contact info
   doc
-    .font('Helvetica')
+    .font('Inter')
     .fontSize(8)
     .fillColor(COLORS.lightGold)
     .text(payslip.companyAddress, textX, 50, { width: CONTENT_W * 0.55 });
@@ -128,15 +117,14 @@ function generatePayslipPDF(payslip, res) {
     );
   }
 
-  // PAYSLIP label (top right)
   doc
-    .font('Helvetica-Bold')
+    .font('Inter-Bold')
     .fontSize(14)
     .fillColor(COLORS.gold)
     .text('SALARY SLIP', MARGIN + CONTENT_W * 0.67, 28, { width: CONTENT_W * 0.33, align: 'right' });
 
   doc
-    .font('Helvetica')
+    .font('Inter')
     .fontSize(10)
     .fillColor(COLORS.lightGold)
     .text(`${payslip.month.toUpperCase()} ${payslip.year}`, MARGIN + CONTENT_W * 0.67, 48, {
@@ -146,7 +134,7 @@ function generatePayslipPDF(payslip, res) {
 
   if (payslip.annualCTC > 0) {
     doc
-      .font('Helvetica-Bold')
+      .font('Inter-Bold')
       .fontSize(8)
       .fillColor(COLORS.gold)
       .text(`ANNUAL CTC: ${formatINR(payslip.annualCTC)}`, MARGIN + CONTENT_W * 0.67, 60, {
@@ -156,7 +144,7 @@ function generatePayslipPDF(payslip, res) {
   }
 
   doc
-    .font('Helvetica')
+    .font('Inter')
     .fontSize(8)
     .fillColor('#aac4e0')
     .text(`Pay Date: ${payslip.payDate}`, MARGIN + CONTENT_W * 0.67, 72, {
@@ -166,20 +154,9 @@ function generatePayslipPDF(payslip, res) {
 
   // ── EMPLOYEE INFO SECTION ────────────────────────────────────────────────
   let y = 120;
-
-  // Section background
   doc.rect(MARGIN, y, CONTENT_W, 105).fill(COLORS.offWhite).stroke(COLORS.lightGray);
-
-  // Section label
-  doc
-    .font('Helvetica-Bold')
-    .fontSize(9)
-    .fillColor(COLORS.navy)
-    .text('EMPLOYEE DETAILS', MARGIN + 10, y + 8);
-
-  // Gold underline
+  doc.font('Inter-Bold').fontSize(9).fillColor(COLORS.navy).text('EMPLOYEE DETAILS', MARGIN + 10, y + 8);
   doc.rect(MARGIN + 10, y + 19, 100, 1.5).fill(COLORS.gold);
-
   y += 28;
 
   const empFields = [
@@ -202,17 +179,12 @@ function generatePayslipPDF(payslip, res) {
     const fx = MARGIN + col * colW + 10;
     const fy = y + row * 17;
 
-    doc.font('Helvetica').fontSize(8).fillColor(COLORS.gray).text(field[0] + ':', fx, fy, { width: 90 });
-    doc
-      .font('Helvetica-Bold')
-      .fontSize(8.5)
-      .fillColor(COLORS.darkGray)
-      .text(field[1], fx + 95, fy, { width: colW - 115 });
+    doc.font('Inter').fontSize(8).fillColor(COLORS.gray).text(field[0] + ':', fx, fy, { width: 90 });
+    doc.font('Inter-Bold').fontSize(8.5).fillColor(COLORS.darkGray).text(field[1], fx + 95, fy, { width: colW - 115 });
   });
 
   // ── WORKING DAYS ─────────────────────────────────────────────────────────
   y += halfFields * 17 + 14;
-
   const daysBoxW = (CONTENT_W - 20) / 3;
   const daysData = [
     ['Working Days', payslip.workingDays],
@@ -224,12 +196,12 @@ function generatePayslipPDF(payslip, res) {
     const bx = MARGIN + i * (daysBoxW + 10);
     doc.rect(bx, y, daysBoxW, 30).fill(i === 0 ? COLORS.navy : COLORS.offWhite).stroke(COLORS.lightGray);
     doc
-      .font('Helvetica')
+      .font('Inter')
       .fontSize(7.5)
       .fillColor(i === 0 ? COLORS.lightGold : COLORS.gray)
       .text(item[0], bx + 8, y + 5, { width: daysBoxW - 16 });
     doc
-      .font('Helvetica-Bold')
+      .font('Inter-Bold')
       .fontSize(13)
       .fillColor(i === 0 ? COLORS.white : COLORS.navy)
       .text(String(item[1]), bx + 8, y + 14, { width: daysBoxW - 16 });
@@ -237,54 +209,33 @@ function generatePayslipPDF(payslip, res) {
 
   // ── EARNINGS & DEDUCTIONS TABLE ───────────────────────────────────────────
   y += 44;
-
   const tableW = CONTENT_W;
   const COL = {
-    earning: MARGIN,
-    earningAmt: MARGIN + tableW * 0.32,
-    deduction: MARGIN + tableW * 0.5,
-    deductionAmt: MARGIN + tableW * 0.82,
+    earning: MARGIN, earningAmt: MARGIN + tableW * 0.32,
+    deduction: MARGIN + tableW * 0.5, deductionAmt: MARGIN + tableW * 0.82,
   };
 
-  // Table header
   doc.rect(MARGIN, y, tableW, 22).fill(COLORS.navy);
-
   doc
-    .font('Helvetica-Bold')
-    .fontSize(9)
-    .fillColor(COLORS.gold)
+    .font('Inter-Bold').fontSize(9).fillColor(COLORS.gold)
     .text('EARNINGS', COL.earning + 10, y + 7)
     .text('AMOUNT (Rs.)', COL.earningAmt, y + 7, { width: 80, align: 'right' })
     .text('DEDUCTIONS', COL.deduction + 10, y + 7)
     .text('AMOUNT (Rs.)', COL.deductionAmt, y + 7, { width: 80, align: 'right' });
 
-  // Vertical divider
-  doc
-    .moveTo(MARGIN + tableW * 0.5, y)
-    .lineTo(MARGIN + tableW * 0.5, y + 22)
-    .strokeColor(COLORS.gold)
-    .lineWidth(0.5)
-    .stroke();
-
+  doc.moveTo(MARGIN + tableW * 0.5, y).lineTo(MARGIN + tableW * 0.5, y + 22).strokeColor(COLORS.gold).lineWidth(0.5).stroke();
   y += 22;
 
-  let earnings = [];
-  if (payslip.employmentType === 'intern') {
-    earnings = [
-      ['Monthly Stipend', payslip.stipend || payslip.grossEarnings],
-    ];
-  } else {
-    earnings = [
-      ['Basic Salary (50%)', payslip.basicSalary],
-      ['House Rent Allowance (40%)', payslip.hra],
-      ['Special Allowance', payslip.specialAllowance],
-      ['Employer PF Contribution', payslip.employerPF],
-    ];
-  }
+  const earnings = payslip.employmentType === 'intern' 
+    ? [['Monthly Stipend', payslip.stipend || payslip.grossEarnings]]
+    : [
+        ['Basic Salary (50%)', payslip.basicSalary],
+        ['House Rent Allowance (40%)', payslip.hra],
+        ['Special Allowance', payslip.specialAllowance],
+        ['Employer PF Contribution', payslip.employerPF],
+      ];
 
-  if (payslip.otherEarnings > 0) {
-    earnings.push([payslip.otherEarningsLabel || 'Other Earnings', payslip.otherEarnings]);
-  }
+  if (payslip.otherEarnings > 0) earnings.push([payslip.otherEarningsLabel || 'Other Earnings', payslip.otherEarnings]);
 
   const deductions = [
     ['Employee PF', payslip.providentFund],
@@ -301,144 +252,96 @@ function generatePayslipPDF(payslip, res) {
   for (let i = 0; i < maxRows; i++) {
     const rowBg = i % 2 === 0 ? COLORS.tableRow1 : COLORS.tableRow2;
     doc.rect(MARGIN, y, tableW, ROW_H).fill(rowBg);
+    doc.moveTo(MARGIN + tableW * 0.5, y).lineTo(MARGIN + tableW * 0.5, y + ROW_H).strokeColor(COLORS.lightGray).lineWidth(0.3).stroke();
 
-    // Vertical divider line
-    doc
-      .moveTo(MARGIN + tableW * 0.5, y)
-      .lineTo(MARGIN + tableW * 0.5, y + ROW_H)
-      .strokeColor(COLORS.lightGray)
-      .lineWidth(0.3)
-      .stroke();
-
-    // Earnings column
     if (earnings[i]) {
-      doc.font('Helvetica').fontSize(8.5).fillColor(COLORS.darkGray).text(earnings[i][0], COL.earning + 10, y + 5);
-      doc
-        .font('Helvetica-Bold')
-        .fontSize(8.5)
-        .fillColor('#065f46')
-        .text(formatINR(earnings[i][1]), COL.earningAmt, y + 5, { width: 80, align: 'right' });
+      doc.font('Inter').fontSize(8.5).fillColor(COLORS.darkGray).text(earnings[i][0], COL.earning + 10, y + 5);
+      doc.font('Inter-Bold').fontSize(8.5).fillColor('#065f46').text(formatINR(earnings[i][1]), COL.earningAmt, y + 5, { width: 80, align: 'right' });
     }
-
-    // Deductions column
     if (deductions[i]) {
-      doc.font('Helvetica').fontSize(8.5).fillColor(COLORS.darkGray).text(deductions[i][0], COL.deduction + 10, y + 5);
-      doc
-        .font('Helvetica-Bold')
-        .fontSize(8.5)
-        .fillColor('#7f1d1d')
-        .text(formatINR(deductions[i][1]), COL.deductionAmt, y + 5, { width: 80, align: 'right' });
+      doc.font('Inter').fontSize(8.5).fillColor(COLORS.darkGray).text(deductions[i][0], COL.deduction + 10, y + 5);
+      doc.font('Inter-Bold').fontSize(8.5).fillColor('#7f1d1d').text(formatINR(deductions[i][1]), COL.deductionAmt, y + 5, { width: 80, align: 'right' });
     }
-
     y += ROW_H;
   }
 
-  // Totals row
   doc.rect(MARGIN, y, tableW, 22).fill('#e8f0fe');
+  doc.moveTo(MARGIN + tableW * 0.5, y).lineTo(MARGIN + tableW * 0.5, y + 22).strokeColor(COLORS.lightGray).lineWidth(0.5).stroke();
   doc
-    .moveTo(MARGIN + tableW * 0.5, y)
-    .lineTo(MARGIN + tableW * 0.5, y + 22)
-    .strokeColor(COLORS.lightGray)
-    .lineWidth(0.5)
-    .stroke();
-
-  doc
-    .font('Helvetica-Bold')
-    .fontSize(9)
-    .fillColor(COLORS.navy)
+    .font('Inter-Bold').fontSize(9).fillColor(COLORS.navy)
     .text('GROSS EARNINGS', COL.earning + 10, y + 7)
     .text(formatINR(payslip.grossEarnings), COL.earningAmt, y + 7, { width: 80, align: 'right' })
     .text('TOTAL DEDUCTIONS', COL.deduction + 10, y + 7)
     .text(formatINR(payslip.totalDeductions), COL.deductionAmt, y + 7, { width: 80, align: 'right' });
 
-  y += 22;
+  y += 30;
 
   // ── NET SALARY BAND ──────────────────────────────────────────────────────
-  y += 8;
   doc.rect(MARGIN, y, tableW, 48).fill(COLORS.navy);
   doc.rect(MARGIN, y, 4, 48).fill(COLORS.gold);
-
+  doc.font('Inter-Bold').fontSize(11).fillColor(COLORS.gold).text('NET SALARY PAYABLE', MARGIN + 16, y + 8);
   doc
-    .font('Helvetica-Bold')
-    .fontSize(11)
-    .fillColor(COLORS.gold)
-    .text('NET SALARY PAYABLE', MARGIN + 16, y + 8);
-
+    .font('Inter-Bold').fontSize(18).fillColor(COLORS.white)
+    .text(formatINR(payslip.netSalary), MARGIN + CONTENT_W * 0.45, y + 14, { width: CONTENT_W * 0.5, align: 'right' });
   doc
-    .font('Helvetica-Bold')
-    .fontSize(18)
-    .fillColor(COLORS.white)
-    .text(formatINR(payslip.netSalary), MARGIN + CONTENT_W * 0.45, y + 14, {
-      width: CONTENT_W * 0.5,
-      align: 'right',
-    });
+    .font('Inter').fontSize(8).fillColor('#aac4e0')
+    .text('(' + numberToWords(payslip.netSalary) + ')', MARGIN + 16, y + 30, { width: CONTENT_W - 20 });
 
-  doc
-    .font('Helvetica')
-    .fontSize(8)
-    .fillColor('#aac4e0')
-    .text(
-      '(' + numberToWords(payslip.netSalary) + ')',
-      MARGIN + 16,
-      y + 30,
-      { width: CONTENT_W - 20 }
-    );
-
-  // ── NOTES ────────────────────────────────────────────────────────────────
+  // Notes
   if (payslip.notes) {
     y += 58;
-    doc
-      .font('Helvetica-Bold')
-      .fontSize(8)
-      .fillColor(COLORS.navy)
-      .text('Notes:', MARGIN, y);
-    doc
-      .font('Helvetica')
-      .fontSize(8)
-      .fillColor(COLORS.gray)
-      .text(payslip.notes, MARGIN + 40, y, { width: CONTENT_W - 40 });
-    y += 20;
+    doc.font('Inter-Bold').fontSize(8).fillColor(COLORS.navy).text('Notes:', MARGIN, y);
+    doc.font('Inter').fontSize(8).fillColor(COLORS.gray).text(payslip.notes, MARGIN + 40, y, { width: CONTENT_W - 40 });
   }
 
-  // ── SIGNATURE SECTION ────────────────────────────────────────────────────
+  // Signature
   y = PAGE_H - 100;
-
+  doc.moveTo(MARGIN, y).lineTo(MARGIN + 130, y).strokeColor(COLORS.lightGray).lineWidth(1).stroke();
+  doc.moveTo(PAGE_W - MARGIN - 130, y).lineTo(PAGE_W - MARGIN, y).stroke();
   doc
-    .moveTo(MARGIN, y)
-    .lineTo(MARGIN + 130, y)
-    .strokeColor(COLORS.lightGray)
-    .lineWidth(1)
-    .stroke();
-
-  doc
-    .moveTo(PAGE_W - MARGIN - 130, y)
-    .lineTo(PAGE_W - MARGIN, y)
-    .stroke();
-
-  doc
-    .font('Helvetica')
-    .fontSize(8)
-    .fillColor(COLORS.gray)
+    .font('Inter').fontSize(8).fillColor(COLORS.gray)
     .text("Employee's Signature", MARGIN, y + 5, { width: 130, align: 'center' })
     .text("Authorized Signatory", PAGE_W - MARGIN - 130, y + 5, { width: 130, align: 'center' });
 
-  // ── FOOTER ───────────────────────────────────────────────────────────────
+  // Footer
   doc.rect(0, PAGE_H - 32, PAGE_W, 32).fill(COLORS.navy);
   doc.rect(0, PAGE_H - 32, PAGE_W, 2).fill(COLORS.gold);
-
   doc
-    .font('Helvetica')
-    .fontSize(7.5)
-    .fillColor('#aac4e0')
-    .text(
-      'This is a computer-generated payslip and does not require a physical signature.  |  ' +
-        payslip.companyName,
-      0,
-      PAGE_H - 22,
-      { width: PAGE_W, align: 'center' }
-    );
+    .font('Inter').fontSize(7.5).fillColor('#aac4e0')
+    .text('This is a computer-generated payslip and does not require a physical signature.  |  ' + payslip.companyName, 0, PAGE_H - 22, { width: PAGE_W, align: 'center' });
 
   doc.end();
 }
 
-module.exports = { generatePayslipPDF };
+/**
+ * Generate a payslip PDF and pipe it to the response
+ */
+function generatePayslipPDF(payslip, res) {
+  const doc = new PDFDocument({
+    size: 'A4',
+    margin: 0,
+    info: {
+      Title: `Payslip - ${payslip.employeeName} - ${payslip.month} ${payslip.year}`,
+      Author: payslip.companyName,
+      Subject: 'Salary Slip',
+    },
+  });
+
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader(
+    'Content-Disposition',
+    `attachment; filename="Payslip_${payslip.employeeName.replace(/\s+/g, '_')}_${payslip.month}_${payslip.year}.pdf"`
+  );
+
+  doc.pipe(res);
+  try {
+    drawPayslip(doc, payslip);
+  } catch (err) {
+    console.error('PDF drawing error:', err);
+    if (!res.headersSent) {
+      res.status(500).send('Error drawing PDF');
+    }
+  }
+}
+
+module.exports = { generatePayslipPDF, drawPayslip };

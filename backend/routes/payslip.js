@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Payslip = require('../models/Payslip');
-const { generatePDFBuffer } = require('../utils/pdfPuppeteer');
+const { generatePayslipPDF } = require('../utils/pdfGenerator');
 const { sendPayslipEmail } = require('../utils/emailService');
 const { auth } = require('./auth');
 
@@ -138,14 +138,7 @@ router.get('/:id/download', async (req, res) => {
     if (!payslip) {
       return res.status(404).json({ success: false, message: 'Payslip not found' });
     }
-    const pdfBuffer = await generatePDFBuffer(payslip);
-    
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader(
-      'Content-Disposition',
-      `attachment; filename="Payslip_${payslip.employeeName.replace(/\s+/g, '_')}_${payslip.month}_${payslip.year}.pdf"`
-    );
-    res.send(pdfBuffer);
+    generatePayslipPDF(payslip, res);
   } catch (err) {
     console.error('PDF generation error:', err);
     res.status(500).json({ success: false, message: 'Failed to generate PDF' });
