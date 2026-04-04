@@ -28,7 +28,12 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Validation error', errors: err.errors });
     }
     console.error('Create payslip error:', err);
-    res.status(500).json({ success: false, message: 'Failed to create payslip' });
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to create payslip',
+      error: err.message,
+      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined 
+    });
   }
 });
 
