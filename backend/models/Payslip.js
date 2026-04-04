@@ -6,15 +6,16 @@ const payslipSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,
+      index: true,
     },
     employmentType: {
       type: String,
       enum: ['regular', 'intern'],
       default: 'regular',
     },
-    annualCTC: { type: Number, default: 0 },
-    employerPF: { type: Number, default: 0 },
-    stipend: { type: Number, default: 0 },
+    annualCTC: { type: Number, default: 0, min: 0 },
+    employerPF: { type: Number, default: 0, min: 0 },
+    stipend: { type: Number, default: 0, min: 0 },
     // ── Company Info ─────────────────────────────────
     companyName: { type: String, required: true, trim: true },
     companyAddress: { type: String, trim: true, default: '' },
@@ -26,7 +27,7 @@ const payslipSchema = new mongoose.Schema(
 
     // ── Employee Info ─────────────────────────────────
     employeeName: { type: String, required: true, trim: true },
-    employeeId: { type: String, required: true, trim: true },
+    employeeId: { type: String, required: true, trim: true, index: true },
     designation: { type: String, required: true, trim: true },
     department: { type: String, required: true, trim: true },
     employeeEmail: { type: String, required: true, trim: true, lowercase: true },
@@ -40,8 +41,8 @@ const payslipSchema = new mongoose.Schema(
     month: { type: String, required: true },
     year: { type: Number, required: true },
     payDate: { type: String, required: true },
-    workingDays: { type: Number, default: 26 },
-    paidDays: { type: Number, default: 26 },
+    workingDays: { type: Number, default: 26, min: 0 },
+    paidDays: { type: Number, default: 26, min: 0 },
 
     // ── Earnings (₹) ─────────────────────────────────
     basicSalary: { type: Number, default: 0, min: 0 },
@@ -62,9 +63,9 @@ const payslipSchema = new mongoose.Schema(
     otherDeductionsLabel: { type: String, default: 'Other Deductions' },
 
     // ── Computed Totals ───────────────────────────────
-    grossEarnings: { type: Number },
-    totalDeductions: { type: Number },
-    netSalary: { type: Number },
+    grossEarnings: { type: Number, min: 0 },
+    totalDeductions: { type: Number, min: 0 },
+    netSalary: { type: Number, min: 0 },
 
     // ── Meta ─────────────────────────────────────────
     notes: { type: String, default: '' },

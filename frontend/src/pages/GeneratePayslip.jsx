@@ -44,7 +44,13 @@ function StepLabel({ num, label, active, completed }) {
   )
 }
 
-function InputField({ label, name, value, onChange, type = 'text', placeholder, icon: Icon, required }) {
+function InputField({ label, name, value, onChange, type = 'text', placeholder, icon: Icon, required, min, max }) {
+  const handleKeyDown = (e) => {
+    if (type === 'number' && (e.key === '-' || e.key === 'e' || e.key === '+')) {
+      e.preventDefault();
+    }
+  };
+
   return (
     <div style={{ marginBottom: 20 }}>
       <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 8, letterSpacing: '0.02em' }}>
@@ -57,6 +63,9 @@ function InputField({ label, name, value, onChange, type = 'text', placeholder, 
           value={value}
           placeholder={placeholder}
           onChange={onChange}
+          onKeyDown={handleKeyDown}
+          min={min}
+          max={max}
           style={{
             width: '100%', padding: Icon ? '12px 14px 12px 42px' : '12px 14px',
             border: '2px solid var(--border)', borderRadius: 12,
@@ -242,21 +251,21 @@ export default function GeneratePayslip() {
                   </div>
                   <InputField label="Payout Date" type="date" value={form.payDate} onChange={e => setForm({...form, payDate: e.target.value})} icon={Calendar} />
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, padding: 20, background: 'var(--bg)', borderRadius: 20, border: '1px solid var(--border)' }}>
-                    <InputField label="Working Days" type="number" value={form.workingDays} onChange={e => setForm({...form, workingDays: e.target.value})} />
-                    <InputField label="Paid Days" type="number" value={form.paidDays} onChange={e => setForm({...form, paidDays: e.target.value})} />
+                    <InputField label="Working Days" type="number" min="0" max="31" value={form.workingDays} onChange={e => setForm({...form, workingDays: Math.max(0, parseInt(e.target.value) || 0)})} />
+                    <InputField label="Paid Days" type="number" min="0" max="31" value={form.paidDays} onChange={e => setForm({...form, paidDays: Math.max(0, parseInt(e.target.value) || 0)})} />
                   </div>
                 </motion.div>
               )}
 
               {step === 3 && (
                 <motion.div key="s3" initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 12 }}>
-                  <InputField label="Annual Cost to Company (CTC)" required type="number" value={form.annualCTC} onChange={e => setForm({...form, annualCTC: e.target.value})} placeholder="Salary in INR" icon={IndianRupee} />
+                  <InputField label="Annual Cost to Company (CTC)" required type="number" min="0" value={form.annualCTC} onChange={e => setForm({...form, annualCTC: Math.max(0, parseFloat(e.target.value) || 0)})} placeholder="Salary in INR" icon={IndianRupee} />
                   
                   {form.employmentType === 'regular' && (
                     <div style={{ padding: 24, background: 'var(--bg)', borderRadius: 24, border: '1px solid var(--border)', marginBottom: 24 }}>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-                        <InputField label="TDS" type="number" value={form.tds} onChange={e => setForm({...form, tds: e.target.value})} placeholder="0" />
-                        <InputField label="Loan/Recovery" type="number" value={form.loanDeduction} onChange={e => setForm({...form, loanDeduction: e.target.value})} placeholder="0" />
+                        <InputField label="TDS" type="number" min="0" value={form.tds} onChange={e => setForm({...form, tds: Math.max(0, parseFloat(e.target.value) || 0)})} placeholder="0" />
+                        <InputField label="Loan/Recovery" type="number" min="0" value={form.loanDeduction} onChange={e => setForm({...form, loanDeduction: Math.max(0, parseFloat(e.target.value) || 0)})} placeholder="0" />
                       </div>
                     </div>
                   )}

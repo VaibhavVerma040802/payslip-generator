@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FileText, Send, DollarSign, TrendingUp, PlusCircle, ArrowRight, Calendar, Building2 } from 'lucide-react'
 import { Plus, ChevronRight } from 'lucide-react'
 import api from '../api'
 import { useAuth } from '../context/AuthContext'
 
-function StatCard({ icon: Icon, label, value, sub, color, delay = 0 }) {
+const StatCard = React.memo(({ icon: Icon, label, value, sub, color, delay = 0 }) => {
   return (
     <div className="fade-up glass" style={{
       animationDelay: `${delay}ms`,
@@ -27,9 +27,9 @@ function StatCard({ icon: Icon, label, value, sub, color, delay = 0 }) {
       </div>
     </div>
   )
-}
+});
 
-function RecentRow({ p, navigate }) {
+const RecentRow = React.memo(({ p, navigate }) => {
   return (
     <div
       onClick={() => navigate(`/payslips/${p._id}`)}
@@ -69,7 +69,7 @@ function RecentRow({ p, navigate }) {
       </div>
     </div>
   )
-}
+});
 
 export default function Dashboard() {
   const { user } = useAuth()

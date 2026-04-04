@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, Filter, Eye, Download, Mail, Trash2, FileText, ChevronLeft, ChevronRight, Loader2, Copy, Plus } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -8,7 +8,7 @@ const MONTHS = ['','January','February','March','April','May','June','July','Aug
 const CURRENT_YEAR = new Date().getFullYear()
 const YEARS = ['', ...Array.from({ length: 5 }, (_, i) => CURRENT_YEAR - 2 + i)]
 
-function EmptyState({ filtered }) {
+const EmptyState = React.memo(({ filtered }) => {
   return (
     <tr>
       <td colSpan={7}>
@@ -29,9 +29,9 @@ function EmptyState({ filtered }) {
       </td>
     </tr>
   )
-}
+});
 
-function ActionBtn({ icon: Icon, label, onClick, color = 'var(--text-muted)', loading }) {
+const ActionBtn = React.memo(({ icon: Icon, label, onClick, color = 'var(--text-muted)', loading }) => {
   return (
     <button
       onClick={e => { e.stopPropagation(); onClick(); }}
@@ -48,7 +48,7 @@ function ActionBtn({ icon: Icon, label, onClick, color = 'var(--text-muted)', lo
       {loading ? <Loader2 size={14} className="animate-spin" /> : <Icon size={15} />}
     </button>
   )
-}
+});
 
 export default function PayslipList() {
   const navigate = useNavigate()
