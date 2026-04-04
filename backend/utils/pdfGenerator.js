@@ -73,26 +73,44 @@ function drawPayslip(doc, payslip) {
   let fontRegular = 'Helvetica';
   let fontBold = 'Helvetica-Bold';
 
-  // Register fonts defensively
+  // Register fonts defensively with double-layered catch logic
   try {
     if (fs.existsSync(FONT_REGULAR_PATH)) {
-      doc.registerFont('Inter', FONT_REGULAR_PATH);
-      fontRegular = 'Inter';
+      try {
+        doc.registerFont('Inter', FONT_REGULAR_PATH);
+        fontRegular = 'Inter';
+      } catch (err) {
+        console.error(`❌ Inter Regular registration failed (Format Error): ${err.message}`);
+        fontRegular = 'Helvetica'; // Explicit fallback on format error
+      }
     } else {
-      console.warn('Inter Regular font file missing at:', FONT_REGULAR_PATH);
+      console.warn('⚠️ Inter Regular font file not found on disk.');
     }
 
     if (fs.existsSync(FONT_BOLD_PATH)) {
-      doc.registerFont('Inter-Bold', FONT_BOLD_PATH);
-      fontBold = 'Inter-Bold';
+      try {
+        doc.registerFont('Inter-Bold', FONT_BOLD_PATH);
+        fontBold = 'Inter-Bold';
+      } catch (err) {
+        console.error(`❌ Inter Bold registration failed (Format Error): ${err.message}`);
+        fontBold = 'Helvetica-Bold'; // Explicit fallback on format error
+      }
     } else {
-      console.warn('Inter Bold font file missing at:', FONT_BOLD_PATH);
+      console.warn('⚠️ Inter Bold font file not found on disk.');
     }
-    
-    // Set default if Inter is available
-    doc.font(fontRegular);
   } catch (err) {
-    console.warn('Graceful font fallback initiated:', err.message);
+    console.error('CRITICAL: Font registration logic crash:', err.message);
+    fontRegular = 'Helvetica';
+    fontBold = 'Helvetica-Bold';
+  }
+
+  // Final validation of font choice
+  try {
+    doc.font(fontRegular);
+  } catch (e) {
+    console.error('Emergency font switch to Helvetica');
+    doc.font('Helvetica');
+    fontRegular = 'Helvetica';
   }
 
   const PAGE_W = 595.28;
