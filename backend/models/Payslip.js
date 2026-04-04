@@ -18,6 +18,7 @@ const payslipSchema = new mongoose.Schema(
     // ── Company Info ─────────────────────────────────
     companyName: { type: String, required: true, trim: true },
     companyAddress: { type: String, trim: true, default: '' },
+    companyLogo: { type: String }, // Base64 or URL
     companyEmail: { type: String, trim: true, default: '' },
     companyPhone: { type: String, trim: true, default: '' },
     companyWebsite: { type: String, trim: true, default: '' },

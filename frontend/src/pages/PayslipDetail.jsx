@@ -252,20 +252,30 @@ export default function PayslipDetail() {
         </button>
 
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 14 }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-              <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 26, fontWeight: 700, color: 'var(--navy)', lineHeight: 1 }}>
-                {p.employeeName}
-              </h1>
-              {p.emailSent && (
-                <span className="badge badge-green">
-                  <CheckCircle2 size={10} /> Emailed
-                </span>
-              )}
+          <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+            {p.companyLogo && (
+              <img 
+                src={p.companyLogo} 
+                alt="Company Logo" 
+                style={{ height: 60, width: 'auto', borderRadius: 12, objectFit: 'contain', background: 'white', padding: 4, border: '1px solid var(--border)' }} 
+              />
+            )}
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 700, color: 'var(--navy)', lineHeight: 1 }}>
+                  {p.employeeName}
+                </h1>
+                {p.emailSent && (
+                  <span className="badge badge-green">
+                    <CheckCircle2 size={10} /> Emailed
+                  </span>
+                )}
+              </div>
+              <p style={{ color: 'var(--text-muted)', marginTop: 5, fontSize: 14 }}>
+                {p.employmentType === 'intern' ? 'Intern' : 'Regular Employee'} · {p.designation} · {p.department}
+              </p>
             </div>
-            <p style={{ color: 'var(--text-muted)', marginTop: 5, fontSize: 14 }}>
-              {p.employmentType === 'intern' ? 'Intern' : 'Regular Employee'} · {p.designation} · {p.department}
-            </p>
+          </div>
             <div style={{ marginTop: 8, display: 'flex', gap: 10 }}>
               <span className="badge" style={{ background: 'var(--surface-2)', color: 'var(--navy)' }}>
                 {p.month} {p.year}
@@ -276,7 +286,6 @@ export default function PayslipDetail() {
                 </span>
               )}
             </div>
-          </div>
 
           {/* Action Buttons */}
           <div style={{ display: 'flex', gap: 10 }}>

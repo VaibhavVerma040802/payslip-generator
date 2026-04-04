@@ -1,32 +1,29 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FileText, Send, DollarSign, TrendingUp, PlusCircle, ArrowRight, Calendar, Building2 } from 'lucide-react'
+import { FileText, Send, DollarSign, TrendingUp, PlusCircle, ArrowRight, Calendar, Building2 } from 'lucide-center'
+import { Plus, ChevronRight } from 'lucide-react'
 import api from '../api'
 import { useAuth } from '../context/AuthContext'
 
 function StatCard({ icon: Icon, label, value, sub, color, delay = 0 }) {
   return (
-    <div className="fade-up" style={{
+    <div className="fade-up glass" style={{
       animationDelay: `${delay}ms`,
-      background: 'var(--surface)',
-      borderRadius: 'var(--radius)',
-      padding: '22px 24px',
-      boxShadow: 'var(--shadow-sm)',
-      border: '1px solid var(--border)',
-      display: 'flex', alignItems: 'flex-start', gap: 16,
+      padding: '24px',
+      display: 'flex', alignItems: 'center', gap: 20,
     }}>
       <div style={{
-        width: 48, height: 48, borderRadius: 14,
-        background: `${color}18`,
+        width: 54, height: 54, borderRadius: 16,
+        background: `${color}10`,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        flexShrink: 0,
+        flexShrink: 0, border: `1px solid ${color}20`
       }}>
-        <Icon size={22} color={color} />
+        <Icon size={24} color={color} />
       </div>
       <div>
-        <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500, marginBottom: 4 }}>{label}</div>
-        <div style={{ fontSize: 26, fontWeight: 700, color: 'var(--text)', lineHeight: 1 }}>{value}</div>
-        {sub && <div style={{ fontSize: 11, color: 'var(--text-light)', marginTop: 4 }}>{sub}</div>}
+        <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 2 }}>{label}</div>
+        <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--navy)', lineHeight: 1 }}>{value}</div>
+        {sub && <div style={{ fontSize: 11, color: 'var(--text-light)', marginTop: 4, fontWeight: 500 }}>{sub}</div>}
       </div>
     </div>
   )
@@ -38,36 +35,36 @@ function RecentRow({ p, navigate }) {
       onClick={() => navigate(`/payslips/${p._id}`)}
       style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '13px 16px',
-        borderRadius: 10,
+        padding: '16px 20px',
+        borderRadius: 14,
         cursor: 'pointer',
-        transition: 'background 0.15s',
+        transition: 'all 0.2s',
+        marginBottom: 4
       }}
-      onMouseEnter={e => e.currentTarget.style.background = 'var(--surface-2)'}
-      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+      className="btn-hover"
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
         <div style={{
-          width: 38, height: 38,
-          borderRadius: 10,
+          width: 44, height: 44,
+          borderRadius: 12,
           background: 'var(--navy)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: 'var(--gold)', fontWeight: 700, fontSize: 14,
-          flexShrink: 0,
+          color: 'var(--gold)', fontWeight: 900, fontSize: 16,
+          flexShrink: 0, boxShadow: '0 4px 12px rgba(15,23,42,0.15)'
         }}>
           {p.employeeName.charAt(0).toUpperCase()}
         </div>
         <div>
-          <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text)' }}>{p.employeeName}</div>
-          <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{p.designation} · {p.month} {p.year}</div>
+          <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--text)' }}>{p.employeeName}</div>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>{p.designation} · {p.month} {p.year}</div>
         </div>
       </div>
       <div style={{ textAlign: 'right' }}>
-        <div style={{ fontWeight: 700, color: 'var(--navy)', fontSize: 14 }}>
+        <div style={{ fontWeight: 800, color: 'var(--emerald)', fontSize: 16 }}>
           ₹{parseFloat(p.netSalary || 0).toLocaleString('en-IN')}
         </div>
         {p.emailSent && (
-          <span className="badge badge-green" style={{ fontSize: 10 }}>✓ Emailed</span>
+          <div className="badge badge-green" style={{ marginTop: 4, transform: 'scale(0.9)', transformOrigin: 'right' }}>Delivered</div>
         )}
       </div>
     </div>
@@ -90,11 +87,7 @@ export default function Dashboard() {
         ])
         setStats(statsRes.data?.data || null)
         setRecent(listRes.data?.data || [])
-      } catch (e) {
-        console.error(e)
-      } finally {
-        setLoading(false)
-      }
+      } catch (e) { console.error(e) } finally { setLoading(false) }
     }
     fetchData()
   }, [])
@@ -103,100 +96,104 @@ export default function Dashboard() {
   const fmtCurrency = (n) => n ? '₹' + parseFloat(n).toLocaleString('en-IN', { maximumFractionDigits: 0 }) : '₹0'
 
   return (
-    <div style={{ padding: '36px 40px', maxWidth: 1100 }}>
-      {/* Header */}
-      <div className="fade-up" style={{ marginBottom: 32, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
+    <div style={{ padding: 'clamp(24px, 5vw, 48px)', maxWidth: 1200, margin: '0 auto' }}>
+      
+      {/* Header Section */}
+      <div className="fade-in" style={{ marginBottom: 40, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap' }}>
         <div>
-          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Calendar size={13} />
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <Calendar size={14} color="var(--gold)" />
             {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
           </div>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 30, fontWeight: 700, color: 'var(--navy)', lineHeight: 1.1 }}>
-            {user?.companyName || 'Dashboard'}
+          <h1 style={{ color: 'var(--navy)', marginBottom: 8, letterSpacing: '-0.02em' }}>
+            {user?.companyName ? `Hello, ${user.companyName.split(' ')[0]}` : 'Dashboard'}
           </h1>
-          <p style={{ color: 'var(--text-muted)', marginTop: 6, fontSize: 14 }}>
-            {!user?.companyName ? "Welcome back — here's your payroll overview." : `Welcome back, ${user.companyName}. Here's your payroll overview.`}
+          <p style={{ color: 'var(--text-muted)', fontSize: 16, fontWeight: 500 }}>
+            Managed <strong>{fmt(stats?.totalPayslips)} slips</strong> in this workspace.
           </p>
         </div>
         <button
           onClick={() => navigate('/generate')}
           style={{
-            display: 'flex', alignItems: 'center', gap: 8,
+            display: 'flex', alignItems: 'center', gap: 10,
             background: 'var(--navy)', color: 'white',
-            border: 'none', borderRadius: 10, padding: '11px 20px',
-            fontWeight: 600, fontSize: 14, cursor: 'pointer',
-            boxShadow: 'var(--shadow)',
-            transition: 'background 0.15s',
+            border: 'none', borderRadius: 14, padding: '14px 28px',
+            fontWeight: 800, fontSize: 15, cursor: 'pointer',
+            boxShadow: '0 10px 20px -5px rgba(15,23,42,0.3)',
+            transition: 'all 0.3s',
           }}
-          onMouseEnter={e => e.currentTarget.style.background = 'var(--navy-light)'}
-          onMouseLeave={e => e.currentTarget.style.background = 'var(--navy)'}
+          className="btn-hover"
         >
-          <PlusCircle size={16} />
-          New Payslip
+          <Plus size={18} strokeWidth={3} />
+          Generate New Slip
         </button>
       </div>
 
-      {/* Stats Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 32 }}>
-        <StatCard icon={FileText} label="Total Payslips" value={loading ? '—' : fmt(stats?.totalPayslips)} sub="All time" color="var(--navy)" delay={0} />
-        <StatCard icon={Calendar} label="This Month" value={loading ? '—' : fmt(stats?.thisMonthPayslips)} sub="Payslips generated" color="var(--gold)" delay={80} />
-        <StatCard icon={Send} label="Emails Sent" value={loading ? '—' : fmt(stats?.emailsSent)} sub="Payslips delivered" color="#0284c7" delay={160} />
-        <StatCard icon={DollarSign} label="Avg. Salary" value={loading ? '—' : fmtCurrency(stats?.avgSalary)} sub="Net per employee" color="var(--green)" delay={240} />
+      {/* Responsive Stats Grid */}
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', 
+        gap: 24, 
+        marginBottom: 40 
+      }}>
+        <StatCard icon={FileText} label="Total Volume" value={loading ? '—' : fmt(stats?.totalPayslips)} sub="Lifetime Generation" color="#6366f1" delay={0} />
+        <StatCard icon={TrendingUp} label="This Month" value={loading ? '—' : fmt(stats?.thisMonthPayslips)} sub="New Payroll Cycle" color="var(--gold)" delay={100} />
+        <StatCard icon={Send} label="Email Delivery" value={loading ? '—' : fmt(stats?.emailsSent)} sub="Successful Pushes" color="#0ea5e9" delay={200} />
+        <StatCard icon={DollarSign} label="Avg. Payroll" value={loading ? '—' : fmtCurrency(stats?.avgSalary)} sub="Net Per Employee" color="var(--emerald)" delay={300} />
       </div>
 
-      {/* Recent Payslips */}
-      <div className="fade-up" style={{
-        animationDelay: '300ms',
-        background: 'var(--surface)',
-        borderRadius: 'var(--radius)',
-        border: '1px solid var(--border)',
-        boxShadow: 'var(--shadow-sm)',
-        overflow: 'hidden',
-      }}>
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '18px 20px',
-          borderBottom: '1px solid var(--border)',
-        }}>
-          <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--text)' }}>Recent Payslips</div>
-          <button
-            onClick={() => navigate('/payslips')}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 4,
-              background: 'none', border: 'none', cursor: 'pointer',
-              color: 'var(--navy)', fontSize: 12, fontWeight: 600,
-            }}
-          >
-            View all <ArrowRight size={13} />
-          </button>
-        </div>
-
-        {loading ? (
-          <div style={{ padding: 20 }}>
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="skeleton" style={{ height: 48, marginBottom: 8, borderRadius: 10 }} />
-            ))}
-          </div>
-        ) : recent.length === 0 ? (
-          <div style={{ padding: 48, textAlign: 'center' }}>
-            <FileText size={40} color="var(--border)" style={{ margin: '0 auto 12px' }} />
-            <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>No payslips yet.</div>
+      {/* Main Feature Area */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 32 }}>
+        <div className="fade-in glass" style={{ animationDelay: '400ms', overflow: 'hidden' }}>
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '24px 32px',
+            borderBottom: '1px solid var(--border)',
+            background: 'var(--bg)'
+          }}>
+            <div>
+              <div style={{ fontWeight: 800, fontSize: 17, color: 'var(--navy)' }}>Recent Activity</div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>Latest salary slips generated</div>
+            </div>
             <button
-              onClick={() => navigate('/generate')}
+              onClick={() => navigate('/payslips')}
               style={{
-                marginTop: 14, background: 'var(--navy)', color: 'white',
-                border: 'none', borderRadius: 8, padding: '8px 18px',
-                fontWeight: 600, fontSize: 13, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 8,
+                background: 'var(--surface)', border: '1px solid var(--border)', cursor: 'pointer',
+                color: 'var(--navy)', fontSize: 13, fontWeight: 700, padding: '8px 16px', borderRadius: 10
               }}
+              className="btn-hover"
             >
-              Generate your first payslip
+              Archive <ChevronRight size={16} />
             </button>
           </div>
-        ) : (
-          <div style={{ padding: '8px 4px' }}>
-            {recent.map((p) => <RecentRow key={p._id} p={p} navigate={navigate} />)}
+
+          <div style={{ padding: '16px' }}>
+            {loading ? (
+              [...Array(4)].map((_, i) => (
+                <div key={i} className="skeleton" style={{ height: 60, marginBottom: 12, borderRadius: 16 }} />
+              ))
+            ) : recent.length === 0 ? (
+              <div style={{ padding: 60, textAlign: 'center' }}>
+                <Building2 size={48} color="var(--border)" style={{ margin: '0 auto 20px' }} />
+                <div style={{ color: 'var(--navy)', fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Workspace is empty</div>
+                <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 24 }}>Start by generating your first statutory compliance document.</p>
+                <button
+                  onClick={() => navigate('/generate')}
+                  style={{
+                    background: 'var(--navy)', color: 'white',
+                    border: 'none', borderRadius: 12, padding: '12px 24px',
+                    fontWeight: 700, fontSize: 14, cursor: 'pointer',
+                  }}
+                >
+                  Create First Slip
+                </button>
+              </div>
+            ) : (
+              recent.map((p) => <RecentRow key={p._id} p={p} navigate={navigate} />)
+            )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   )

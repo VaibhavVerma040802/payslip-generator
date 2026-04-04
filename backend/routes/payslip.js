@@ -13,7 +13,14 @@ router.use(auth);
 // ─────────────────────────────────────────────────────────────
 router.post('/', async (req, res) => {
   try {
-    const payslip = new Payslip({ ...req.body, user: req.user._id });
+    const payslipData = { ...req.body, user: req.user._id };
+    
+    // Automatically inherit branding if missing in payload
+    if (!payslipData.companyLogo && req.user.companyLogo) {
+      payslipData.companyLogo = req.user.companyLogo;
+    }
+    
+    const payslip = new Payslip(payslipData);
     await payslip.save();
     res.status(201).json({ success: true, message: 'Payslip created successfully', data: payslip });
   } catch (err) {
