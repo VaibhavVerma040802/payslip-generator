@@ -132,8 +132,8 @@ export default function GeneratePayslip() {
     // 2026 INDIAN STATUTORY LOGIC
     // 1. Basic is exactly 50% of CTC
     const basicAnnual = annualCTC * 0.5;
-    // 2. HRA is 40% of Basic (Standard non-metro / flexible)
-    const hraAnnual = basicAnnual * 0.4;
+    // 2. HRA is 50% of Basic (Standard Metro)
+    const hraAnnual = basicAnnual * 0.5;
     // 3. Retirals based strictly on Basic Pay
     const employerPFAnnual = basicAnnual * 0.12; 
     const gratuityAnnual = basicAnnual * 0.0481;

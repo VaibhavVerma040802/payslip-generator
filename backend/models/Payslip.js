@@ -17,7 +17,7 @@ const payslipSchema = new mongoose.Schema(
     stipend: { type: Number, default: 0 },
     // ── Company Info ─────────────────────────────────
     companyName: { type: String, required: true, trim: true },
-    companyAddress: { type: String, required: true, trim: true },
+    companyAddress: { type: String, trim: true, default: '' },
     companyEmail: { type: String, trim: true, default: '' },
     companyPhone: { type: String, trim: true, default: '' },
     companyWebsite: { type: String, trim: true, default: '' },
@@ -83,7 +83,8 @@ payslipSchema.pre('save', function (next) {
     (this.conveyanceAllowance || 0) +
     (this.medicalAllowance || 0) +
     (this.specialAllowance || 0) +
-    (this.otherEarnings || 0);
+    (this.otherEarnings || 0) +
+    (this.stipend || 0);
 
   this.totalDeductions =
     (this.providentFund || 0) +

@@ -27,6 +27,22 @@
   --font-display: 'Outfit', sans-serif;
 }
 
+:root[data-theme='dark'] {
+  --navy: #38bdf8;
+  --navy-dark: #020617;
+  --navy-light: #1e293b;
+  --gold: #f59e0b;
+  --gold-pale: #451a03;
+  --emerald: #34d399;
+  --emerald-light: #064e3b;
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --border: #334155;
+  --text: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-light: #64748b;
+}
+
 body {
   font-family: var(--font-body);
   background-color: var(--bg);

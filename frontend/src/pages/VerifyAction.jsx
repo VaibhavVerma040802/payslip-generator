@@ -11,7 +11,9 @@ export default function VerifyAction() {
   const [message, setMessage] = useState('')
 
   useEffect(() => {
-    const token = searchParams.get('token')
+    const fallbackToken = new URLSearchParams(window.location.search).get('token') || 
+                          (window.location.hash.includes('?') ? new URLSearchParams(window.location.hash.split('?')[1]).get('token') : null);
+    const token = searchParams.get('token') || fallbackToken;
     
     if (!token) {
       setStatus('error')

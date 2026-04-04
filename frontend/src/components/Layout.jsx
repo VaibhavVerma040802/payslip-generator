@@ -1,7 +1,8 @@
-import { useState } from 'react'
-import { Outlet, NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, FileText, PlusCircle, List, Menu, X, FileSpreadsheet, Settings, LogOut, User } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
+import { LayoutDashboard, FileText, PlusCircle, List, Menu, X, FileSpreadsheet, Settings, LogOut, User, Sun, Moon, Monitor } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { useTheme } from '../context/ThemeContext'
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
@@ -10,13 +11,46 @@ const navItems = [
   { to: '/profile', label: 'Company Profile', icon: Settings },
 ]
 
+function useMediaQuery(query) {
+  const [matches, setMatches] = useState(false)
+  useEffect(() => {
+    const media = window.matchMedia(query)
+    setMatches(media.matches)
+    const listener = (e) => setMatches(e.matches)
+    media.addEventListener('change', listener)
+    return () => media.removeEventListener('change', listener)
+  }, [query])
+  return matches
+}
+
 export default function Layout() {
+  const isMobile = useMediaQuery('(max-width: 1024px)')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { user, logout } = useAuth()
+  const { theme, setTheme } = useTheme()
   const navigate = useNavigate()
+  const location = useLocation()
+
+  // Initialize sidebar based on screen size
+  useEffect(() => {
+    setSidebarOpen(!window.matchMedia('(max-width: 1024px)').matches)
+  }, [])
+
+  // Auto-close sidebar on mobile navigate
+  useEffect(() => {
+    if (isMobile) setSidebarOpen(false)
+  }, [location.pathname, isMobile])
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg)' }}>
+      {/* Mobile Overlay */}
+      {isMobile && sidebarOpen && (
+        <div 
+          onClick={() => setSidebarOpen(false)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 90, backdropFilter: 'blur(2px)' }}
+        />
+      )}
+
       {/* Sidebar */}
       <aside style={{
         width: 240,
@@ -26,14 +60,15 @@ export default function Layout() {
         position: 'fixed',
         top: 0, left: 0, bottom: 0,
         zIndex: 100,
-        transform: sidebarOpen ? 'translateX(0)' : 'translateX(0)',
-        transition: 'transform 0.3s ease',
+        transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
+        transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         boxShadow: '4px 0 20px rgba(0,0,0,0.15)',
       }}>
         {/* Logo */}
         <div style={{
           padding: '28px 22px 22px',
           borderBottom: '1px solid rgba(255,255,255,0.08)',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{
@@ -55,6 +90,11 @@ export default function Layout() {
               </div>
             </div>
           </div>
+          {isMobile && (
+            <button onClick={() => setSidebarOpen(false)} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', padding: 4 }}>
+              <X size={20} />
+            </button>
+          )}
         </div>
 
         {/* Nav */}
@@ -117,8 +157,86 @@ export default function Layout() {
       </aside>
 
       {/* Main content */}
-      <main style={{ marginLeft: 240, flex: 1, minHeight: '100vh', overflow: 'auto' }}>
-        <Outlet />
+      <main style={{ 
+        marginLeft: isMobile ? 0 : (sidebarOpen ? 240 : 0), 
+        flex: 1, minHeight: '100vh', display: 'flex', flexDirection: 'column',
+        transition: 'margin 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+      }}>
+        
+        {/* Top Header */}
+        <header style={{
+          height: 64, background: 'var(--surface)', borderBottom: '1px solid var(--border)',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px',
+          position: 'sticky', top: 0, zIndex: 80
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <button 
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              style={{ 
+                background: 'var(--bg)', border: '1px solid var(--border)', 
+                color: 'var(--text)', cursor: 'pointer', 
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                width: 36, height: 36, borderRadius: 8, transition: 'all 0.2s'
+              }}
+              className="btn-hover"
+            >
+              <Menu size={18} />
+            </button>
+            <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--navy)' }}>
+              PaySlip Pro Workspace
+            </div>
+          </div>
+
+          {/* Theme Switcher */}
+          <div style={{ 
+            display: 'flex', background: 'var(--bg)', borderRadius: 20, 
+            padding: 4, border: '1px solid var(--border)' 
+          }}>
+            <button 
+              onClick={() => setTheme('light')}
+              style={{
+                background: theme === 'light' ? 'var(--surface)' : 'transparent',
+                color: theme === 'light' ? 'var(--navy)' : 'var(--text-light)',
+                boxShadow: theme === 'light' ? 'var(--shadow-sm)' : 'none',
+                border: 'none', borderRadius: 16, padding: '6px 12px',
+                display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer',
+                fontSize: 12, fontWeight: 600, transition: 'all 0.2s'
+              }}
+            >
+              <Sun size={14} /> <span style={{ display: isMobile ? 'none' : 'inline' }}>Light</span>
+            </button>
+            <button 
+              onClick={() => setTheme('dark')}
+              style={{
+                background: theme === 'dark' ? 'var(--surface)' : 'transparent',
+                color: theme === 'dark' ? 'var(--navy)' : 'var(--text-light)',
+                boxShadow: theme === 'dark' ? 'var(--shadow-sm)' : 'none',
+                border: 'none', borderRadius: 16, padding: '6px 12px',
+                display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer',
+                fontSize: 12, fontWeight: 600, transition: 'all 0.2s'
+              }}
+            >
+              <Moon size={14} /> <span style={{ display: isMobile ? 'none' : 'inline' }}>Dark</span>
+            </button>
+            <button 
+              onClick={() => setTheme('system')}
+              style={{
+                background: theme === 'system' ? 'var(--surface)' : 'transparent',
+                color: theme === 'system' ? 'var(--navy)' : 'var(--text-light)',
+                boxShadow: theme === 'system' ? 'var(--shadow-sm)' : 'none',
+                border: 'none', borderRadius: 16, padding: '6px 12px',
+                display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer',
+                fontSize: 12, fontWeight: 600, transition: 'all 0.2s'
+              }}
+            >
+              <Monitor size={14} /> <span style={{ display: isMobile ? 'none' : 'inline' }}>System</span>
+            </button>
+          </div>
+        </header>
+
+        <div style={{ flex: 1, overflow: 'auto' }}>
+          <Outlet />
+        </div>
       </main>
     </div>
   )
