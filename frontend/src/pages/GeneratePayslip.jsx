@@ -230,6 +230,10 @@ export default function GeneratePayslip() {
                   </div>
                   <InputField label="Department" required value={form.department} onChange={e => setForm({...form, department: e.target.value})} placeholder="e.g. Engineering" />
                   <InputField label="Employee Email" required type="email" value={form.employeeEmail} onChange={e => setForm({...form, employeeEmail: e.target.value})} placeholder="email@company.com" icon={Send} />
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+                    <InputField label="PAN Number" value={form.panNumber} onChange={e => setForm({...form, panNumber: e.target.value})} placeholder="ABCDE1234F" />
+                    <InputField label="PF Number" value={form.pfNumber} onChange={e => setForm({...form, pfNumber: e.target.value})} placeholder="XX/XXX/0000000" />
+                  </div>
                 </motion.div>
               )}
 
@@ -249,7 +253,10 @@ export default function GeneratePayslip() {
                       </select>
                     </div>
                   </div>
-                  <InputField label="Payout Date" type="date" value={form.payDate} onChange={e => setForm({...form, payDate: e.target.value})} icon={Calendar} />
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+                    <InputField label="Date of Joining" type="date" value={form.dateOfJoining} onChange={e => setForm({...form, dateOfJoining: e.target.value})} icon={Calendar} />
+                    <InputField label="Payout Date" type="date" value={form.payDate} onChange={e => setForm({...form, payDate: e.target.value})} icon={Calendar} />
+                  </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, padding: 20, background: 'var(--bg)', borderRadius: 20, border: '1px solid var(--border)' }}>
                     <InputField label="Working Days" type="number" min="0" max="31" value={form.workingDays} onChange={e => setForm({...form, workingDays: Math.max(0, parseInt(e.target.value) || 0)})} />
                     <InputField label="Paid Days" type="number" min="0" max="31" value={form.paidDays} onChange={e => setForm({...form, paidDays: Math.max(0, parseInt(e.target.value) || 0)})} />
