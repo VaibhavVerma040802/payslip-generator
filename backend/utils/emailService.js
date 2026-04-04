@@ -1,6 +1,5 @@
 const nodemailer = require('nodemailer');
-const PDFDocument = require('pdfkit');
-const { generatePayslipPDFBuffer } = require('./pdfBuffer');
+const { generatePDFBuffer } = require('./pdfPuppeteer');
 
 /**
  * Create a reusable Nodemailer transporter
@@ -116,8 +115,8 @@ async function sendPayslipEmail(payslip) {
     throw new Error('Email credentials not configured. Please set EMAIL_USER and EMAIL_PASS in .env');
   }
 
-  // Generate PDF as buffer
-  const pdfBuffer = await generatePayslipPDFBuffer(payslip);
+  // Generate PDF as buffer via Puppeteer
+  const pdfBuffer = await generatePDFBuffer(payslip);
 
   const transporter = createTransporter();
 
