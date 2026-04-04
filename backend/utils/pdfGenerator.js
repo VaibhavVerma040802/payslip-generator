@@ -2,11 +2,11 @@ const PDFDocument = require('pdfkit');
 const path = require('path');
 const fs = require('fs');
 
-// Color palette
+// Color palette (Matching BDA Technologies: https://bdatechnologies.com/)
 const COLORS = {
-  navy: '#1e3a5f',
-  gold: '#c9a84c',
-  lightGold: '#f0d98a',
+  navy: '#57833B',      // BDA Olive Green
+  gold: '#FFBE11',      // BDA Accent Gold
+  lightGold: '#DDE7D3', // Light Green Tint for sub-headers
   white: '#ffffff',
   offWhite: '#f8f9fa',
   gray: '#6b7280',
@@ -14,10 +14,11 @@ const COLORS = {
   darkGray: '#374151',
   green: '#065f46',
   red: '#7f1d1d',
-  tableHeader: '#1e3a5f',
+  tableHeader: '#57833B',
   tableRow1: '#f8f9fa',
   tableRow2: '#ffffff',
-  netBg: '#1e3a5f',
+  netBg: '#57833B',
+  totalNetRow: '#DDE7D3', 
 };
 
 // Font paths
