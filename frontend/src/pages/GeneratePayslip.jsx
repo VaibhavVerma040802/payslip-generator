@@ -105,10 +105,21 @@ export default function GeneratePayslip() {
   const [step, setStep] = useState(user?.companyName ? 1 : 0)
   const [form, setForm] = useState(() => {
     if (location.state?.duplicateData) {
-      const { _id, createdAt, updatedAt, __v, user, ...rest } = location.state.duplicateData;
+      const { _id, createdAt, updatedAt, __v, user: _user, ...rest } = location.state.duplicateData;
       return { ...INITIAL, ...rest };
     }
-    if (user) return { ...INITIAL, ...user };
+    if (user) {
+      // Pre-fill company info from user profile
+      return {
+        ...INITIAL,
+        companyName: user.companyName || '',
+        companyAddress: user.companyAddress || '',
+        companyEmail: user.companyEmail || '',
+        companyPhone: user.companyPhone || '',
+        companyCIN: user.companyCIN || '',
+        companyLogo: user.companyLogo || '',
+      };
+    }
     return INITIAL;
   })
   const [submitting, setSubmitting] = useState(false)
@@ -170,9 +181,24 @@ export default function GeneratePayslip() {
   const handleSubmit = async () => {
     setSubmitting(true)
     try {
-      const payload = { ...form, ...totals, grossEarnings: totals.gross, totalDeductions: totals.deductions, netSalary: totals.net };
+      // BUG FIX: Explicitly map computed totals to their correct Mongoose schema field names.
+      // Previously, spreading `totals` was sending keys like `basic`, `pf`, `pt` which
+      // don't exist in the schema — causing values to be saved as 0.
+      const payload = {
+        ...form,
+        basicSalary: totals.basic,
+        hra: totals.hra,
+        specialAllowance: totals.special,
+        providentFund: totals.pf,
+        esi: totals.esi,
+        professionalTax: totals.pt,
+        stipend: form.employmentType === 'intern' ? totals.gross : 0,
+        grossEarnings: totals.gross,
+        totalDeductions: totals.deductions,
+        netSalary: totals.net,
+      };
       const res = await api.post('/payslips', payload)
-      toast.success('Payslip generated!')
+      toast.success('Payslip generated successfully!')
       navigate(`/payslips/${res.data.data._id}`)
     } catch (err) {
       toast.error(err.message || 'Failed to generate payslip')

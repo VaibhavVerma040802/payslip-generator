@@ -15,54 +15,47 @@ router.post('/', async (req, res) => {
   try {
     const userId = req.user ? req.user._id : null;
     if (!userId) {
-      console.error('❌ Create payslip error: req.user is undefined');
       return res.status(401).json({ success: false, message: 'Authentication required' });
     }
 
-    console.log(`📝 Creating payslip for employee: ${req.body.employeeName} (User ID: ${userId})`);
-    
-    // Defensive numeric casting
+    // Defensive numeric casting for all numeric fields
     const numericFields = [
-      'annualCTC', 'stipend', 'employerPF', 'basicSalary', 'hra', 
+      'annualCTC', 'stipend', 'employerPF', 'basicSalary', 'hra',
       'conveyanceAllowance', 'medicalAllowance', 'specialAllowance', 'otherEarnings',
       'providentFund', 'esi', 'tds', 'professionalTax', 'loanDeduction', 'otherDeductions',
+      'grossEarnings', 'totalDeductions', 'netSalary',
       'workingDays', 'paidDays', 'year'
     ];
 
     const payslipData = { ...req.body, user: userId };
-    
+
     numericFields.forEach(field => {
       const val = parseFloat(payslipData[field]);
       payslipData[field] = isNaN(val) ? 0 : val;
     });
 
-    // Automatically inherit branding if missing in payload
+    // Inherit company logo from user profile if not provided
     if (!payslipData.companyLogo && req.user.companyLogo) {
       payslipData.companyLogo = req.user.companyLogo;
     }
-    
+
     const payslip = new Payslip(payslipData);
     await payslip.save();
-    
-    console.log(`✅ Payslip saved successfully: ${payslip._id}`);
+
+    console.log(`✅ Payslip saved: ${payslip._id} for ${payslip.employeeName}`);
     res.status(201).json({ success: true, message: 'Payslip created successfully', data: payslip });
   } catch (err) {
-    console.error('❌ Create payslip CRASH:', err);
-    
-    // Explicitly handle validation errors to help the user
+    console.error('❌ Create payslip error:', err);
     if (err.name === 'ValidationError') {
       const errors = Object.values(err.errors).map(e => e.message);
-      return res.status(400).json({ 
-        success: false, 
+      return res.status(400).json({
+        success: false,
         message: 'Validation failed: ' + errors.join(', '),
-        details: err.errors 
       });
     }
-
-    res.status(500).json({ 
-      success: false, 
-      message: 'Critical error: ' + err.message,
-      type: err.name
+    res.status(500).json({
+      success: false,
+      message: 'Failed to create payslip: ' + err.message,
     });
   }
 });
@@ -76,7 +69,6 @@ router.get('/', async (req, res) => {
 
     const filter = { user: req.user._id };
     if (search) {
-      // Escape regex special characters to prevent injection
       const sanitizedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       filter.$or = [
         { employeeName: { $regex: sanitizedSearch, $options: 'i' } },
@@ -115,6 +107,42 @@ router.get('/', async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────
+// BUG FIX: /stats/summary MUST be before /:id to prevent Express 
+// matching "stats" as a MongoDB ObjectId param (causes a guaranteed crash)
+// ─────────────────────────────────────────────────────────────
+router.get('/stats/summary', async (req, res) => {
+  try {
+    const filter = { user: req.user._id };
+    const total = await Payslip.countDocuments(filter);
+    const thisMonth = new Date();
+    const monthName = thisMonth.toLocaleString('en-US', { month: 'long' });
+    const year = thisMonth.getFullYear();
+
+    const thisMonthCount = await Payslip.countDocuments({ ...filter, month: monthName, year });
+    const emailsSent = await Payslip.countDocuments({ ...filter, emailSent: true });
+
+    const netSalaryAgg = await Payslip.aggregate([
+      { $match: { user: req.user._id } },
+      { $group: { _id: null, totalNet: { $sum: '$netSalary' }, avgNet: { $avg: '$netSalary' } } },
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        totalPayslips: total,
+        thisMonthPayslips: thisMonthCount,
+        emailsSent,
+        totalPayroll: netSalaryAgg[0]?.totalNet || 0,
+        avgSalary: Math.round(netSalaryAgg[0]?.avgNet || 0),
+      },
+    });
+  } catch (err) {
+    console.error('Stats error:', err);
+    res.status(500).json({ success: false, message: 'Failed to fetch stats' });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────
 // GET /api/payslips/:id — Get a single payslip
 // ─────────────────────────────────────────────────────────────
 router.get('/:id', async (req, res) => {
@@ -131,7 +159,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────
-// PUT /api/payslips/:id — Update a payslip
+// PUT /api/payslips/:id — Update a payslip (sanitized fields only)
 // ─────────────────────────────────────────────────────────────
 router.put('/:id', async (req, res) => {
   try {
@@ -139,7 +167,22 @@ router.put('/:id', async (req, res) => {
     if (!payslip) {
       return res.status(404).json({ success: false, message: 'Payslip not found' });
     }
-    Object.assign(payslip, req.body);
+
+    // BUG FIX: Whitelist allowed fields. Never allow 'user' to be overwritten.
+    const allowedFields = [
+      'employeeName', 'employeeId', 'designation', 'department', 'employeeEmail',
+      'dateOfJoining', 'bankAccount', 'bankName', 'panNumber', 'pfNumber',
+      'month', 'year', 'payDate', 'workingDays', 'paidDays',
+      'basicSalary', 'hra', 'conveyanceAllowance', 'medicalAllowance', 'specialAllowance',
+      'otherEarnings', 'otherEarningsLabel', 'employerPF', 'stipend', 'annualCTC',
+      'providentFund', 'esi', 'tds', 'professionalTax', 'loanDeduction',
+      'otherDeductions', 'otherDeductionsLabel', 'notes', 'companyLogo',
+      'companyName', 'companyAddress', 'companyEmail', 'companyPhone', 'companyCIN',
+    ];
+    allowedFields.forEach(field => {
+      if (req.body[field] !== undefined) payslip[field] = req.body[field];
+    });
+
     await payslip.save();
     res.json({ success: true, message: 'Payslip updated', data: payslip });
   } catch (err) {
@@ -176,7 +219,9 @@ router.get('/:id/download', async (req, res) => {
     generatePayslipPDF(payslip, res);
   } catch (err) {
     console.error('PDF generation error:', err);
-    res.status(500).json({ success: false, message: 'Failed to generate PDF' });
+    if (!res.headersSent) {
+      res.status(500).json({ success: false, message: 'Failed to generate PDF: ' + err.message });
+    }
   }
 });
 
@@ -190,14 +235,16 @@ router.post('/:id/email', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Payslip not found' });
     }
 
-    // Allow overriding recipient email via request body
     const targetEmail = req.body.email || payslip.employeeEmail;
+    if (!targetEmail) {
+      return res.status(400).json({ success: false, message: 'No recipient email address specified.' });
+    }
+
     const payslipToSend = { ...payslip.toObject(), employeeEmail: targetEmail };
 
     await sendPayslipEmail(payslipToSend);
-    console.log(`✅ Email process completed for: ${targetEmail}`);
+    console.log(`✅ Email delivered to: ${targetEmail}`);
 
-    // Mark email as sent
     payslip.emailSent = true;
     payslip.emailSentAt = new Date();
     await payslip.save();
@@ -208,48 +255,11 @@ router.post('/:id/email', async (req, res) => {
       sentTo: targetEmail,
     });
   } catch (err) {
-    console.error('📧 Email Transmission CRASH:', err);
-    res.status(500).json({ 
-      success: false, 
-      message: err.message || 'Server encountered an error while sending email.',
-      error: err.toString(),
-      hint: 'Ensure your Gmail App Password is correct and added to Vercel Environment Variables.'
+    console.error('❌ Email send error:', err);
+    res.status(500).json({
+      success: false,
+      message: err.message || 'Failed to send email.',
     });
-  }
-});
-
-// ─────────────────────────────────────────────────────────────
-// GET /api/payslips/stats/summary — Dashboard stats
-// ─────────────────────────────────────────────────────────────
-router.get('/stats/summary', async (req, res) => {
-  try {
-    const filter = { user: req.user._id };
-    const total = await Payslip.countDocuments(filter);
-    const thisMonth = new Date();
-    const monthName = thisMonth.toLocaleString('en-US', { month: 'long' });
-    const year = thisMonth.getFullYear();
-
-    const thisMonthCount = await Payslip.countDocuments({ ...filter, month: monthName, year });
-    const emailsSent = await Payslip.countDocuments({ ...filter, emailSent: true });
-
-    const netSalaryAgg = await Payslip.aggregate([
-      { $match: { user: req.user._id } },
-      { $group: { _id: null, totalNet: { $sum: '$netSalary' }, avgNet: { $avg: '$netSalary' } } },
-    ]);
-
-    res.json({
-      success: true,
-      data: {
-        totalPayslips: total,
-        thisMonthPayslips: thisMonthCount,
-        emailsSent,
-        totalPayroll: netSalaryAgg[0]?.totalNet || 0,
-        avgSalary: Math.round(netSalaryAgg[0]?.avgNet || 0),
-      },
-    });
-  } catch (err) {
-    console.error('Stats error:', err);
-    res.status(500).json({ success: false, message: 'Failed to fetch stats' });
   }
 });
 

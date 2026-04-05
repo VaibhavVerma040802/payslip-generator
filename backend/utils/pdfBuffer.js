@@ -1,14 +1,9 @@
 const PDFDocument = require('pdfkit');
-const generator = require('./pdfGenerator');
-const { drawPayslip } = generator;
-
-console.log('PDF Generator Keys:', Object.keys(generator));
-console.log('drawPayslip type:', typeof drawPayslip);
+const { drawPayslip } = require('./pdfGenerator');
 
 /**
- * Generates payslip PDF as a Buffer (for email attachments)
+ * Generates payslip PDF as a Buffer (for email attachments).
  * Uses the SAME unified drawing logic as direct downloads.
- * Hardened with error resilience for serverless environments.
  */
 function generatePayslipPDFBuffer(payslip) {
   return new Promise((resolve, reject) => {
@@ -24,25 +19,19 @@ function generatePayslipPDFBuffer(payslip) {
       });
 
       const chunks = [];
-      doc.on('data', (chunk) => {
-        chunks.push(chunk);
-      });
+      doc.on('data', (chunk) => chunks.push(chunk));
       doc.on('end', () => {
-        const finalBuffer = Buffer.concat(chunks);
-        console.log(`📑 PDF Generation Complete. Buffer Size: ${finalBuffer.length} bytes`);
-        resolve(finalBuffer);
+        const buffer = Buffer.concat(chunks);
+        resolve(buffer);
       });
       doc.on('error', (err) => {
-        console.error('❌ PDF Kit Internal Error:', err);
+        console.error('❌ PDFKit stream error:', err.message);
         reject(err);
       });
 
-      // Execute unified drawing logic
-      console.log('🎨 Starting PDF Drawing Engine...');
       drawPayslip(doc, payslip);
-      console.log('🏁 PDF Drawing Instructions Sent to Stream');
     } catch (err) {
-      console.error('CRITICAL: PDF Buffer Generation Exception:', err);
+      console.error('❌ PDF buffer generation failed:', err.message);
       reject(err);
     }
   });
