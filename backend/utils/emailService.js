@@ -252,4 +252,92 @@ function buildEmailHTML(payslip) {
   `;
 }
 
-module.exports = { sendPayslipEmail, sendVerificationEmail };
+// ─────────────────────────────────────────────────────────────
+// Send password-reset email with a secure link
+// ─────────────────────────────────────────────────────────────
+async function sendPasswordResetEmail(user, token, origin) {
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.warn('⚠️ Email credentials missing — skipping password reset email.');
+    return;
+  }
+
+  const finalAppUrl = (origin || '').replace(/\/$/, '') ||
+    process.env.FRONTEND_URL ||
+    'https://payslip-gen-rouge.vercel.app';
+  const resetUrl = `${finalAppUrl}/reset-password?token=${token}`;
+
+  console.log(`✉️ Sending password reset email to: ${user.email}`);
+
+  const transporter = createSMTPTransporter();
+
+  const mailOptions = {
+    from: `"PaySlip Pro" <${(process.env.EMAIL_FROM || process.env.EMAIL_USER || '').trim()}>`,
+    to: user.email,
+    subject: `Reset Your PaySlip Pro Password`,
+    html: `
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f4f6fa; font-family: 'Segoe UI', Arial, sans-serif;">
+  <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f4f6fa; padding: 40px 10px;">
+    <tr>
+      <td align="center">
+        <table border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #ffffff; border-radius: 12px; overflow: hidden;">
+          <tr><td height="6" bgcolor="#FFBE11" style="font-size: 0; line-height: 0;">&nbsp;</td></tr>
+          <tr>
+            <td bgcolor="#1e3a5f" style="padding: 40px 45px; text-align: center;">
+              <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 800;">PaySlip Pro</h1>
+              <p style="margin: 8px 0 0 0; color: #a8c0d6; font-size: 14px;">Professional Payroll Management</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 40px 45px;">
+              <p style="margin: 0 0 20px 0; font-size: 18px; font-weight: 700; color: #374151;">Hi ${user.companyName || 'there'},</p>
+              <p style="margin: 0 0 10px 0; font-size: 15px; color: #6b7280; line-height: 1.6;">
+                We received a request to reset the password for your PaySlip Pro account linked to <strong>${user.email}</strong>.
+              </p>
+              <p style="margin: 0 0 30px 0; font-size: 15px; color: #6b7280; line-height: 1.6;">
+                Click the button below to set a new password. This link expires in <strong>1 hour</strong>.
+              </p>
+              <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td align="center">
+                    <a href="${resetUrl}" style="display: inline-block; background: #1e3a5f; color: #ffffff; padding: 16px 36px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 15px;">
+                      Reset My Password
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin: 30px 0 0 0; font-size: 12px; color: #9ca3af;">
+                Or copy this link: <a href="${resetUrl}" style="color: #1e3a5f;">${resetUrl}</a><br/>
+                If you didn't request a password reset, you can safely ignore this email.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td bgcolor="#f9fafb" style="padding: 20px 45px; text-align: center;">
+              <p style="margin: 0; color: #9ca3af; font-size: 11px;">&copy; 2026 PaySlip Pro. All rights reserved.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(`✅ Password reset email sent to: ${user.email}`);
+  } catch (err) {
+    console.error(`❌ Password reset email SMTP error: ${err.message}`);
+    throw err;
+  }
+}
+
+module.exports = { sendPayslipEmail, sendVerificationEmail, sendPasswordResetEmail };

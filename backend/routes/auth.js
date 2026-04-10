@@ -174,4 +174,75 @@ router.put('/profile', auth, async (req, res) => {
   }
 });
 
+// ─────────────────────────────────────────────────────────────
+// POST /api/auth/forgot-password — Send reset link to email
+// ─────────────────────────────────────────────────────────────
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ success: false, message: 'Email is required.' });
+
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    // Always respond success to prevent email enumeration
+    if (!user) {
+      return res.json({ success: true, message: 'If that email exists, a reset link has been sent.' });
+    }
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+    await user.save();
+
+    try {
+      const { sendPasswordResetEmail } = require('../utils/emailService');
+      // Prefer FRONTEND_URL env var; fall back to origin header; last resort: same host
+      const origin = process.env.FRONTEND_URL ||
+        req.get('origin') ||
+        `${req.protocol}://${req.get('host')}`;
+      await sendPasswordResetEmail(user, resetToken, origin);
+    } catch (emailErr) {
+      console.error('📧 Password reset email failed:', emailErr.message);
+    }
+
+    res.json({ success: true, message: 'If that email exists, a reset link has been sent.' });
+  } catch (err) {
+    console.error('Forgot-password error:', err);
+    res.status(500).json({ success: false, message: 'Something went wrong. Please try again.' });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────
+// POST /api/auth/reset-password — Set new password using token
+// ─────────────────────────────────────────────────────────────
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { token, password } = req.body;
+    if (!token || !password) {
+      return res.status(400).json({ success: false, message: 'Token and new password are required.' });
+    }
+    if (password.length < 6) {
+      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters.' });
+    }
+
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(400).json({ success: false, message: 'The reset link is invalid or has expired.' });
+    }
+
+    user.password = password; // will be hashed by pre-save hook
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    res.json({ success: true, message: 'Password reset successful. You can now log in with your new password.' });
+  } catch (err) {
+    console.error('Reset-password error:', err);
+    res.status(500).json({ success: false, message: 'Something went wrong. Please try again.' });
+  }
+});
+
 module.exports = { router, auth };
