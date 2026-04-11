@@ -73,7 +73,7 @@ export default function Profile() {
           {/* Brand Identity / Logo */}
           <div style={{ marginBottom: 48, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 800, color: 'var(--text-muted)', marginBottom: 20, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Corporate Branding</label>
-            <div style={{ position: 'relative', group: 'true' }}>
+            <div style={{ position: 'relative' }}>
               <div style={{
                 width: 140, height: 140, borderRadius: 24, background: 'var(--bg)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -104,28 +104,28 @@ export default function Profile() {
           </div>
 
           {/* Form Fields Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 28 }}>
-            <div style={{ gridColumn: 'span 2' }}>
+          <div className="profile-grid">
+            <div className="profile-full">
               <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 10 }}>Entity Name</label>
               <div style={{ position: 'relative' }}>
                 <Building2 size={18} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-light)' }} />
                 <input 
                   type="text" required value={form.companyName}
                   onChange={e => setForm({ ...form, companyName: e.target.value })}
-                  style={{ width: '100%', padding: '14px 14px 14px 50px', borderRadius: 14, border: '2px solid var(--border)', background: 'var(--bg)', fontSize: 15, fontWeight: 600, outline: 'none' }} 
+                  style={{ width: '100%', padding: '14px 14px 14px 50px', borderRadius: 14, border: '2px solid var(--border)', background: 'var(--bg)', fontSize: 15, fontWeight: 600, outline: 'none', boxSizing: 'border-box' }} 
                   className="btn-hover"
                 />
               </div>
             </div>
 
-            <div style={{ gridColumn: 'span 2' }}>
+            <div className="profile-full">
               <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 10 }}>Statutory Address</label>
               <div style={{ position: 'relative' }}>
                 <MapPin size={18} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-light)' }} />
                 <input 
                   type="text" required value={form.companyAddress}
                   onChange={e => setForm({ ...form, companyAddress: e.target.value })}
-                  style={{ width: '100%', padding: '14px 14px 14px 50px', borderRadius: 14, border: '2px solid var(--border)', background: 'var(--bg)', fontSize: 15, fontWeight: 600, outline: 'none' }} 
+                  style={{ width: '100%', padding: '14px 14px 14px 50px', borderRadius: 14, border: '2px solid var(--border)', background: 'var(--bg)', fontSize: 15, fontWeight: 600, outline: 'none', boxSizing: 'border-box' }} 
                   className="btn-hover"
                 />
               </div>
@@ -138,7 +138,7 @@ export default function Profile() {
                 <input 
                   type="email" value={form.companyEmail}
                   onChange={e => setForm({ ...form, companyEmail: e.target.value })}
-                  style={{ width: '100%', padding: '14px 14px 14px 50px', borderRadius: 14, border: '2px solid var(--border)', background: 'var(--bg)', fontSize: 15, fontWeight: 600, outline: 'none' }} 
+                  style={{ width: '100%', padding: '14px 14px 14px 50px', borderRadius: 14, border: '2px solid var(--border)', background: 'var(--bg)', fontSize: 15, fontWeight: 600, outline: 'none', boxSizing: 'border-box' }} 
                   className="btn-hover"
                 />
               </div>
@@ -151,20 +151,20 @@ export default function Profile() {
                 <input 
                   type="text" value={form.companyPhone}
                   onChange={e => setForm({ ...form, companyPhone: e.target.value })}
-                  style={{ width: '100%', padding: '14px 14px 14px 50px', borderRadius: 14, border: '2px solid var(--border)', background: 'var(--bg)', fontSize: 15, fontWeight: 600, outline: 'none' }} 
+                  style={{ width: '100%', padding: '14px 14px 14px 50px', borderRadius: 14, border: '2px solid var(--border)', background: 'var(--bg)', fontSize: 15, fontWeight: 600, outline: 'none', boxSizing: 'border-box' }} 
                   className="btn-hover"
                 />
               </div>
             </div>
 
-            <div style={{ gridColumn: 'span 2' }}>
+            <div className="profile-full">
               <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 10 }}>Corporate Identification Number (CIN)</label>
               <div style={{ position: 'relative' }}>
                 <Hash size={18} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-light)' }} />
                 <input 
                   type="text" value={form.companyCIN}
                   onChange={e => setForm({ ...form, companyCIN: e.target.value })}
-                  style={{ width: '100%', padding: '14px 14px 14px 50px', borderRadius: 14, border: '2px solid var(--border)', background: 'var(--bg)', fontSize: 15, fontWeight: 600, outline: 'none' }} 
+                  style={{ width: '100%', padding: '14px 14px 14px 50px', borderRadius: 14, border: '2px solid var(--border)', background: 'var(--bg)', fontSize: 15, fontWeight: 600, outline: 'none', boxSizing: 'border-box' }} 
                   className="btn-hover"
                 />
               </div>
@@ -186,6 +186,26 @@ export default function Profile() {
           </button>
         </form>
       </div>
+
+      <style>{`
+        .profile-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 28px;
+        }
+        .profile-full {
+          grid-column: 1 / -1;
+        }
+        @media (max-width: 600px) {
+          .profile-grid {
+            grid-template-columns: 1fr;
+            gap: 20px;
+          }
+          .profile-full {
+            grid-column: 1;
+          }
+        }
+      `}</style>
     </div>
   )
 }
