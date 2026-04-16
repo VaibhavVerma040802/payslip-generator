@@ -298,10 +298,18 @@ export default function GeneratePayslip() {
                       className="btn-hover" style={{ width: '100%', padding: '12px 14px', border: '2px solid var(--border)', borderRadius: 12, fontSize: 14, fontWeight: 600, color: 'var(--text)', background: 'var(--surface)', outline: 'none' }}
                     >
                       <option value="">-- Select Staff Member (Optional) --</option>
-                      {staffList.filter(s => s.type.toLowerCase() === form.employmentType).length === 0 && (
+                      {staffList.filter(s => {
+                        const type = s.type?.toLowerCase();
+                        const current = form.employmentType?.toLowerCase();
+                        return (current === 'regular' && type === 'employee') || (current === type);
+                      }).length === 0 && (
                         <option value="" disabled>No {form.employmentType === 'regular' ? 'Employees' : 'Interns'} found in directory.</option>
                       )}
-                      {staffList.filter(s => s.type.toLowerCase() === form.employmentType).map(s => <option key={s._id} value={s._id}>{s.fullName} ({s.type})</option>)}
+                      {staffList.filter(s => {
+                        const type = s.type?.toLowerCase();
+                        const current = form.employmentType?.toLowerCase();
+                        return (current === 'regular' && type === 'employee') || (current === type);
+                      }).map(s => <option key={s._id} value={s._id}>{s.fullName} ({s.type})</option>)}
                     </select>
                   </div>
 

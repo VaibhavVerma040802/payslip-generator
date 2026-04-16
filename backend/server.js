@@ -70,7 +70,7 @@ mongoose
   })
   .catch((err) => {
     console.error('❌ MongoDB connection failed:', err.message);
-    process.exit(1);
+    // On Vercel, we don't want to exit the process; let the next request retry or fail gracefully
   });
 
 // Export the app so Vercel Serverless Functions can use it

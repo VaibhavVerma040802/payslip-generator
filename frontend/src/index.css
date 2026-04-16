@@ -108,31 +108,13 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 700; letter-spacing:
 .badge-emerald { background: var(--emerald-light); color: #065f46; }
 .badge-gold { background: var(--gold-pale); color: #92400e; }
 
-/* Breakpoints & Layout Systems */
-:root {
-  --sidebar-w: 260px;
-  --header-h: 70px;
-  --container-max: 1200px;
   --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.container {
-  width: 100%;
-  max-width: var(--container-max);
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: 1.5rem;
-  padding-right: 1.5rem;
-}
-
-/* Fluid Typography */
-h1 { font-size: clamp(1.75rem, 5vw, 2.5rem); }
-h2 { font-size: clamp(1.5rem, 4vw, 2rem); }
-h3 { font-size: clamp(1.25rem, 3vw, 1.5rem); }
-
-/* Premium Glassmorphism & Cards */
 .glass {
   background: var(--surface);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--border);
   box-shadow: var(--shadow);
   border-radius: var(--radius-lg);
@@ -148,17 +130,20 @@ h3 { font-size: clamp(1.25rem, 3vw, 1.5rem); }
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 12px;
-  border-radius: 8px;
+  padding: 6px 14px;
+  border-radius: 12px;
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  transition: all 0.2s ease;
 }
 
-.badge-green { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
-.badge-gold { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+.badge-emerald { background: var(--emerald-light); color: var(--emerald); border: 1px solid rgba(16, 185, 129, 0.2); }
+.badge-gold { background: var(--gold-pale); color: var(--gold); border: 1px solid rgba(245, 158, 11, 0.2); }
 .badge-navy { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+
+:root[data-theme='dark'] .badge-navy { background: #0c4a6e; color: #7dd3fc; border: 1px solid #075985; }
 
 /* Dashboard Grid System */
 .split-screen {
