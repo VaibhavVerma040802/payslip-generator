@@ -40,7 +40,7 @@ export default function StaffList() {
   const navigate = useNavigate()
 
   const [formData, setFormData] = useState({
-    fullName: '', email: '', phone: '', designation: '', department: '',
+    fullName: '', employeeId: '', email: '', phone: '', designation: '', department: '',
     type: 'Employee', joiningDate: '', panNumber: '', bankName: '',
     accountNumber: '', ifscCode: '', annualCTC: '', baseSalary: ''
   })
@@ -86,7 +86,7 @@ export default function StaffList() {
       setShowModal(false)
       toast.success('Staff member added successfully')
       setFormData({
-        fullName: '', email: '', phone: '', designation: '', department: '',
+        fullName: '', employeeId: '', email: '', phone: '', designation: '', department: '',
         type: 'Employee', joiningDate: '', panNumber: '', bankName: '',
         accountNumber: '', ifscCode: '', annualCTC: '', baseSalary: ''
       })
@@ -186,6 +186,7 @@ export default function StaffList() {
                   </div>
                   <div>
                     <h3 style={{ margin: 0, fontSize: 16, color: 'var(--navy)' }}>{person.fullName}</h3>
+                    <div style={{ fontSize: 12, color: 'var(--gold)', fontWeight: 700, marginBottom: 2 }}>{person.employeeId}</div>
                     <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 500 }}>{person.designation || 'No designation'}</div>
                   </div>
                 </div>
@@ -238,11 +239,11 @@ export default function StaffList() {
                   <h4 style={{ color: 'var(--navy)', marginBottom: 16 }}>Professional Details</h4>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                     <InputField label="Full Name" name="fullName" value={formData.fullName} onChange={handleInputChange} required />
+                    <InputField label="Employee ID / Code" name="employeeId" value={formData.employeeId} onChange={handleInputChange} required />
                     <InputField label="Email Address" type="email" name="email" value={formData.email} onChange={handleInputChange} required />
                     <InputField label="Phone Number" name="phone" value={formData.phone} onChange={handleInputChange} />
                     <InputField label="Joining Date" type="date" name="joiningDate" value={formData.joiningDate} onChange={handleInputChange} />
                     <InputField label="Designation" name="designation" value={formData.designation} onChange={handleInputChange} />
-                    <InputField label="Department" name="department" value={formData.department} onChange={handleInputChange} />
                   </div>
 
                   <h4 style={{ color: 'var(--navy)', marginTop: 24, marginBottom: 16 }}>Financial Information</h4>

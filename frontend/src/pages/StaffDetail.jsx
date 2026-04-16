@@ -95,6 +95,7 @@ export default function StaffDetail() {
           {/* Professional Details */}
           <div>
             <h3 style={{ color: 'var(--navy)', marginBottom: 24, borderBottom: '2px solid var(--border)', paddingBottom: 8, display: 'inline-block' }}>Professional Details</h3>
+            <DetailRow icon={Code} label="Employee ID / Code" value={staff.employeeId} />
             <DetailRow icon={Mail} label="Email Address" value={staff.email} />
             <DetailRow icon={Phone} label="Phone Number" value={staff.phone} />
             <DetailRow icon={Briefcase} label="Department" value={staff.department} />
