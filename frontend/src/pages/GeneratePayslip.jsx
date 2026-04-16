@@ -273,36 +273,37 @@ export default function GeneratePayslip() {
                     ))}
                   </div>
 
-                  {staffList.length > 0 && (
-                    <div style={{ position: 'relative', marginBottom: 20 }}>
-                      <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 8 }}>Auto-fill from Staff Directory</label>
-                      <select 
-                        onChange={(e) => {
-                          const s = staffList.find(x => x._id === e.target.value);
-                          if(s) {
-                             setForm(f => ({
-                               ...f,
-                               employmentType: s.type.toLowerCase(),
-                               employeeName: s.fullName,
-                               employeeEmail: s.email,
-                               designation: s.designation || '',
-                               department: s.department || '',
-                               dateOfJoining: s.joiningDate ? s.joiningDate.split('T')[0] : '',
-                               panNumber: s.financials?.panNumber || '',
-                               bankAccount: s.financials?.accountNumber || '',
-                               bankName: s.financials?.bankName || '',
-                               annualCTC: s.type === 'Employee' ? (s.salaryDetails?.annualCTC || '') : f.annualCTC,
-                               baseSalary: s.type === 'Intern' ? (s.salaryDetails?.baseSalary || '') : f.baseSalary,
-                             }))
-                          }
-                        }}
-                        className="btn-hover" style={{ width: '100%', padding: '12px 14px', border: '2px solid var(--border)', borderRadius: 12, fontSize: 14, fontWeight: 600 }}
-                      >
-                        <option value="">-- Select Staff Member (Optional) --</option>
-                        {staffList.filter(s => s.type.toLowerCase() === form.employmentType).map(s => <option key={s._id} value={s._id}>{s.fullName} ({s.type})</option>)}
-                      </select>
-                    </div>
-                  )}
+                  <div style={{ position: 'relative', marginBottom: 20 }}>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 8 }}>Auto-fill from Staff Directory</label>
+                    <select 
+                      onChange={(e) => {
+                        const s = staffList.find(x => x._id === e.target.value);
+                        if(s) {
+                           setForm(f => ({
+                             ...f,
+                             employmentType: s.type.toLowerCase(),
+                             employeeName: s.fullName,
+                             employeeEmail: s.email,
+                             designation: s.designation || '',
+                             department: s.department || '',
+                             dateOfJoining: s.joiningDate ? s.joiningDate.split('T')[0] : '',
+                             panNumber: s.financials?.panNumber || '',
+                             bankAccount: s.financials?.accountNumber || '',
+                             bankName: s.financials?.bankName || '',
+                             annualCTC: s.type === 'Employee' ? (s.salaryDetails?.annualCTC || '') : f.annualCTC,
+                             baseSalary: s.type === 'Intern' ? (s.salaryDetails?.baseSalary || '') : f.baseSalary,
+                           }))
+                        }
+                      }}
+                      className="btn-hover" style={{ width: '100%', padding: '12px 14px', border: '2px solid var(--border)', borderRadius: 12, fontSize: 14, fontWeight: 600, color: 'var(--text)', background: 'var(--surface)', outline: 'none' }}
+                    >
+                      <option value="">-- Select Staff Member (Optional) --</option>
+                      {staffList.filter(s => s.type.toLowerCase() === form.employmentType).length === 0 && (
+                        <option value="" disabled>No {form.employmentType === 'regular' ? 'Employees' : 'Interns'} found in directory.</option>
+                      )}
+                      {staffList.filter(s => s.type.toLowerCase() === form.employmentType).map(s => <option key={s._id} value={s._id}>{s.fullName} ({s.type})</option>)}
+                    </select>
+                  </div>
 
                   <InputField label="Employee Name" required value={form.employeeName} onChange={e => setForm({...form, employeeName: e.target.value})} placeholder="Full Name" icon={User} />
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
@@ -323,13 +324,13 @@ export default function GeneratePayslip() {
                   <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 20 }}>
                     <div style={{ marginBottom: 20 }}>
                       <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 8 }}>Pay Month</label>
-                      <select value={form.month} onChange={e => setForm({...form, month: e.target.value})} className="btn-hover" style={{ width: '100%', padding: '14px', border: '2px solid var(--border)', borderRadius: 12, fontSize: 14, fontWeight: 600 }}>
+                      <select value={form.month} onChange={e => setForm({...form, month: e.target.value})} className="btn-hover" style={{ width: '100%', padding: '14px', border: '2px solid var(--border)', borderRadius: 12, fontSize: 14, fontWeight: 600, color: 'var(--text)', background: 'var(--surface)', outline: 'none' }}>
                         {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
                       </select>
                     </div>
                     <div style={{ marginBottom: 20 }}>
                       <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 8 }}>Year</label>
-                      <select value={form.year} onChange={e => setForm({...form, year: e.target.value})} className="btn-hover" style={{ width: '100%', padding: '14px', border: '2px solid var(--border)', borderRadius: 12, fontSize: 14, fontWeight: 600 }}>
+                      <select value={form.year} onChange={e => setForm({...form, year: e.target.value})} className="btn-hover" style={{ width: '100%', padding: '14px', border: '2px solid var(--border)', borderRadius: 12, fontSize: 14, fontWeight: 600, color: 'var(--text)', background: 'var(--surface)', outline: 'none' }}>
                         {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
                       </select>
                     </div>

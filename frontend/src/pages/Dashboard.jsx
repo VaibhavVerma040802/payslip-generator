@@ -139,7 +139,7 @@ export default function Dashboard() {
         <StatCard icon={FileText} label="Total Volume" value={loading ? '—' : fmt(stats?.totalPayslips)} sub="Lifetime Generation" color="#6366f1" delay={0} />
         <StatCard icon={TrendingUp} label="This Month" value={loading ? '—' : fmt(stats?.thisMonthPayslips)} sub="New Payroll Cycle" color="var(--gold)" delay={100} />
         <StatCard icon={Send} label="Email Delivery" value={loading ? '—' : fmt(stats?.emailsSent)} sub="Successful Pushes" color="#0ea5e9" delay={200} />
-        <StatCard icon={DollarSign} label="Avg. Payroll" value={loading ? '—' : fmtCurrency(stats?.avgSalary)} sub="Net Per Employee" color="var(--emerald)" delay={300} />
+        <StatCard icon={DollarSign} label="Total Amount Paid" value={loading ? '—' : fmtCurrency(stats?.totalPayroll)} sub="Total Payroll Disbursed" color="var(--emerald)" delay={300} />
       </div>
 
       {/* Main Feature Area */}
