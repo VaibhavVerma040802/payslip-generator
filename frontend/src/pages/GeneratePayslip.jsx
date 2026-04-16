@@ -4,7 +4,7 @@ import { motion, AnimatePresence, LayoutGroup } from 'framer-motion'
 import { 
   Building2, User, Calendar, TrendingUp, Minus, 
   ChevronRight, ChevronLeft, CheckCircle2, Loader2,
-  FileText, IndianRupee, Landmark, Wallet, Plus, Download, Send
+  FileText, IndianRupee, Landmark, Wallet, Plus, Download, Send, Search
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import toast from 'react-hot-toast'
@@ -22,7 +22,7 @@ const INITIAL = {
   month: MONTHS[new Date().getMonth()], year: CURRENT_YEAR,
   payDate: new Date().toISOString().split('T')[0],
   workingDays: 26, paidDays: 26,
-  employmentType: 'regular', annualCTC: '', stipend: '', employerPF: '',
+  employmentType: 'regular', annualCTC: '', baseSalary: '', stipend: '', employerPF: '',
   basicSalary: '0', hra: '0', specialAllowance: '0', otherEarnings: '0',
   providentFund: '0', esi: '0', professionalTax: '0', tds: '0',
   loanDeduction: '0', otherDeductions: '0', notes: '',
@@ -102,16 +102,17 @@ export default function GeneratePayslip() {
   const navigate = useNavigate()
   const location = useLocation()
   
+  const [staffList, setStaffList] = useState([])
+  useEffect(() => {
+    api.get('/staff').then(res => setStaffList(res.data.data)).catch(console.error)
+  }, [])
+
   const [step, setStep] = useState(user?.companyName ? 1 : 0)
   const [form, setForm] = useState(() => {
-    if (location.state?.duplicateData) {
-      const { _id, createdAt, updatedAt, __v, user: _user, ...rest } = location.state.duplicateData;
-      return { ...INITIAL, ...rest };
-    }
+    let initialValues = { ...INITIAL };
     if (user) {
-      // Pre-fill company info from user profile
-      return {
-        ...INITIAL,
+      initialValues = {
+        ...initialValues,
         companyName: user.companyName || '',
         companyAddress: user.companyAddress || '',
         companyEmail: user.companyEmail || '',
@@ -120,8 +121,33 @@ export default function GeneratePayslip() {
         companyLogo: user.companyLogo || '',
       };
     }
-    return INITIAL;
+    
+    if (location.state?.duplicateData) {
+      const { _id, createdAt, updatedAt, __v, user: _user, ...rest } = location.state.duplicateData;
+      return { ...initialValues, ...rest };
+    }
+    
+    if (location.state?.predefinedStaff) {
+      const s = location.state.predefinedStaff;
+      initialValues = {
+        ...initialValues,
+        employmentType: s.type.toLowerCase(),
+        employeeName: s.fullName,
+        employeeEmail: s.email,
+        designation: s.designation || '',
+        department: s.department || '',
+        dateOfJoining: s.joiningDate ? s.joiningDate.split('T')[0] : '',
+        panNumber: s.financials?.panNumber || '',
+        bankAccount: s.financials?.accountNumber || '',
+        bankName: s.financials?.bankName || '',
+        annualCTC: s.type === 'Employee' ? (s.salaryDetails?.annualCTC || '') : '',
+        baseSalary: s.type === 'Intern' ? (s.salaryDetails?.baseSalary || '') : '',
+      }
+    }
+    
+    return initialValues;
   })
+  
   const [submitting, setSubmitting] = useState(false)
 
   const totals = useMemo(() => {
@@ -131,9 +157,10 @@ export default function GeneratePayslip() {
     const prorationFactor = workingDays > 0 ? (paidDays / workingDays) : 1;
 
     if (form.employmentType === 'intern') {
-      const monthlyCTC = Math.round(annualCTC / 12);
-      const proratedGross = Math.round(monthlyCTC * prorationFactor);
-      return { basic: 0, hra: 0, special: 0, gross: proratedGross, pf: 0, esi: 0, pt: 0, deductions: 0, net: proratedGross }
+      const baseMonthly = parseFloat(form.baseSalary) || 0;
+      const lossOfPay = workingDays > 0 ? Math.round((baseMonthly / workingDays) * Math.max(0, workingDays - paidDays)) : 0;
+      const netStipend = baseMonthly - lossOfPay;
+      return { basic: baseMonthly, hra: 0, special: 0, gross: baseMonthly, pf: 0, esi: 0, pt: 0, lossOfPay: lossOfPay, deductions: lossOfPay, net: netStipend }
     }
 
     const basicAnnual = annualCTC * 0.5;
@@ -162,8 +189,8 @@ export default function GeneratePayslip() {
     const deductions = empPF + esi + pt + tds + loan;
     const net = Math.round(gross - deductions);
 
-    return { basic, hra, special, gross, pf: empPF, esi, pt, deductions, net }
-  }, [form.annualCTC, form.employmentType, form.workingDays, form.paidDays, form.tds, form.loanDeduction]);
+    return { basic, hra, special, gross, pf: empPF, esi, pt, deductions, net, lossOfPay: 0 }
+  }, [form.annualCTC, form.baseSalary, form.employmentType, form.workingDays, form.paidDays, form.tds, form.loanDeduction]);
 
   useEffect(() => {
     setForm(f => ({
@@ -181,9 +208,6 @@ export default function GeneratePayslip() {
   const handleSubmit = async () => {
     setSubmitting(true)
     try {
-      // BUG FIX: Explicitly map computed totals to their correct Mongoose schema field names.
-      // Previously, spreading `totals` was sending keys like `basic`, `pf`, `pt` which
-      // don't exist in the schema — causing values to be saved as 0.
       const payload = {
         ...form,
         basicSalary: totals.basic,
@@ -249,6 +273,37 @@ export default function GeneratePayslip() {
                     ))}
                   </div>
 
+                  {staffList.length > 0 && (
+                    <div style={{ position: 'relative', marginBottom: 20 }}>
+                      <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 8 }}>Auto-fill from Staff Directory</label>
+                      <select 
+                        onChange={(e) => {
+                          const s = staffList.find(x => x._id === e.target.value);
+                          if(s) {
+                             setForm(f => ({
+                               ...f,
+                               employmentType: s.type.toLowerCase(),
+                               employeeName: s.fullName,
+                               employeeEmail: s.email,
+                               designation: s.designation || '',
+                               department: s.department || '',
+                               dateOfJoining: s.joiningDate ? s.joiningDate.split('T')[0] : '',
+                               panNumber: s.financials?.panNumber || '',
+                               bankAccount: s.financials?.accountNumber || '',
+                               bankName: s.financials?.bankName || '',
+                               annualCTC: s.type === 'Employee' ? (s.salaryDetails?.annualCTC || '') : f.annualCTC,
+                               baseSalary: s.type === 'Intern' ? (s.salaryDetails?.baseSalary || '') : f.baseSalary,
+                             }))
+                          }
+                        }}
+                        className="btn-hover" style={{ width: '100%', padding: '12px 14px', border: '2px solid var(--border)', borderRadius: 12, fontSize: 14, fontWeight: 600 }}
+                      >
+                        <option value="">-- Select Staff Member (Optional) --</option>
+                        {staffList.filter(s => s.type.toLowerCase() === form.employmentType).map(s => <option key={s._id} value={s._id}>{s.fullName} ({s.type})</option>)}
+                      </select>
+                    </div>
+                  )}
+
                   <InputField label="Employee Name" required value={form.employeeName} onChange={e => setForm({...form, employeeName: e.target.value})} placeholder="Full Name" icon={User} />
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
                     <InputField label="ID Code" required value={form.employeeId} onChange={e => setForm({...form, employeeId: e.target.value})} placeholder="EMP-001" />
@@ -292,7 +347,11 @@ export default function GeneratePayslip() {
 
               {step === 3 && (
                 <motion.div key="s3" initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 12 }}>
-                  <InputField label="Annual Cost to Company (CTC)" required type="number" min="0" value={form.annualCTC} onChange={e => setForm({...form, annualCTC: Math.max(0, parseFloat(e.target.value) || 0)})} placeholder="Salary in INR" icon={IndianRupee} />
+                  {form.employmentType === 'intern' ? (
+                     <InputField label="Monthly Stipend (Base Salary)" required type="number" min="0" value={form.baseSalary || ''} onChange={e => setForm({...form, baseSalary: Math.max(0, parseFloat(e.target.value) || 0)})} placeholder="Stipend in INR" icon={IndianRupee} />
+                  ) : (
+                     <InputField label="Annual Cost to Company (CTC)" required type="number" min="0" value={form.annualCTC} onChange={e => setForm({...form, annualCTC: Math.max(0, parseFloat(e.target.value) || 0)})} placeholder="Salary in INR" icon={IndianRupee} />
+                  )}
                   
                   {form.employmentType === 'regular' && (
                     <div style={{ padding: 24, background: 'var(--bg)', borderRadius: 24, border: '1px solid var(--border)', marginBottom: 24 }}>
@@ -367,10 +426,15 @@ export default function GeneratePayslip() {
 
             <div style={{ marginBottom: 32 }}>
               <PreviewRow label="Identity Code" value={form.employeeId || '—'} type="text" />
-              <PreviewRow label="Basic Component" value={totals.basic} />
-              <PreviewRow label="HRA Component" value={totals.hra} />
-              {form.employmentType === 'regular' && (
+              {form.employmentType === 'intern' ? (
                 <>
+                  <PreviewRow label="Monthly Stipend (Base)" value={totals.basic} />
+                  {totals.lossOfPay > 0 && <PreviewRow label="Absent Deduction (Loss of Pay)" value={totals.lossOfPay} isDeduction />}
+                </>
+              ) : (
+                <>
+                  <PreviewRow label="Basic Component" value={totals.basic} />
+                  <PreviewRow label="HRA Component" value={totals.hra} />
                   <PreviewRow label="Other Allowances" value={totals.special} />
                   <PreviewRow label="Statutory PF" value={totals.pf} isDeduction />
                   <PreviewRow label="TDS/Tax" value={totals.deductions - totals.pf} isDeduction />
@@ -384,7 +448,9 @@ export default function GeneratePayslip() {
               background: 'var(--navy)', color: 'white', padding: '24px', 
               borderRadius: 24, textAlign: 'center', boxShadow: '0 20px 40px -10px rgba(15,23,42,0.4)'
             }}>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 700, textTransform: 'uppercase', marginBottom: 4 }}>Net Salary Payable</div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 700, textTransform: 'uppercase', marginBottom: 4 }}>
+                {form.employmentType === 'intern' ? 'Net Stipend Payable' : 'Net Salary Payable'}
+              </div>
               <div style={{ fontSize: 36, fontWeight: 900, color: 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 ₹<AnimatedNumber value={totals.net} decimals={0} />
               </div>

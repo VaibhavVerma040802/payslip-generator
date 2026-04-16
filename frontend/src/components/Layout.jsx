@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { 
   LayoutDashboard, PlusCircle, List, Menu, X, 
-  FileSpreadsheet, Settings, LogOut, User, 
+  FileSpreadsheet, Settings, LogOut, User, Users,
   Sun, Moon, Monitor, ChevronLeft 
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
@@ -12,6 +12,7 @@ const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/generate', label: 'Generate Payslip', icon: PlusCircle },
   { to: '/payslips', label: 'All Payslips', icon: List },
+  { to: '/staff', label: 'Staff Management', icon: Users },
   { to: '/profile', label: 'Company Profile', icon: Settings },
 ]
 

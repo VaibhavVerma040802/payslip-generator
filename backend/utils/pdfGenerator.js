@@ -173,12 +173,12 @@ function drawPayslip(doc, payslip) {
     );
   }
 
-  // Right side — SALARY SLIP label in sage
+  // Right side — PAYSLIP label in sage
   doc
     .font(fontBold)
     .fontSize(14)
     .fillColor(COLORS.sage)
-    .text('SALARY SLIP', MARGIN + CONTENT_W * 0.67, 28, { width: CONTENT_W * 0.33, align: 'right' });
+    .text('PAYSLIP', MARGIN + CONTENT_W * 0.67, 28, { width: CONTENT_W * 0.33, align: 'right' });
 
   doc
     .font(fontRegular)
@@ -340,10 +340,10 @@ function drawPayslip(doc, payslip) {
 
   y += 30;
 
-  // ── NET SALARY BAND — Forest Green bg, sage label, white amount ─────────
+  // ── NET SALARY/STIPEND BAND — Forest Green bg, sage label, white amount ─────────
   doc.rect(MARGIN, y, tableW, 48).fill(COLORS.primary);
   doc.rect(MARGIN, y, 4, 48).fill(COLORS.sage);
-  doc.font(fontBold).fontSize(11).fillColor(COLORS.sage).text('NET SALARY PAYABLE', MARGIN + 16, y + 8);
+  doc.font(fontBold).fontSize(11).fillColor(COLORS.sage).text(payslip.employmentType === 'intern' ? 'NET STIPEND PAYABLE' : 'NET SALARY PAYABLE', MARGIN + 16, y + 8);
   doc
     .font(fontBold).fontSize(18).fillColor(COLORS.white)
     .text(formatINR(payslip.netSalary), MARGIN + CONTENT_W * 0.45, y + 14, { width: CONTENT_W * 0.5, align: 'right' });
@@ -388,7 +388,7 @@ function generatePayslipPDF(payslip, res) {
     info: {
       Title: `Payslip - ${payslip.employeeName} - ${payslip.month} ${payslip.year}`,
       Author: payslip.companyName,
-      Subject: 'Salary Slip',
+      Subject: 'Payslip',
     },
   });
 
