@@ -4,6 +4,18 @@ import { Search, Filter, Eye, Download, Mail, Trash2, FileText, ChevronLeft, Che
 import toast from 'react-hot-toast'
 import api from '../api'
 
+function useMediaQuery(query) {
+  const [matches, setMatches] = useState(false)
+  useEffect(() => {
+    const media = window.matchMedia(query)
+    setMatches(media.matches)
+    const listener = (e) => setMatches(e.matches)
+    media.addEventListener('change', listener)
+    return () => media.removeEventListener('change', listener)
+  }, [query])
+  return matches
+}
+
 const MONTHS = ['','January','February','March','April','May','June','July','August','September','October','November','December']
 const CURRENT_YEAR = new Date().getFullYear()
 const YEARS = ['', ...Array.from({ length: 5 }, (_, i) => CURRENT_YEAR - 2 + i)]
@@ -52,6 +64,7 @@ const ActionBtn = React.memo(({ icon: Icon, label, onClick, color = 'var(--text-
 
 export default function PayslipList() {
   const navigate = useNavigate()
+  const isMobile = useMediaQuery('(max-width: 1024px)')
   const [payslips, setPayslips] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -147,12 +160,12 @@ export default function PayslipList() {
   const isFiltered = search || filterMonth || filterYear
 
   return (
-    <div style={{ padding: 'clamp(24px, 5vh, 48px)', maxWidth: 1200, margin: '0 auto' }}>
+    <div style={{ padding: 'clamp(16px, 4vw, 48px)', maxWidth: 1200, margin: '0 auto' }}>
       {/* Header Tier */}
       <div className="fade-in" style={{ marginBottom: 32, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap' }}>
         <div>
-          <h1 style={{ color: 'var(--navy)', letterSpacing: '-0.02em', marginBottom: 4 }}>Payslip Vault</h1>
-          <p style={{ color: 'var(--text-muted)', fontWeight: 500 }}>
+          <h1 style={{ color: 'var(--navy)', letterSpacing: '-0.02em', marginBottom: 4, fontSize: 'clamp(24px, 5vw, 32px)' }}>Payslip Vault</h1>
+          <p style={{ color: 'var(--text-muted)', fontWeight: 500, fontSize: 14 }}>
             Management console for <strong>{pagination.total}</strong> generated artifacts.
           </p>
         </div>
@@ -162,12 +175,13 @@ export default function PayslipList() {
             background: 'var(--navy)', color: 'white', border: 'none',
             borderRadius: 14, padding: '14px 24px', fontWeight: 800,
             fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10,
-            boxShadow: '0 10px 20px -5px rgba(15,23,42,0.3)'
+            boxShadow: '0 10px 20px -5px rgba(15,23,42,0.3)',
+            width: isMobile ? '100%' : 'auto', justifyContent: 'center'
           }}
           className="btn-hover"
         >
           <Plus size={18} strokeWidth={3} />
-          Create New
+          <span>Create New Slip</span>
         </button>
       </div>
 
@@ -176,7 +190,7 @@ export default function PayslipList() {
         padding: '16px 20px', marginBottom: 24,
         display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap',
       }}>
-        <div style={{ position: 'relative', flex: '1 1 300px' }}>
+        <div style={{ position: 'relative', flex: '1 1 280px', minWidth: 200 }}>
           <Search size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-light)' }} />
           <input
             value={search}
@@ -191,15 +205,15 @@ export default function PayslipList() {
           />
         </div>
 
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center', width: isMobile ? '100%' : 'auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: isMobile ? 1 : 'none' }}>
             <Filter size={14} color="var(--text-light)" />
             <select
               value={filterMonth}
               onChange={e => { setFilterMonth(e.target.value); setPage(1) }}
               style={{
-                border: '1.5px solid var(--border)', borderRadius: 10, background: 'var(--surface)',
-                padding: '10px 14px', fontSize: 13, color: 'var(--text)', outline: 'none', cursor: 'pointer', fontWeight: 600
+                flex: 1, border: '1.5px solid var(--border)', borderRadius: 10, background: 'var(--surface)',
+                padding: '10px 14px', fontSize: 13, color: 'var(--text)', outline: 'none', cursor: 'pointer', fontWeight: 600, minWidth: 100
               }}
             >
               <option value="">Month</option>
@@ -211,8 +225,8 @@ export default function PayslipList() {
             value={filterYear}
             onChange={e => { setFilterYear(e.target.value); setPage(1) }}
             style={{
-              border: '1.5px solid var(--border)', borderRadius: 10, background: 'var(--surface)',
-              padding: '10px 14px', fontSize: 13, color: 'var(--text)', outline: 'none', cursor: 'pointer', fontWeight: 600
+              flex: isMobile ? 1 : 'none', border: '1.5px solid var(--border)', borderRadius: 10, background: 'var(--surface)',
+              padding: '10px 14px', fontSize: 13, color: 'var(--text)', outline: 'none', cursor: 'pointer', fontWeight: 600, minWidth: 80
             }}
           >
             <option value="">Year</option>
@@ -223,11 +237,12 @@ export default function PayslipList() {
             <button
               onClick={() => { setSearch(''); setFilterMonth(''); setFilterYear(''); setPage(1) }}
               style={{
+                width: isMobile ? '100%' : 'auto',
                 background: 'var(--bg)', color: '#ef4444', border: '1px solid #fee2e2',
                 borderRadius: 10, padding: '10px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer',
               }}
             >
-              Reset Filters
+              Reset
             </button>
           )}
         </div>
@@ -236,7 +251,7 @@ export default function PayslipList() {
       {/* Racked Data View */}
       <div className="fade-in glass" style={{ animationDelay: '100ms', overflow: 'hidden' }}>
         <div style={{ width: '100%', overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 800 }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 700 }}>
             <thead>
               <tr style={{ background: 'var(--navy-dark)' }}>
                 {['Employee Details', 'Period', 'Compensation', 'Tracking', 'Actions'].map((h, i) => (
@@ -288,8 +303,8 @@ export default function PayslipList() {
                           {p.employeeName.charAt(0).toUpperCase()}
                         </div>
                         <div style={{ overflow: 'hidden' }}>
-                          <div style={{ fontWeight: 800, fontSize: 14.5, color: 'var(--text)', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{p.employeeName}</div>
-                          <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>{p.employeeId} · <span style={{ color: 'var(--navy)' }}>{p.department}</span></div>
+                          <div style={{ fontWeight: 800, fontSize: 14, color: 'var(--text)', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{p.employeeName}</div>
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500 }}>{p.employeeId} · <span style={{ color: 'var(--navy)', opacity: 0.8 }}>{p.department}</span></div>
                         </div>
                       </div>
                     </td>
@@ -297,7 +312,7 @@ export default function PayslipList() {
                     {/* Timeline */}
                     <td style={{ padding: '16px 20px' }}>
                       <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--navy)' }}>{p.month}</div>
-                      <div style={{ fontSize: 12, color: 'var(--text-light)', fontWeight: 600 }}>CY {p.year}</div>
+                      <div style={{ fontSize: 11, color: 'var(--text-light)', fontWeight: 600 }}>CY {p.year}</div>
                     </td>
 
                     {/* Salary */}
@@ -309,19 +324,18 @@ export default function PayslipList() {
                     {/* Status Tracking */}
                     <td style={{ padding: '16px 20px' }}>
                       {p.emailSent
-                        ? <div className="badge badge-green">✓ Dispatched</div>
-                        : <div className="badge" style={{ background: 'var(--bg)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>Draft Only</div>
+                        ? <div className="badge badge-green">✓ Sent</div>
+                        : <div className="badge" style={{ background: 'var(--bg)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>Draft</div>
                       }
                     </td>
 
                     {/* Professional Actions */}
                     <td style={{ padding: '16px 20px', textAlign: 'right' }}>
                       <div style={{ display: 'inline-flex', gap: 6 }}>
-                        <ActionBtn icon={Eye} label="View Full Slip" onClick={() => navigate(`/payslips/${p._id}`)} color="var(--navy)" />
-                        <ActionBtn icon={Copy} label="Clone Document" loading={actionLoading[`dup_${p._id}`]} onClick={() => handleDuplicate(p._id)} color="var(--gold)" />
-                        <ActionBtn icon={Download} label="Export PDF" loading={actionLoading[`dl_${p._id}`]} onClick={() => handleDownload(p._id, p.employeeName, p.month, p.year)} color="var(--emerald)" />
-                        <ActionBtn icon={Mail} label="Push to Email" loading={actionLoading[`em_${p._id}`]} onClick={() => handleEmail(p._id, p.employeeEmail)} color="#0284c7" />
-                        <ActionBtn icon={Trash2} label="Purge Record" loading={deleting === p._id} onClick={() => handleDelete(p._id)} color="#ef4444" />
+                        <ActionBtn icon={Eye} label="View" onClick={() => navigate(`/payslips/${p._id}`)} color="var(--navy)" />
+                        <ActionBtn icon={Download} label="PDF" loading={actionLoading[`dl_${p._id}`]} onClick={() => handleDownload(p._id, p.employeeName, p.month, p.year)} color="var(--emerald)" />
+                        <ActionBtn icon={Mail} label="Email" loading={actionLoading[`em_${p._id}`]} onClick={() => handleEmail(p._id, p.employeeEmail)} color="#0284c7" />
+                        <ActionBtn icon={Trash2} label="Delete" loading={deleting === p._id} onClick={() => handleDelete(p._id)} color="#ef4444" />
                       </div>
                     </td>
                   </tr>
@@ -335,11 +349,11 @@ export default function PayslipList() {
         {pagination.totalPages > 1 && (
           <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '20px 32px', borderTop: '1.5px solid var(--border)',
-            background: 'var(--bg)',
+            padding: '20px 24px', borderTop: '1.5px solid var(--border)',
+            background: 'var(--bg)', flexWrap: 'wrap', gap: 16
           }}>
             <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600 }}>
-              Viewing {((page - 1) * 10) + 1} – {Math.min(page * 10, pagination.total)} of {pagination.total} records
+              Showing {((page - 1) * 10) + 1} – {Math.min(page * 10, pagination.total)} of {pagination.total}
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
               <button

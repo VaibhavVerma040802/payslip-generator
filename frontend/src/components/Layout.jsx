@@ -46,17 +46,22 @@ export default function Layout() {
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen)
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg)', color: 'var(--text)' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg)', color: 'var(--text)', overflowX: 'hidden' }}>
       {/* Mobile Overlay */}
-      {isMobile && sidebarOpen && (
-        <div 
-          onClick={() => setSidebarOpen(false)}
-          style={{ 
-            position: 'fixed', inset: 0, background: 'rgba(2, 6, 23, 0.5)', 
-            zIndex: 100, backdropFilter: 'blur(4px)', transition: 'all 0.3s'
-          }}
-        />
-      )}
+      <AnimatePresence>
+        {isMobile && sidebarOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSidebarOpen(false)}
+            style={{ 
+              position: 'fixed', inset: 0, background: 'rgba(2, 6, 23, 0.4)', 
+              zIndex: 110, backdropFilter: 'blur(4px)'
+            }}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Sidebar */}
       <aside style={{
@@ -67,7 +72,7 @@ export default function Layout() {
         position: 'fixed',
         top: 0, left: 0, bottom: 0,
         zIndex: 120,
-        transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
+        transform: sidebarOpen ? 'translateX(0)' : 'translateX(-101%)',
         transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
         borderRight: '1px solid rgba(255,255,255,0.05)',
       }}>
@@ -106,7 +111,7 @@ export default function Layout() {
 
         {/* Navigation Sidebar */}
         <nav style={{ padding: '24px 16px', flex: 1, overflowY: 'auto' }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em', padding: '0 12px 16px', textTransform: 'uppercase' }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.1em', padding: '0 12px 16px', textTransform: 'uppercase' }}>
             Main Menu
           </div>
           {navItems.map(({ to, label, icon: Icon, end }) => (
@@ -124,12 +129,12 @@ export default function Layout() {
                 textDecoration: 'none',
                 fontSize: 14,
                 fontWeight: isActive ? 600 : 500,
-                color: isActive ? 'white' : 'rgba(255,255,255,0.5)',
+                color: isActive ? 'white' : 'rgba(255,255,255,0.45)',
                 background: isActive ? 'rgba(255,255,255,0.08)' : 'transparent',
                 transition: 'all 0.2s ease',
               })}
             >
-              <Icon size={18} opacity={0.8} />
+              <Icon size={18} opacity={isActive ? 1 : 0.7} />
               {label}
             </NavLink>
           ))}
@@ -138,17 +143,17 @@ export default function Layout() {
         {/* User Profile Hook */}
         <div style={{
           padding: '20px 16px',
-          background: 'rgba(0,0,0,0.2)',
+          background: 'rgba(0,0,0,0.15)',
           borderTop: '1px solid rgba(255,255,255,0.05)',
         }}>
           <div style={{ 
             display: 'flex', alignItems: 'center', gap: 12, 
-            padding: '12px', background: 'rgba(255,255,255,0.03)', 
+            padding: '12px', background: 'rgba(255,255,255,0.02)', 
             borderRadius: 16, marginBottom: 12 
           }}>
             <div style={{ 
               width: 36, height: 36, borderRadius: 10, 
-              background: 'var(--navy-light)', border: '1px solid rgba(255,255,255,0.1)',
+              background: 'var(--navy-light)', border: '1px solid rgba(255,255,255,0.08)',
               display: 'flex', alignItems: 'center', justifyContent: 'center' 
             }}>
               <User size={16} color="white" />
@@ -157,14 +162,14 @@ export default function Layout() {
               <div style={{ fontSize: 13, color: 'white', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {user?.companyName || 'Corporate Account'}
               </div>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>Verified Workspace</div>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', fontWeight: 500 }}>Verified Workspace</div>
             </div>
           </div>
           <button 
             onClick={logout}
             style={{
               width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, 
-              background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)',
+              background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.15)',
               padding: '10px', borderRadius: 12, color: '#f87171', fontSize: 13, 
               cursor: 'pointer', fontWeight: 600, transition: 'all 0.2s'
             }}
@@ -181,7 +186,8 @@ export default function Layout() {
         display: 'flex', 
         flexDirection: 'column',
         transition: 'margin 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-        minWidth: 0
+        minWidth: 0,
+        width: '100%'
       }}>
         
         {/* Universal Header */}
@@ -198,22 +204,25 @@ export default function Layout() {
           zIndex: 80,
           backdropFilter: 'blur(8px)',
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <button 
               onClick={toggleSidebar}
               style={{ 
                 background: 'var(--bg)', border: '1px solid var(--border)', 
                 color: 'var(--text)', cursor: 'pointer', 
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                width: 40, height: 40, borderRadius: 12, transition: 'all 0.2s'
+                width: 38, height: 38, borderRadius: 12, transition: 'all 0.2s',
+                flexShrink: 0
               }}
               className="btn-hover"
             >
-              <Menu size={20} />
+              <Menu size={18} />
             </button>
-            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--navy)', opacity: 0.9, letterSpacing: '-0.01em' }}>
-              Workspace Console
-            </div>
+            {!isMobile && (
+              <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--navy)', opacity: 0.8, letterSpacing: '-0.01em', whiteSpace: 'nowrap' }}>
+                Workspace Console
+              </div>
+            )}
           </div>
 
           {/* Theme Control System */}
@@ -233,7 +242,7 @@ export default function Layout() {
                   background: theme === t.id ? 'var(--surface)' : 'transparent',
                   color: theme === t.id ? 'var(--gold)' : 'var(--text-light)',
                   boxShadow: theme === t.id ? 'var(--shadow-sm)' : 'none',
-                  border: 'none', borderRadius: 11, padding: '7px 14px',
+                  border: 'none', borderRadius: 11, padding: '7px clamp(8px, 2vw, 14px)',
                   display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer',
                   fontSize: 12, fontWeight: 700, transition: 'all 0.2s'
                 }}
@@ -245,8 +254,8 @@ export default function Layout() {
           </div>
         </header>
 
-        {/* Global Body */}
-        <div style={{ flex: 1, position: 'relative' }}>
+        {/* Global Body Container */}
+        <div style={{ flex: 1, position: 'relative', width: '100%', overflowX: 'hidden' }}>
           <Outlet />
         </div>
       </main>
