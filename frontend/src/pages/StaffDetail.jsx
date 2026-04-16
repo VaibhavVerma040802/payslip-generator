@@ -5,18 +5,6 @@ import { ArrowLeft, User, Mail, Phone, Briefcase, Calendar, Landmark, CreditCard
 import toast from 'react-hot-toast'
 import api from '../api'
 
-function useMediaQuery(query) {
-  const [matches, setMatches] = useState(false)
-  useEffect(() => {
-    const media = window.matchMedia(query)
-    setMatches(media.matches)
-    const listener = (e) => setMatches(e.matches)
-    media.addEventListener('change', listener)
-    return () => media.removeEventListener('change', listener)
-  }, [query])
-  return matches
-}
-
 function DetailRow({ icon: Icon, label, value }) {
   return (
     <div style={{ display: 'flex', gap: 16, marginBottom: 20 }}>
@@ -32,7 +20,6 @@ function DetailRow({ icon: Icon, label, value }) {
 export default function StaffDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const isMobile = useMediaQuery('(max-width: 1024px)')
   const [staff, setStaff] = useState(null)
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState(false)
@@ -71,31 +58,31 @@ export default function StaffDetail() {
   const isIntern = staff.type === 'Intern'
 
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={{ padding: 'clamp(16px, 4vw, 40px)', maxWidth: 1000, margin: '0 auto' }}>
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={{ padding: 'clamp(20px, 4vw, 40px)', maxWidth: 1000, margin: '0 auto' }}>
       <button 
         onClick={() => navigate('/staff')} 
-        style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'transparent', border: 'none', color: 'var(--text-muted)', fontWeight: 600, cursor: 'pointer', marginBottom: 24, fontSize: 14 }}
+        style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'transparent', border: 'none', color: 'var(--text-muted)', fontWeight: 600, cursor: 'pointer', marginBottom: 24 }}
       >
-        <ArrowLeft size={16} /> Back to Staff
+        <ArrowLeft size={18} /> Back to Staff
       </button>
 
       <div style={{ background: 'var(--surface)', borderRadius: 24, border: '1px solid var(--border)', overflow: 'hidden', boxShadow: '0 10px 30px -10px rgba(0,0,0,0.05)' }}>
         {/* Header Profile Area */}
-        <div style={{ padding: 'clamp(20px, 5vw, 40px)', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 24 }}>
-          <div style={{ display: 'flex', gap: 'clamp(16px, 3vw, 24px)', alignItems: 'center' }}>
-            <div style={{ width: 'clamp(60px, 10vw, 80px)', height: 'clamp(60px, 10vw, 80px)', borderRadius: 20, background: staff.type === 'Employee' ? 'var(--navy)' : 'var(--emerald)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: 800, flexShrink: 0 }}>
+        <div style={{ padding: 40, borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 24 }}>
+          <div style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
+            <div style={{ width: 80, height: 80, borderRadius: 20, background: staff.type === 'Employee' ? 'var(--navy)' : 'var(--emerald)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 32, fontWeight: 800 }}>
               {staff.fullName.charAt(0).toUpperCase()}
             </div>
             <div>
-              <h1 style={{ margin: 0, color: 'var(--navy)', fontSize: 'clamp(20px, 4vw, 24px)', marginBottom: 8 }}>{staff.fullName}</h1>
-              <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+              <h1 style={{ margin: 0, color: 'var(--navy)', fontSize: 24, marginBottom: 8 }}>{staff.fullName}</h1>
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                 <span className={`badge ${staff.type === 'Employee' ? 'badge-navy' : 'badge-emerald'}`}>{staff.type}</span>
-                <span style={{ color: 'var(--text-muted)', fontWeight: 500, fontSize: 13 }}>{staff.designation || 'No Designation'} · {staff.department || 'General'}</span>
+                <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>{staff.designation || 'No Designation'} · {staff.department || 'General'}</span>
               </div>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 12, width: isMobile ? '100%' : 'auto' }}>
-            <button onClick={() => navigate('/generate', { state: { predefinedStaff: staff } })} style={{ flex: isMobile ? 1 : 'none', padding: '10px 20px', borderRadius: 12, border: 'none', background: 'var(--navy)', color: 'white', fontWeight: 600, cursor: 'pointer', display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <button onClick={() => navigate('/generate', { state: { predefinedStaff: staff } })} style={{ padding: '10px 20px', borderRadius: 12, border: 'none', background: 'var(--navy)', color: 'white', fontWeight: 600, cursor: 'pointer', display: 'flex', gap: 8, alignItems: 'center' }}>
                <FileText size={16} /> Generate Payslip
             </button>
             <button onClick={handleDelete} disabled={deleting} style={{ padding: '10px', borderRadius: 12, border: '1px solid #fee2e2', background: '#fef2f2', color: '#ef4444', fontWeight: 600, cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -104,10 +91,10 @@ export default function StaffDetail() {
           </div>
         </div>
 
-        <div style={{ padding: 'clamp(20px, 5vw, 40px)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(clamp(260px, 100%, 300px), 1fr))', gap: 'clamp(24px, 5vw, 40px)' }}>
+        <div style={{ padding: 40, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 40 }}>
           {/* Professional Details */}
           <div>
-            <h3 style={{ color: 'var(--navy)', marginBottom: 24, borderBottom: '2px solid var(--border)', paddingBottom: 8, display: 'inline-block', fontSize: 16 }}>Professional Details</h3>
+            <h3 style={{ color: 'var(--navy)', marginBottom: 24, borderBottom: '2px solid var(--border)', paddingBottom: 8, display: 'inline-block' }}>Professional Details</h3>
             <DetailRow icon={Mail} label="Email Address" value={staff.email} />
             <DetailRow icon={Phone} label="Phone Number" value={staff.phone} />
             <DetailRow icon={Briefcase} label="Department" value={staff.department} />
@@ -116,7 +103,7 @@ export default function StaffDetail() {
 
           {/* Financials */}
           <div>
-            <h3 style={{ color: 'var(--navy)', marginBottom: 24, borderBottom: '2px solid var(--border)', paddingBottom: 8, display: 'inline-block', fontSize: 16 }}>Financial Information</h3>
+            <h3 style={{ color: 'var(--navy)', marginBottom: 24, borderBottom: '2px solid var(--border)', paddingBottom: 8, display: 'inline-block' }}>Financial Information</h3>
             <DetailRow icon={CreditCard} label="PAN Number" value={staff.financials?.panNumber} />
             <DetailRow icon={Landmark} label="Bank Name" value={staff.financials?.bankName} />
             <DetailRow icon={Code} label="Account Number" value={staff.financials?.accountNumber} />
@@ -125,7 +112,7 @@ export default function StaffDetail() {
           
           {/* Salary */}
           <div>
-            <h3 style={{ color: 'var(--navy)', marginBottom: 24, borderBottom: '2px solid var(--border)', paddingBottom: 8, display: 'inline-block', fontSize: 16 }}>Salary Structure</h3>
+            <h3 style={{ color: 'var(--navy)', marginBottom: 24, borderBottom: '2px solid var(--border)', paddingBottom: 8, display: 'inline-block' }}>Salary Structure</h3>
             {isIntern ? (
               <DetailRow icon={IndianRupee} label="Monthly Stipend (Base Salary)" value={`₹ ${staff.salaryDetails?.baseSalary?.toLocaleString() || 0}`} />
             ) : (

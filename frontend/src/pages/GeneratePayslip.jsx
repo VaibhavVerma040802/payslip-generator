@@ -306,13 +306,13 @@ export default function GeneratePayslip() {
                   </div>
 
                   <InputField label="Employee Name" required value={form.employeeName} onChange={e => setForm({...form, employeeName: e.target.value})} placeholder="Full Name" icon={User} />
-                  <div className="grid-2">
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
                     <InputField label="ID Code" required value={form.employeeId} onChange={e => setForm({...form, employeeId: e.target.value})} placeholder="EMP-001" />
                     <InputField label="Designation" required value={form.designation} onChange={e => setForm({...form, designation: e.target.value})} placeholder="Role" />
                   </div>
                   <InputField label="Department" required value={form.department} onChange={e => setForm({...form, department: e.target.value})} placeholder="e.g. Engineering" />
                   <InputField label="Employee Email" required type="email" value={form.employeeEmail} onChange={e => setForm({...form, employeeEmail: e.target.value})} placeholder="email@company.com" icon={Send} />
-                  <div className="grid-2">
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
                     <InputField label="PAN Number" value={form.panNumber} onChange={e => setForm({...form, panNumber: e.target.value})} placeholder="ABCDE1234F" />
                     <InputField label="PF Number" value={form.pfNumber} onChange={e => setForm({...form, pfNumber: e.target.value})} placeholder="XX/XXX/0000000" />
                   </div>
@@ -321,7 +321,7 @@ export default function GeneratePayslip() {
 
               {step === 2 && (
                 <motion.div key="s2" initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 12 }}>
-                  <div className="grid-2" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 20 }}>
                     <div style={{ marginBottom: 20 }}>
                       <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 8 }}>Pay Month</label>
                       <select value={form.month} onChange={e => setForm({...form, month: e.target.value})} className="btn-hover" style={{ width: '100%', padding: '14px', border: '2px solid var(--border)', borderRadius: 12, fontSize: 14, fontWeight: 600, color: 'var(--text)', background: 'var(--surface)', outline: 'none' }}>
@@ -335,11 +335,11 @@ export default function GeneratePayslip() {
                       </select>
                     </div>
                   </div>
-                  <div className="grid-2">
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
                     <InputField label="Date of Joining" type="date" value={form.dateOfJoining} onChange={e => setForm({...form, dateOfJoining: e.target.value})} icon={Calendar} />
                     <InputField label="Payout Date" type="date" value={form.payDate} onChange={e => setForm({...form, payDate: e.target.value})} icon={Calendar} />
                   </div>
-                  <div className="grid-2" style={{ padding: 20, background: 'var(--bg)', borderRadius: 20, border: '1px solid var(--border)' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, padding: 20, background: 'var(--bg)', borderRadius: 20, border: '1px solid var(--border)' }}>
                     <InputField label="Working Days" type="number" min="0" max="31" value={form.workingDays} onChange={e => setForm({...form, workingDays: Math.max(0, parseInt(e.target.value) || 0)})} />
                     <InputField label="Paid Days" type="number" min="0" max="31" value={form.paidDays} onChange={e => setForm({...form, paidDays: Math.max(0, parseInt(e.target.value) || 0)})} />
                   </div>
@@ -356,7 +356,7 @@ export default function GeneratePayslip() {
                   
                   {form.employmentType === 'regular' && (
                     <div style={{ padding: 24, background: 'var(--bg)', borderRadius: 24, border: '1px solid var(--border)', marginBottom: 24 }}>
-                      <div className="grid-2">
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
                         <InputField label="TDS" type="number" min="0" value={form.tds} onChange={e => setForm({...form, tds: Math.max(0, parseFloat(e.target.value) || 0)})} placeholder="0" />
                         <InputField label="Loan/Recovery" type="number" min="0" value={form.loanDeduction} onChange={e => setForm({...form, loanDeduction: Math.max(0, parseFloat(e.target.value) || 0)})} placeholder="0" />
                       </div>
@@ -394,8 +394,12 @@ export default function GeneratePayslip() {
         minHeight: '100%'
       }}>
         <div style={{ width: '100%', maxWidth: 500 }} className="fade-in">
-          <div className="preview-card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', marginBottom: 32, borderBottom: '2px solid var(--bg)', paddingBottom: 24, gap: 16 }}>
+          <div style={{ 
+            background: 'var(--surface)', borderRadius: 32, padding: 'clamp(24px, 5vw, 40px)',
+            boxShadow: '0 40px 100px -20px rgba(0,0,0,0.12)', border: '1px solid var(--border)',
+            position: 'relative'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 32, borderBottom: '2px solid var(--bg)', paddingBottom: 24 }}>
               <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
                 {form.companyLogo && (
                   <img src={form.companyLogo} alt="Logo" style={{ height: 48, width: 'auto', borderRadius: 12, objectFit: 'contain', background: '#f8fafc', padding: 4 }} />

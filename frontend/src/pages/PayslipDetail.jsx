@@ -7,18 +7,6 @@ import {
 } from 'lucide-react'
 import api from '../api'
 
-function useMediaQuery(query) {
-  const [matches, setMatches] = useState(false)
-  useEffect(() => {
-    const media = window.matchMedia(query)
-    setMatches(media.matches)
-    const listener = (e) => setMatches(e.matches)
-    media.addEventListener('change', listener)
-    return () => media.removeEventListener('change', listener)
-  }, [query])
-  return matches
-}
-
 function InfoRow({ label, value }) {
   if (!value) return null
   return (
@@ -189,7 +177,6 @@ function EmailModal({ payslip, onClose, onSent }) {
 export default function PayslipDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const isMobile = useMediaQuery('(max-width: 1024px)')
   const [payslip, setPayslip] = useState(null)
   const [loading, setLoading] = useState(true)
   const [downloading, setDownloading] = useState(false)
@@ -246,7 +233,7 @@ export default function PayslipDetail() {
   const p = payslip
 
   return (
-    <div style={{ padding: 'clamp(16px, 4vw, 40px)', maxWidth: 1100, margin: '0 auto' }}>
+    <div style={{ padding: '36px 40px', maxWidth: 1100 }}>
       {showEmailModal && (
         <EmailModal payslip={p} onClose={() => setShowEmailModal(false)} onSent={fetchPayslip} />
       )}
@@ -258,130 +245,169 @@ export default function PayslipDetail() {
           style={{
             display: 'flex', alignItems: 'center', gap: 6, background: 'none',
             border: 'none', cursor: 'pointer', color: 'var(--text-muted)',
-            fontSize: 13, marginBottom: 16, padding: 0
+            fontSize: 13, marginBottom: 16,
           }}
         >
-          <ArrowLeft size={14} /> Back to Vault
+          <ArrowLeft size={14} /> Back to All Payslips
         </button>
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 24 }}>
-          <div style={{ display: 'flex', gap: 16, alignItems: 'center', minWidth: 280 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 14 }}>
+          <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
             {p.companyLogo && (
               <img 
                 src={p.companyLogo} 
-                alt="Logo" 
-                style={{ height: 'clamp(48px, 8vw, 60px)', width: 'auto', borderRadius: 12, objectFit: 'contain', background: 'white', padding: 4, border: '1px solid var(--border)' }} 
+                alt="Company Logo" 
+                style={{ height: 60, width: 'auto', borderRadius: 12, objectFit: 'contain', background: 'white', padding: 4, border: '1px solid var(--border)' }} 
               />
             )}
-            <div style={{ minWidth: 0 }}>
+            <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(20px, 4vw, 28px)', fontWeight: 700, color: 'var(--navy)', lineHeight: 1.2, margin: 0 }}>
+                <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 700, color: 'var(--navy)', lineHeight: 1 }}>
                   {p.employeeName}
                 </h1>
-                {p.emailSent && <span className="badge badge-green"><CheckCircle2 size={10} /> Sent</span>}
+                {p.emailSent && (
+                  <span className="badge badge-green">
+                    <CheckCircle2 size={10} /> Emailed
+                  </span>
+                )}
               </div>
-              <p style={{ color: 'var(--text-muted)', marginTop: 4, fontSize: 13, fontWeight: 500 }}>
-                {p.employmentType === 'intern' ? 'Internship' : 'Regular'} · {p.designation}
+              <p style={{ color: 'var(--text-muted)', marginTop: 5, fontSize: 14 }}>
+                {p.employmentType === 'intern' ? 'Intern' : 'Regular Employee'} · {p.designation} · {p.department}
               </p>
             </div>
           </div>
+            <div style={{ marginTop: 8, display: 'flex', gap: 10 }}>
+              <span className="badge" style={{ background: 'var(--surface-2)', color: 'var(--navy)' }}>
+                {p.month} {p.year}
+              </span>
+              {p.annualCTC > 0 && (
+                <span className="badge" style={{ background: 'var(--gold-pale)', color: 'var(--navy-dark)' }}>
+                  Annual CTC: ₹{p.annualCTC.toLocaleString('en-IN')}
+                </span>
+              )}
+            </div>
 
-          <div style={{ display: 'flex', gap: 12, width: isMobile ? '100% ' : 'auto' }}>
+          {/* Action Buttons */}
+          <div style={{ display: 'flex', gap: 10 }}>
             <button
               onClick={handleDownload}
               disabled={downloading}
               style={{
-                flex: isMobile ? 1 : 'none',
-                display: 'flex', alignItems: 'center', gap: 7, justifyContent: 'center',
-                background: 'var(--emerald)', color: 'white',
-                border: 'none', borderRadius: 12, padding: '12px 18px',
-                fontWeight: 700, fontSize: 13, cursor: downloading ? 'wait' : 'pointer',
+                display: 'flex', alignItems: 'center', gap: 7,
+                background: 'var(--green)', color: 'white',
+                border: 'none', borderRadius: 9, padding: '10px 18px',
+                fontWeight: 600, fontSize: 13.5, cursor: downloading ? 'wait' : 'pointer',
               }}
             >
-              {downloading ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
-              <span>PDF</span>
+              {downloading
+                ? <><Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> Generating...</>
+                : <><Download size={14} /> Download PDF</>
+              }
             </button>
             <button
               onClick={() => setShowEmailModal(true)}
               style={{
-                flex: isMobile ? 1 : 'none',
-                display: 'flex', alignItems: 'center', gap: 7, justifyContent: 'center',
+                display: 'flex', alignItems: 'center', gap: 7,
                 background: '#0284c7', color: 'white',
-                border: 'none', borderRadius: 12, padding: '12px 18px',
-                fontWeight: 700, fontSize: 13, cursor: 'pointer',
+                border: 'none', borderRadius: 9, padding: '10px 18px',
+                fontWeight: 600, fontSize: 13.5, cursor: 'pointer',
               }}
             >
-              <Mail size={14} />
-              <span>Email</span>
+              <Mail size={14} /> Send Email
             </button>
           </div>
         </div>
       </div>
 
-      {/* Stats Summary Strip */}
-      <div style={{ display: 'flex', gap: 12, marginBottom: 32, flexWrap: 'wrap' }}>
-        <span className="badge" style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--navy)' }}>
-          {p.month} {p.year}
-        </span>
-        {p.annualCTC > 0 && (
-          <span className="badge" style={{ background: 'var(--gold-pale)', color: 'var(--navy-dark)', border: '1px solid var(--gold)' }}>
-            CTC: ₹{p.annualCTC.toLocaleString('en-IN')}
-          </span>
-        )}
-      </div>
-
       {/* Content Grid */}
-      <div className="grid-2" style={{ gap: 'clamp(16px, 3vw, 24px)' }}>
-        <SectionCard title="Employer Info" icon={Building2}>
-          <InfoRow label="Name" value={p.companyName} />
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+
+        {/* Company Info */}
+        <SectionCard title="Company" icon={Building2}>
+          <InfoRow label="Company Name" value={p.companyName} />
+          <InfoRow label="Address" value={p.companyAddress} />
           <InfoRow label="Email" value={p.companyEmail} />
+          <InfoRow label="Phone" value={p.companyPhone} />
           <InfoRow label="CIN" value={p.companyCIN} />
         </SectionCard>
 
-        <SectionCard title="Employee Info" icon={User}>
+        {/* Employee Info */}
+        <SectionCard title="Employee" icon={User}>
           <InfoRow label="Name" value={p.employeeName} />
-          <InfoRow label="ID Code" value={p.employeeId} />
-          <InfoRow label="Joining Date" value={p.dateOfJoining} />
+          <InfoRow label="Employee ID" value={p.employeeId} />
+          <InfoRow label="Designation" value={p.designation} />
+          <InfoRow label="Department" value={p.department} />
+          <InfoRow label="Email" value={p.employeeEmail} />
+          <InfoRow label="Date of Joining" value={p.dateOfJoining} />
           <InfoRow label="PAN" value={p.panNumber} />
+          <InfoRow label="PF No." value={p.pfNumber} />
+          <InfoRow label="Bank Account" value={p.bankAccount ? `****${p.bankAccount.slice(-4)}` : null} />
+          <InfoRow label="Bank Name" value={p.bankName} />
         </SectionCard>
 
-        <SectionCard title="Attendance" icon={Calendar}>
+        {/* Pay Period */}
+        <SectionCard title="Pay Period" icon={Calendar}>
           <InfoRow label="Pay Period" value={`${p.month} ${p.year}`} />
-          <InfoRow label="Worked Days" value={p.paidDays} />
-          <InfoRow label="LOP Days" value={p.workingDays - p.paidDays} />
+          <InfoRow label="Pay Date" value={p.payDate} />
+          <InfoRow label="Working Days" value={p.workingDays} />
+          <InfoRow label="Paid Days" value={p.paidDays} />
+          <InfoRow label="Loss of Pay Days" value={p.workingDays - p.paidDays} />
         </SectionCard>
 
-        <SectionCard title="Payroll Table" icon={Banknote} accent>
-          <div style={{ marginBottom: 12 }}>
-            <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--gold)', textTransform: 'uppercase', marginBottom: 8 }}>Earnings</div>
+        {/* Salary Breakdown */}
+        <SectionCard title="Salary Breakdown" icon={Banknote} accent>
+          {/* Earnings */}
+          <div style={{ marginBottom: 10 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 6 }}>
+              Earnings
+            </div>
             {p.employmentType === 'intern' ? (
-              <SalaryRow label="Gross Stipend" amount={p.stipend || p.grossEarnings} type="earning" bold />
+              <SalaryRow label="Monthly Stipend" amount={p.stipend || p.grossEarnings} type="earning" bold />
             ) : (
               <>
-                <SalaryRow label="Basic" amount={p.basicSalary} type="earning" />
-                <SalaryRow label="HRA" amount={p.hra} type="earning" />
-                <SalaryRow label="Gross Total" amount={p.grossEarnings} type="earning" bold />
+                <SalaryRow label="Basic Salary (50%)" amount={p.basicSalary} type="earning" />
+                <SalaryRow label="House Rent Allowance (40%)" amount={p.hra} type="earning" />
+                <SalaryRow label="Special Allowance" amount={p.specialAllowance} type="earning" />
+                <SalaryRow label="Employer PF Contribution" amount={p.employerPF} type="earning" />
+                <SalaryRow label="Gross Earnings" amount={p.grossEarnings} type="earning" bold />
               </>
+            )}
+            {p.otherEarnings > 0 && (
+              <SalaryRow label={p.otherEarningsLabel || 'Other Earnings'} amount={p.otherEarnings} type="earning" />
             )}
           </div>
 
-          <div style={{ marginBottom: 16 }}>
-            <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--gold)', textTransform: 'uppercase', marginBottom: 8 }}>Deductions</div>
-            <SalaryRow label="Taxes / TDS" amount={p.tds} type="deduction" />
+          <div style={{ height: 1, background: 'var(--border)', margin: '12px 0' }} />
+
+          {/* Deductions */}
+          <div style={{ marginBottom: 10 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 6 }}>
+              Deductions
+            </div>
+            <SalaryRow label="Provident Fund (PF)" amount={p.providentFund} type="deduction" />
+            <SalaryRow label="ESI" amount={p.esi} type="deduction" />
+            <SalaryRow label="Tax Deducted (TDS)" amount={p.tds} type="deduction" />
             <SalaryRow label="Professional Tax" amount={p.professionalTax} type="deduction" />
+            <SalaryRow label="Loan Deduction" amount={p.loanDeduction} type="deduction" />
+            <SalaryRow label={p.otherDeductionsLabel || 'Other Deductions'} amount={p.otherDeductions} type="deduction" />
             <SalaryRow label="Total Deductions" amount={p.totalDeductions} type="deduction" bold />
           </div>
 
-          <div style={{ background: 'rgba(255,255,255,0.05)', padding: 4, borderRadius: 10 }}>
-            <SalaryRow label="NET PAYABLE" amount={p.netSalary} type="net" bold />
-          </div>
+          <div style={{ height: 1, background: 'var(--border)', margin: '12px 0' }} />
+
+          {/* Net */}
+          <SalaryRow label="NET SALARY PAYABLE" amount={p.netSalary} type="net" bold />
+
+          {p.notes && (
+            <div style={{
+              marginTop: 14, background: 'var(--surface-2)', borderRadius: 8,
+              padding: '10px 14px', fontSize: 12.5, color: 'var(--text-muted)',
+            }}>
+              <strong style={{ color: 'var(--text)' }}>Notes:</strong> {p.notes}
+            </div>
+          )}
         </SectionCard>
       </div>
-
-      <div style={{ marginTop: 24, fontSize: 11, color: 'var(--text-light)', textAlign: isMobile ? 'center' : 'right', borderTop: '1px solid var(--border)', paddingTop: 16 }}>
-        Reference ID: {p._id} · Generated: {new Date(p.createdAt).toLocaleDateString()}
-      </div>
-    </div>
 
       {/* Email status */}
       {p.emailSent && (

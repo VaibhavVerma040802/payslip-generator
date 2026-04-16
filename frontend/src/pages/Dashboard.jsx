@@ -96,26 +96,19 @@ export default function Dashboard() {
   const fmtCurrency = (n) => n ? '₹' + parseFloat(n).toLocaleString('en-IN', { maximumFractionDigits: 0 }) : '₹0'
 
   return (
-    <div style={{ padding: 'clamp(16px, 4vw, 48px)', maxWidth: 1200, margin: '0 auto' }}>
+    <div style={{ padding: 'clamp(24px, 5vw, 48px)', maxWidth: 1200, margin: '0 auto' }}>
       
       {/* Header Section */}
-      <div className="fade-in" style={{ 
-        marginBottom: 40, 
-        display: 'flex', 
-        alignItems: 'flex-start', 
-        justifyContent: 'space-between', 
-        gap: 20, 
-        flexWrap: 'wrap' 
-      }}>
-        <div style={{ minWidth: 280 }}>
+      <div className="fade-in" style={{ marginBottom: 40, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap' }}>
+        <div>
           <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             <Calendar size={14} color="var(--gold)" />
             {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
           </div>
-          <h1 style={{ color: 'var(--navy)', marginBottom: 8, letterSpacing: '-0.02em', fontSize: 'clamp(24px, 5vw, 36px)' }}>
+          <h1 style={{ color: 'var(--navy)', marginBottom: 8, letterSpacing: '-0.02em' }}>
             {user?.companyName ? `Hello, ${user.companyName.split(' ')[0]}` : 'Dashboard'}
           </h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: 15, fontWeight: 500 }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: 16, fontWeight: 500 }}>
             Managed <strong>{fmt(stats?.totalPayslips)} slips</strong> in this workspace.
           </p>
         </div>
@@ -128,20 +121,19 @@ export default function Dashboard() {
             fontWeight: 800, fontSize: 15, cursor: 'pointer',
             boxShadow: '0 10px 20px -5px rgba(15,23,42,0.3)',
             transition: 'all 0.3s',
-            width: 'auto'
           }}
           className="btn-hover"
         >
           <Plus size={18} strokeWidth={3} />
-          <span style={{ whiteSpace: 'nowrap' }}>Generate New Slip</span>
+          Generate New Slip
         </button>
       </div>
 
       {/* Responsive Stats Grid */}
       <div style={{ 
         display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', 
-        gap: 'clamp(16px, 2vw, 24px)', 
+        gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', 
+        gap: 24, 
         marginBottom: 40 
       }}>
         <StatCard icon={FileText} label="Total Volume" value={loading ? '—' : fmt(stats?.totalPayslips)} sub="Lifetime Generation" color="#6366f1" delay={0} />
