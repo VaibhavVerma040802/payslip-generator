@@ -1,0 +1,17 @@
+{
+  "name": "PaySlip Pro",
+  "short_name": "PaySlip",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0d0a",
+  "theme_color": "#6c9a4d",
+  "description": "Professional Payroll Management System",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
