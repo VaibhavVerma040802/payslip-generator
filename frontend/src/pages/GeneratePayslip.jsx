@@ -91,7 +91,7 @@ function PreviewRow({ label, value, type = 'normal', isDeduction }) {
         fontWeight: type === 'bold' ? 800 : 700,
         color: isDeduction ? '#ef4444' : type === 'bold' ? 'var(--navy)' : 'var(--text)'
       }}>
-        {type === 'text' ? value : <div style={{ display: 'flex', alignItems: 'center' }}>₹<AnimatedNumber value={parseFloat(value || 0)} decimals={0} /></div>}
+        {type === 'text' ? value : <div style={{ display: 'flex', alignItems: 'center' }}><AnimatedNumber value={parseFloat(value || 0)} decimals={0} /></div>}
       </span>
     </div>
   )
@@ -399,8 +399,8 @@ export default function GeneratePayslip() {
       {/* RIGHT: PROFESSIONAL PREVIEW */}
       <div style={{ 
         background: 'var(--bg)', borderLeft: '1px solid var(--border)', 
-        padding: 'clamp(20px, 4vw, 60px)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        minHeight: '100%'
+        padding: 'clamp(20px, 4vw, 60px)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
+        minHeight: '100%', overflowY: 'auto'
       }}>
         <div style={{ width: '100%', maxWidth: 500 }} className="fade-in">
           <div style={{ 
@@ -462,7 +462,7 @@ export default function GeneratePayslip() {
                 {form.employmentType === 'intern' ? 'Net Stipend Payable' : 'Net Salary Payable'}
               </div>
               <div style={{ fontSize: 36, fontWeight: 900, color: 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                ₹<AnimatedNumber value={totals.net} decimals={0} />
+                <AnimatedNumber value={totals.net} decimals={0} />
               </div>
             </div>
             

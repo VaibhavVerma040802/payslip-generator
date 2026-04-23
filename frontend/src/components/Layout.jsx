@@ -47,11 +47,16 @@ export default function Layout() {
   }, [])
 
   const handleInstallClick = async () => {
-    if (!deferredPrompt) return
-    deferredPrompt.prompt()
-    const { outcome } = await deferredPrompt.userChoice
-    if (outcome === 'accepted') {
-      setDeferredPrompt(null)
+    if (deferredPrompt) {
+      deferredPrompt.prompt()
+      const { outcome } = await deferredPrompt.userChoice
+      if (outcome === 'accepted') {
+        setDeferredPrompt(null)
+      }
+    } else {
+      import('react-hot-toast').then(mod => {
+        mod.default('To install, click the Install icon (🖥️) in your address bar, or use "Add to Home Screen" in your mobile menu.', { duration: 5000, icon: '💡' });
+      });
     }
   }
 
@@ -237,21 +242,19 @@ export default function Layout() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            {deferredPrompt && (
-              <button
-                onClick={handleInstallClick}
-                style={{
-                  background: 'var(--navy)', color: 'white', border: 'none',
-                  display: 'flex', alignItems: 'center', gap: 8,
-                  padding: '8px 16px', borderRadius: 12, fontSize: 13, fontWeight: 700,
-                  cursor: 'pointer', boxShadow: '0 4px 12px rgba(15,23,42,0.15)',
-                  transition: 'all 0.2s'
-                }}
-                className="btn-hover"
-              >
-                <Download size={16} /> <span style={{ display: isMobile ? 'none' : 'inline' }}>Install App</span>
-              </button>
-            )}
+            <button
+              onClick={handleInstallClick}
+              style={{
+                background: 'var(--navy)', color: 'white', border: 'none',
+                display: 'flex', alignItems: 'center', gap: 8,
+                padding: '8px 16px', borderRadius: 12, fontSize: 13, fontWeight: 700,
+                cursor: 'pointer', boxShadow: '0 4px 12px rgba(15,23,42,0.15)',
+                transition: 'all 0.2s'
+              }}
+              className="btn-hover"
+            >
+              <Download size={16} /> <span style={{ display: isMobile ? 'none' : 'inline' }}>Install App</span>
+            </button>
 
             {/* Theme Control System */}
             <div style={{ 
