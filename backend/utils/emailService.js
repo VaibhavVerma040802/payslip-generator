@@ -340,4 +340,90 @@ async function sendPasswordResetEmail(user, token, origin) {
   }
 }
 
-module.exports = { sendPayslipEmail, sendVerificationEmail, sendPasswordResetEmail };
+// ─────────────────────────────────────────────────────────────
+// Send staff portal provisioning email with temp password
+// ─────────────────────────────────────────────────────────────
+async function sendStaffProvisionEmail(staff, tempPassword, loginUrl) {
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.warn('⚠️ Email credentials missing — skipping staff provision email.');
+    return;
+  }
+
+  console.log(`✉️ Sending staff provision email to: ${staff.email}`);
+
+  const transporter = createSMTPTransporter();
+
+  const mailOptions = {
+    from: `"PaySlip Pro" <${(process.env.EMAIL_FROM || process.env.EMAIL_USER || '').trim()}>`,
+    to: staff.email,
+    subject: `Welcome to the Staff Portal — ${staff.user?.companyName || 'Your Company'}`,
+    html: `
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f4f6fa; font-family: 'Segoe UI', Arial, sans-serif;">
+  <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f4f6fa; padding: 40px 10px;">
+    <tr>
+      <td align="center">
+        <table border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #ffffff; border-radius: 12px; overflow: hidden;">
+          <tr><td height="6" bgcolor="#FFBE11" style="font-size: 0; line-height: 0;">&nbsp;</td></tr>
+          <tr>
+            <td bgcolor="#1e3a5f" style="padding: 40px 45px; text-align: center;">
+              <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 800;">Staff Portal Access</h1>
+              <p style="margin: 8px 0 0 0; color: #a8c0d6; font-size: 14px;">${staff.user?.companyName || ''}</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 40px 45px;">
+              <p style="margin: 0 0 20px 0; font-size: 18px; font-weight: 700; color: #374151;">Hi ${staff.fullName},</p>
+              <p style="margin: 0 0 10px 0; font-size: 15px; color: #6b7280; line-height: 1.6;">
+                An administrator has granted you access to the Staff Portal.
+              </p>
+              <p style="margin: 0 0 30px 0; font-size: 15px; color: #6b7280; line-height: 1.6;">
+                Below are your temporary login credentials. You will be required to change your password upon your first login.
+              </p>
+              <div style="background-color: #f9fafb; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 30px; text-align: center;">
+                <p style="margin: 0 0 10px 0; font-size: 14px; color: #6b7280;">Temporary Password:</p>
+                <p style="margin: 0; font-size: 24px; font-weight: bold; color: #1e3a5f; letter-spacing: 2px;">${tempPassword}</p>
+              </div>
+              <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td align="center">
+                    <a href="${loginUrl}" style="display: inline-block; background: #1e3a5f; color: #ffffff; padding: 16px 36px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 15px;">
+                      Log In to Staff Portal
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin: 30px 0 0 0; font-size: 12px; color: #9ca3af;">
+                Or copy this link: <a href="${loginUrl}" style="color: #1e3a5f;">${loginUrl}</a>
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td bgcolor="#f9fafb" style="padding: 20px 45px; text-align: center;">
+              <p style="margin: 0; color: #9ca3af; font-size: 11px;">&copy; 2026 PaySlip Pro. All rights reserved.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(`✅ Staff provision email sent to: ${staff.email}`);
+  } catch (err) {
+    console.error(`❌ Staff provision email SMTP error: ${err.message}`);
+    throw err;
+  }
+}
+
+module.exports = { sendPayslipEmail, sendVerificationEmail, sendPasswordResetEmail, sendStaffProvisionEmail };

@@ -1,0 +1,51 @@
+const mongoose = require('mongoose');
+
+const attendanceSchema = new mongoose.Schema(
+  {
+    staff: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Staff',
+      required: true,
+      index: true
+    },
+    admin: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
+    date: {
+      type: Date,
+      required: true,
+      index: true
+    }, // Store as 00:00:00 UTC for the given day
+    punchIn: {
+      type: Date,
+      required: true,
+    },
+    punchOut: {
+      type: Date,
+    },
+    totalHours: {
+      type: Number,
+      default: 0,
+    },
+    overtimeHours: {
+      type: Number,
+      default: 0,
+    },
+    status: {
+      type: String,
+      enum: ['incomplete', 'complete', 'flagged'],
+      default: 'incomplete',
+    },
+    notes: {
+      type: String,
+    },
+  },
+  { timestamps: true }
+);
+
+// Ensure only one attendance record per staff per day
+attendanceSchema.index({ staff: 1, date: 1 }, { unique: true });
+
+module.exports = mongoose.model('Attendance', attendanceSchema);

@@ -6,6 +6,8 @@ require('dotenv').config();
 const payslipRoutes = require('./routes/payslip');
 const { router: authRoutes } = require('./routes/auth');
 const staffRoutes = require('./routes/staff');
+const { router: staffPortalRoutes } = require('./routes/staffPortal');
+const attendanceRoutes = require('./routes/attendance');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -19,6 +21,8 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use('/api/payslips', payslipRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/staff', staffRoutes);
+app.use('/api/portal', staffPortalRoutes);
+app.use('/api/attendance', attendanceRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

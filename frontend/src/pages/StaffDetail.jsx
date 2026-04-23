@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowLeft, User, Mail, Phone, Briefcase, Calendar, Landmark, CreditCard, Trash2, Code, FileText, Loader2, IndianRupee } from 'lucide-react'
+import { ArrowLeft, Mail, Phone, Briefcase, Calendar, Landmark, CreditCard, Trash2, Code, FileText, Loader2, IndianRupee, Key, Ban } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../api'
 
@@ -24,11 +24,24 @@ export default function StaffDetail() {
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState(false)
 
+  const [attendance, setAttendance] = useState([])
+  const [provisioning, setProvisioning] = useState(false)
+  const [revoking, setRevoking] = useState(false)
+  const [tempPassword, setTempPassword] = useState('')
+
   useEffect(() => {
     const fetchDetail = async () => {
       try {
         const res = await api.get(`/staff/${id}`)
         setStaff(res.data.data)
+        
+        // Fetch attendance for admin
+        try {
+          const attRes = await api.get(`/attendance/admin/staff/${id}`)
+          setAttendance(attRes.data.history)
+        } catch (attErr) {
+          console.error("Failed to load attendance", attErr)
+        }
       } catch (err) {
         toast.error('Failed to load staff details')
         navigate('/staff')
@@ -38,6 +51,42 @@ export default function StaffDetail() {
     }
     fetchDetail()
   }, [id, navigate])
+
+  const handleProvision = async () => {
+    setProvisioning(true)
+    setTempPassword('')
+    try {
+      const res = await api.post(`/staff/${id}/provision-portal`)
+      toast.success(res.data.message || 'Portal provisioned')
+      if (res.data.tempPassword) {
+        setTempPassword(res.data.tempPassword)
+      }
+      // Refresh staff to show active state
+      const staffRes = await api.get(`/staff/${id}`)
+      setStaff(staffRes.data.data)
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to provision portal')
+    } finally {
+      setProvisioning(false)
+    }
+  }
+
+  const handleRevoke = async () => {
+    if (!window.confirm('Are you sure you want to revoke portal access for this staff member?')) return
+    setRevoking(true)
+    try {
+      await api.delete(`/staff/${id}/revoke-portal`)
+      toast.success('Portal access revoked')
+      setTempPassword('')
+      // Refresh staff to show inactive state
+      const staffRes = await api.get(`/staff/${id}`)
+      setStaff(staffRes.data.data)
+    } catch (err) {
+      toast.error('Failed to revoke access')
+    } finally {
+      setRevoking(false)
+    }
+  }
 
   const handleDelete = async () => {
     if (!window.confirm(`Are you sure you want to delete ${staff.fullName}?`)) return
@@ -126,6 +175,104 @@ export default function StaffDetail() {
              </div>
           </div>
         </div>
+
+        {/* Portal Access Management */}
+        <div style={{ padding: '0 40px 40px' }}>
+          <h3 style={{ color: 'var(--navy)', marginBottom: 24, borderBottom: '2px solid var(--border)', paddingBottom: 8, display: 'inline-block' }}>Staff Portal Access</h3>
+          <div style={{ background: 'var(--bg)', padding: 24, borderRadius: 16, display: 'flex', flexWrap: 'wrap', gap: 24, alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                <h4 style={{ margin: 0, color: 'var(--text)', fontSize: 16 }}>Portal Status:</h4>
+                {staff.isPortalEnabled ? (
+                  <span className="badge badge-emerald">Active</span>
+                ) : (
+                  <span className="badge" style={{ background: '#f3f4f6', color: '#4b5563' }}>Disabled</span>
+                )}
+              </div>
+              <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: 14 }}>
+                {staff.isPortalEnabled 
+                  ? 'This staff member can log in to the Staff Portal to track attendance.' 
+                  : 'Enable portal access to allow this staff member to log their attendance.'}
+              </p>
+            </div>
+            
+            <div style={{ display: 'flex', gap: 12 }}>
+              {!staff.isPortalEnabled ? (
+                <button onClick={handleProvision} disabled={provisioning} style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: 'var(--emerald)', color: 'white', fontWeight: 600, cursor: 'pointer', display: 'flex', gap: 8, alignItems: 'center' }}>
+                  {provisioning ? <Loader2 size={16} className="animate-spin" /> : <Key size={16} />}
+                  Provision Access
+                </button>
+              ) : (
+                <button onClick={handleRevoke} disabled={revoking} style={{ padding: '10px 20px', borderRadius: 8, border: '1px solid #fee2e2', background: '#fef2f2', color: '#ef4444', fontWeight: 600, cursor: 'pointer', display: 'flex', gap: 8, alignItems: 'center' }}>
+                  {revoking ? <Loader2 size={16} className="animate-spin" /> : <Ban size={16} />}
+                  Revoke Access
+                </button>
+              )}
+            </div>
+          </div>
+          
+          {tempPassword && (
+            <div style={{ marginTop: 16, padding: 16, background: '#fffbeb', border: '1px solid #fef3c7', borderRadius: 12, color: '#92400e' }}>
+              <strong>Temporary Password Generated:</strong> <span style={{ fontFamily: 'monospace', fontSize: 18, marginLeft: 8, letterSpacing: 2 }}>{tempPassword}</span>
+              <p style={{ margin: '8px 0 0', fontSize: 13 }}>Please share this securely with the staff member if the email fails to deliver.</p>
+            </div>
+          )}
+        </div>
+
+        {/* Attendance History (Admin View) */}
+        {staff.isPortalEnabled && (
+          <div style={{ padding: '0 40px 40px' }}>
+            <h3 style={{ color: 'var(--navy)', marginBottom: 24, borderBottom: '2px solid var(--border)', paddingBottom: 8, display: 'inline-block' }}>Recent Attendance (Last 30 Days)</h3>
+            {attendance.length === 0 ? (
+              <div style={{ padding: 32, textAlign: 'center', background: 'var(--bg)', borderRadius: 16, color: 'var(--text-muted)' }}>
+                No recent attendance records found.
+              </div>
+            ) : (
+              <div style={{ overflowX: 'auto', background: 'var(--bg)', borderRadius: 16 }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 14 }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                      <th style={{ padding: 16, color: 'var(--text-muted)', fontWeight: 600 }}>Date</th>
+                      <th style={{ padding: 16, color: 'var(--text-muted)', fontWeight: 600 }}>In</th>
+                      <th style={{ padding: 16, color: 'var(--text-muted)', fontWeight: 600 }}>Out</th>
+                      <th style={{ padding: 16, color: 'var(--text-muted)', fontWeight: 600 }}>Total Hours</th>
+                      <th style={{ padding: 16, color: 'var(--text-muted)', fontWeight: 600 }}>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {attendance.map((record) => (
+                      <tr key={record._id} style={{ borderBottom: '1px solid var(--border)' }}>
+                        <td style={{ padding: 16, fontWeight: 500, color: 'var(--text)' }}>
+                          {new Date(record.date).toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric' })}
+                        </td>
+                        <td style={{ padding: 16, color: 'var(--text-muted)' }}>
+                          {record.punchIn ? new Date(record.punchIn).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '--'}
+                        </td>
+                        <td style={{ padding: 16, color: 'var(--text-muted)' }}>
+                          {record.punchOut ? new Date(record.punchOut).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '--'}
+                        </td>
+                        <td style={{ padding: 16, color: 'var(--text-muted)' }}>
+                          {record.totalHours > 0 ? `${record.totalHours.toFixed(2)}h` : '-'}
+                          {record.overtimeHours > 0 && <span style={{ marginLeft: 8, color: '#9333ea', fontSize: 12 }}>+{record.overtimeHours.toFixed(2)}h OT</span>}
+                        </td>
+                        <td style={{ padding: 16 }}>
+                          {record.status === 'complete' ? (
+                            <span className="badge badge-emerald">Complete</span>
+                          ) : record.status === 'incomplete' ? (
+                            <span className="badge" style={{ background: '#fef3c7', color: '#92400e' }}>Active</span>
+                          ) : (
+                            <span className="badge" style={{ background: '#fee2e2', color: '#991b1b' }} title={record.notes}>Flagged</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
       </div>
     </motion.div>
   )

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
 const staffSchema = new mongoose.Schema(
   {
@@ -44,8 +45,48 @@ const staffSchema = new mongoose.Schema(
         default: 0,
       }, // Represents Monthly Stipend for Interns
     },
+    // Portal Authentication Fields
+    portalPassword: {
+      type: String,
+    },
+    isPortalEnabled: {
+      type: Boolean,
+      default: false,
+    },
+    mustChangePassword: {
+      type: Boolean,
+      default: true,
+    },
+    loginAttempts: {
+      type: Number,
+      default: 0,
+    },
+    lockUntil: {
+      type: Date,
+    },
+    passwordResetToken: String,
+    passwordResetExpires: Date,
+    lastLogin: Date,
   },
   { timestamps: true }
 );
+
+// Hash portal password before saving
+staffSchema.pre('save', async function (next) {
+  if (!this.isModified('portalPassword')) return next();
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.portalPassword = await bcrypt.hash(this.portalPassword, salt);
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Method to check password
+staffSchema.methods.comparePassword = async function (candidatePassword) {
+  if (!this.portalPassword) return false;
+  return await bcrypt.compare(candidatePassword, this.portalPassword);
+};
 
 module.exports = mongoose.model('Staff', staffSchema);
