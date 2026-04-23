@@ -241,17 +241,17 @@ export default function StaffList() {
                     <InputField label="Full Name" name="fullName" value={formData.fullName} onChange={handleInputChange} required />
                     <InputField label="Employee ID / Code" name="employeeId" value={formData.employeeId} onChange={handleInputChange} required />
                     <InputField label="Email Address" type="email" name="email" value={formData.email} onChange={handleInputChange} required />
-                    <InputField label="Phone Number" name="phone" value={formData.phone} onChange={handleInputChange} />
-                    <InputField label="Joining Date" type="date" name="joiningDate" value={formData.joiningDate} onChange={handleInputChange} />
-                    <InputField label="Designation" name="designation" value={formData.designation} onChange={handleInputChange} />
+                    <InputField label="Phone Number" name="phone" value={formData.phone} onChange={handleInputChange} required />
+                    <InputField label="Joining Date" type="date" name="joiningDate" value={formData.joiningDate} onChange={handleInputChange} required />
+                    <InputField label="Designation" name="designation" value={formData.designation} onChange={handleInputChange} required />
                   </div>
 
                   <h4 style={{ color: 'var(--navy)', marginTop: 24, marginBottom: 16 }}>Financial Information</h4>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                    <InputField label="PAN Number" name="panNumber" value={formData.panNumber} onChange={handleInputChange} />
-                    <InputField label="Bank Name" name="bankName" value={formData.bankName} onChange={handleInputChange} />
-                    <InputField label="Account Number" name="accountNumber" value={formData.accountNumber} onChange={handleInputChange} />
-                    <InputField label="IFSC Code" name="ifscCode" value={formData.ifscCode} onChange={handleInputChange} />
+                    <InputField label="PAN Number" name="panNumber" value={formData.panNumber} onChange={handleInputChange} required />
+                    <InputField label="Bank Name" name="bankName" value={formData.bankName} onChange={handleInputChange} required />
+                    <InputField label="Account Number" name="accountNumber" value={formData.accountNumber} onChange={handleInputChange} required />
+                    <InputField label="IFSC Code" name="ifscCode" value={formData.ifscCode} onChange={handleInputChange} required />
                   </div>
 
                   <h4 style={{ color: 'var(--navy)', marginTop: 24, marginBottom: 16 }}>Salary Structure</h4>

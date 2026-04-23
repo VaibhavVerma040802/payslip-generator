@@ -7,6 +7,7 @@ import PayslipList from './pages/PayslipList'
 import PayslipDetail from './pages/PayslipDetail'
 import StaffList from './pages/StaffList'
 import StaffDetail from './pages/StaffDetail'
+import AuditLogs from './pages/AuditLogs'
 import { useAuth } from './context/AuthContext'
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -40,6 +41,7 @@ export default function App() {
         <Route path="payslips/:id" element={<PayslipDetail />} />
         <Route path="staff" element={<StaffList />} />
         <Route path="staff/:id" element={<StaffDetail />} />
+        <Route path="audit-logs" element={<AuditLogs />} />
         <Route path="profile" element={<Profile />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>

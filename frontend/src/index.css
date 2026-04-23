@@ -28,19 +28,19 @@
 }
 
 :root[data-theme='dark'] {
-  --navy: #38bdf8;
-  --navy-dark: #020617;
-  --navy-light: #1e293b;
+  --navy: #6fa945;
+  --navy-dark: #5a8f38;
+  --navy-light: #252b25;
   --gold: #f59e0b;
   --gold-pale: #451a03;
-  --emerald: #34d399;
-  --emerald-light: #064e3b;
-  --bg: #0f172a;
-  --surface: #1e293b;
-  --border: #334155;
-  --text: #f8fafc;
-  --text-muted: #94a3b8;
-  --text-light: #64748b;
+  --emerald: #6fa945;
+  --emerald-light: #2a3f1f;
+  --bg: #0a0f0a;
+  --surface: #1a1f1a;
+  --border: #3a453a;
+  --text: #e5ebdd;
+  --text-muted: #a8b89a;
+  --text-light: #6b7a60;
 }
 
 body {

@@ -3,7 +3,7 @@ import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { 
   LayoutDashboard, PlusCircle, List, Menu, X, 
   FileSpreadsheet, Settings, LogOut, User, Users,
-  Sun, Moon, Monitor, ChevronLeft 
+  Sun, Moon, Monitor, ChevronLeft, Activity, Download
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
@@ -13,6 +13,7 @@ const navItems = [
   { to: '/generate', label: 'Generate Payslip', icon: PlusCircle },
   { to: '/payslips', label: 'All Payslips', icon: List },
   { to: '/staff', label: 'Staff Management', icon: Users },
+  { to: '/audit-logs', label: 'Audit Logs', icon: Activity },
   { to: '/profile', label: 'Company Profile', icon: Settings },
 ]
 
@@ -34,6 +35,25 @@ export default function Layout() {
   const { user, logout } = useAuth()
   const { theme, setTheme } = useTheme()
   const location = useLocation()
+  const [deferredPrompt, setDeferredPrompt] = useState(null)
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault()
+      setDeferredPrompt(e)
+    }
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+  }, [])
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return
+    deferredPrompt.prompt()
+    const { outcome } = await deferredPrompt.userChoice
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null)
+    }
+  }
 
   useEffect(() => {
     setSidebarOpen(!window.matchMedia('(max-width: 1024px)').matches)
@@ -216,32 +236,50 @@ export default function Layout() {
             </div>
           </div>
 
-          {/* Theme Control System */}
-          <div style={{ 
-            display: 'flex', background: 'var(--bg)', borderRadius: 14, 
-            padding: 3, border: '1.5px solid var(--border)' 
-          }}>
-            {[
-              { id: 'light', icon: Sun, label: 'Light' },
-              { id: 'dark', icon: Moon, label: 'Dark' },
-              { id: 'system', icon: Monitor, label: 'Sys' }
-            ].map(t => (
-              <button 
-                key={t.id}
-                onClick={() => setTheme(t.id)}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            {deferredPrompt && (
+              <button
+                onClick={handleInstallClick}
                 style={{
-                  background: theme === t.id ? 'var(--surface)' : 'transparent',
-                  color: theme === t.id ? 'var(--gold)' : 'var(--text-light)',
-                  boxShadow: theme === t.id ? 'var(--shadow-sm)' : 'none',
-                  border: 'none', borderRadius: 11, padding: '7px 14px',
-                  display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer',
-                  fontSize: 12, fontWeight: 700, transition: 'all 0.2s'
+                  background: 'var(--navy)', color: 'white', border: 'none',
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  padding: '8px 16px', borderRadius: 12, fontSize: 13, fontWeight: 700,
+                  cursor: 'pointer', boxShadow: '0 4px 12px rgba(15,23,42,0.15)',
+                  transition: 'all 0.2s'
                 }}
+                className="btn-hover"
               >
-                <t.icon size={15} strokeWidth={2.5} />
-                <span style={{ display: isMobile ? 'none' : 'inline' }}>{t.label}</span>
+                <Download size={16} /> <span style={{ display: isMobile ? 'none' : 'inline' }}>Install App</span>
               </button>
-            ))}
+            )}
+
+            {/* Theme Control System */}
+            <div style={{ 
+              display: 'flex', background: 'var(--bg)', borderRadius: 14, 
+              padding: 3, border: '1.5px solid var(--border)' 
+            }}>
+              {[
+                { id: 'light', icon: Sun, label: 'Light' },
+                { id: 'dark', icon: Moon, label: 'Dark' },
+                { id: 'system', icon: Monitor, label: 'Sys' }
+              ].map(t => (
+                <button 
+                  key={t.id}
+                  onClick={() => setTheme(t.id)}
+                  style={{
+                    background: theme === t.id ? 'var(--surface)' : 'transparent',
+                    color: theme === t.id ? 'var(--gold)' : 'var(--text-light)',
+                    boxShadow: theme === t.id ? 'var(--shadow-sm)' : 'none',
+                    border: 'none', borderRadius: 11, padding: '7px 14px',
+                    display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer',
+                    fontSize: 12, fontWeight: 700, transition: 'all 0.2s'
+                  }}
+                >
+                  <t.icon size={15} strokeWidth={2.5} />
+                  <span style={{ display: isMobile ? 'none' : 'inline' }}>{t.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </header>
 
