@@ -40,8 +40,14 @@ export default function Layout() {
   useEffect(() => {
     const handleBeforeInstallPrompt = (e) => {
       e.preventDefault()
+      window.deferredPrompt = e
       setDeferredPrompt(e)
     }
+
+    if (window.deferredPrompt) {
+      setDeferredPrompt(window.deferredPrompt)
+    }
+
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
     return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
   }, [])
