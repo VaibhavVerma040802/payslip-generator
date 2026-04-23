@@ -66,6 +66,7 @@ function InputField({ label, name, value, onChange, type = 'text', placeholder, 
           onKeyDown={handleKeyDown}
           min={min}
           max={max}
+          required={required}
           style={{
             width: '100%', padding: Icon ? '12px 14px 12px 42px' : '12px 14px',
             border: '2px solid var(--border)', borderRadius: 12,
