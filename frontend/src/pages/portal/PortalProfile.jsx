@@ -13,6 +13,7 @@ export default function PortalProfile() {
   const handleUpdate = async (e) => {
     e.preventDefault()
     setSaving(true)
+    try {
       await api.put('/portal/me', { phone })
       setStaffUser({ ...staffUser, phone })
       toast.success('Profile details updated.')
