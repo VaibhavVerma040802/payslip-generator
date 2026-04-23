@@ -115,7 +115,7 @@ export default function StaffList() {
         <button 
           onClick={() => setShowModal(true)}
           style={{
-            background: 'var(--gold)', color: 'var(--navy)', padding: '12px 24px', borderRadius: 12,
+            background: 'var(--gold)', color: 'var(--navy-dark)', padding: '12px 24px', borderRadius: 12,
             border: 'none', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer',
             boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)'
           }}

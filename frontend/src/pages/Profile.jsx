@@ -112,7 +112,7 @@ export default function Profile() {
                 <input 
                   type="text" required value={form.companyName}
                   onChange={e => setForm({ ...form, companyName: e.target.value })}
-                  style={{ width: '100%', padding: '14px 14px 14px 50px', borderRadius: 14, border: '2px solid var(--border)', background: 'var(--bg)', fontSize: 15, fontWeight: 600, outline: 'none', boxSizing: 'border-box' }} 
+                  style={{ width: '100%', padding: '14px 14px 14px 50px', borderRadius: 14, border: '2px solid var(--border)', background: 'var(--bg)', fontSize: 15, fontWeight: 600, color: 'var(--text)', outline: 'none', boxSizing: 'border-box' }} 
                   className="btn-hover"
                 />
               </div>
@@ -125,7 +125,7 @@ export default function Profile() {
                 <input 
                   type="text" required value={form.companyAddress}
                   onChange={e => setForm({ ...form, companyAddress: e.target.value })}
-                  style={{ width: '100%', padding: '14px 14px 14px 50px', borderRadius: 14, border: '2px solid var(--border)', background: 'var(--bg)', fontSize: 15, fontWeight: 600, outline: 'none', boxSizing: 'border-box' }} 
+                  style={{ width: '100%', padding: '14px 14px 14px 50px', borderRadius: 14, border: '2px solid var(--border)', background: 'var(--bg)', fontSize: 15, fontWeight: 600, color: 'var(--text)', outline: 'none', boxSizing: 'border-box' }} 
                   className="btn-hover"
                 />
               </div>
@@ -138,7 +138,7 @@ export default function Profile() {
                 <input 
                   type="email" value={form.companyEmail}
                   onChange={e => setForm({ ...form, companyEmail: e.target.value })}
-                  style={{ width: '100%', padding: '14px 14px 14px 50px', borderRadius: 14, border: '2px solid var(--border)', background: 'var(--bg)', fontSize: 15, fontWeight: 600, outline: 'none', boxSizing: 'border-box' }} 
+                  style={{ width: '100%', padding: '14px 14px 14px 50px', borderRadius: 14, border: '2px solid var(--border)', background: 'var(--bg)', fontSize: 15, fontWeight: 600, color: 'var(--text)', outline: 'none', boxSizing: 'border-box' }} 
                   className="btn-hover"
                 />
               </div>
@@ -151,7 +151,7 @@ export default function Profile() {
                 <input 
                   type="text" value={form.companyPhone}
                   onChange={e => setForm({ ...form, companyPhone: e.target.value })}
-                  style={{ width: '100%', padding: '14px 14px 14px 50px', borderRadius: 14, border: '2px solid var(--border)', background: 'var(--bg)', fontSize: 15, fontWeight: 600, outline: 'none', boxSizing: 'border-box' }} 
+                  style={{ width: '100%', padding: '14px 14px 14px 50px', borderRadius: 14, border: '2px solid var(--border)', background: 'var(--bg)', fontSize: 15, fontWeight: 600, color: 'var(--text)', outline: 'none', boxSizing: 'border-box' }} 
                   className="btn-hover"
                 />
               </div>
@@ -164,7 +164,7 @@ export default function Profile() {
                 <input 
                   type="text" value={form.companyCIN}
                   onChange={e => setForm({ ...form, companyCIN: e.target.value })}
-                  style={{ width: '100%', padding: '14px 14px 14px 50px', borderRadius: 14, border: '2px solid var(--border)', background: 'var(--bg)', fontSize: 15, fontWeight: 600, outline: 'none', boxSizing: 'border-box' }} 
+                  style={{ width: '100%', padding: '14px 14px 14px 50px', borderRadius: 14, border: '2px solid var(--border)', background: 'var(--bg)', fontSize: 15, fontWeight: 600, color: 'var(--text)', outline: 'none', boxSizing: 'border-box' }} 
                   className="btn-hover"
                 />
               </div>
