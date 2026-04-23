@@ -8,8 +8,17 @@ const api = axios.create({
 
 // Request interceptor to add bearer token
 api.interceptors.request.use((config) => {
-  // Check for admin token first, then staff token
-  const token = localStorage.getItem('token') || localStorage.getItem('staffToken')
+  // Determine which token to use based on the request URL
+  // Staff portal routes typically start with /portal/ or /attendance/
+  const isPortalRoute = config.url.startsWith('/portal/') || config.url.startsWith('/attendance/')
+  
+  let token = null
+  if (isPortalRoute) {
+    token = localStorage.getItem('staffToken') || localStorage.getItem('token')
+  } else {
+    token = localStorage.getItem('token') || localStorage.getItem('staffToken')
+  }
+
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
