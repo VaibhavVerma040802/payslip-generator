@@ -24,78 +24,77 @@ export default function PortalForgotPassword() {
   }
 
   if (success) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-        <div className="sm:mx-auto sm:w-full sm:max-w-md bg-white dark:bg-gray-800 py-8 px-4 shadow sm:rounded-lg text-center border border-gray-100 dark:border-gray-700">
-          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 dark:bg-green-900/30">
-            <Mail className="h-6 w-6 text-green-600 dark:text-green-400" />
-          </div>
-          <h2 className="mt-4 text-2xl font-bold text-gray-900 dark:text-white">Check your email</h2>
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-            We've sent a password reset link to {email}. It will expire in 15 minutes.
-          </p>
-          <div className="mt-6">
-            <Link to="/portal/login" className="text-sm font-medium text-green-600 hover:text-green-500">
-              Return to login
-            </Link>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
-          Reset Password
-        </h2>
-        <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-          Enter your staff email to receive a reset link
-        </p>
-      </div>
+    <div style={{
+      minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', 
+      background: 'var(--bg)', padding: 'clamp(20px, 5vw, 60px)', position: 'relative', overflow: 'hidden'
+    }}>
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        style={{
+          width: '100%', maxWidth: 440,
+          borderRadius: 32, padding: 'clamp(32px, 5vw, 60px)',
+          zIndex: 10
+        }}
+        className="glass"
+      >
+        <div style={{ textAlign: 'center', marginBottom: 40 }}>
+          <h2 style={{ fontSize: 32, color: 'var(--navy)', marginBottom: 12 }}>Access Recovery</h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: 16, fontWeight: 500 }}>
+            {sent ? 'Check your inbox for instructions.' : 'Enter your email to reset your portal password.'}
+          </p>
+        </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white dark:bg-gray-800 py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-gray-100 dark:border-gray-700">
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Email address
-              </label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
-                </div>
+        {!sent ? (
+          <form onSubmit={handleSubmit}>
+            <div style={{ marginBottom: 40 }}>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 800, color: 'var(--text-muted)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Staff Email</label>
+              <div style={{ position: 'relative' }}>
+                <Mail size={18} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-light)' }} />
                 <input
-                  type="email"
-                  required
+                  type="email" required
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10 block w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent sm:text-sm"
-                  placeholder="you@company.com"
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="employee@company.com"
+                  style={{
+                    width: '100%', padding: '16px 16px 16px 50px', background: 'var(--bg)',
+                    border: '2px solid var(--border)', borderRadius: 16, outline: 'none', fontSize: 15,
+                    color: 'var(--text)', transition: 'all 0.2s', fontWeight: 600
+                  }}
+                  className="btn-hover"
                 />
               </div>
             </div>
 
-            <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
-              >
-                {loading ? 'Sending...' : 'Send reset link'}
-              </button>
-            </div>
+            <motion.button
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.98 }}
+              type="submit" disabled={loading}
+              style={{
+                width: '100%', height: 60, background: 'var(--navy)', color: 'white',
+                border: 'none', borderRadius: 16, fontWeight: 800, fontSize: 16, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                boxShadow: '0 15px 30px -10px rgba(15,23,42,0.4)', transition: 'all 0.3s'
+              }}
+            >
+              {loading ? <Loader2 size={24} className="animate-spin" /> : <>Send Reset Link <Send size={20} /></>}
+            </motion.button>
           </form>
-
-          <div className="mt-6 text-center">
-            <Link to="/portal/login" className="inline-flex items-center text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to login
-            </Link>
+        ) : (
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ padding: '24px', background: 'var(--bg)', borderRadius: 20, color: 'var(--text-muted)', marginBottom: 32, fontSize: 14, lineHeight: 1.6 }}>
+              We've sent a secure reset link to <strong>{email}</strong>. Please follow the instructions to regain access.
+            </div>
           </div>
+        )}
+
+        <div style={{ textAlign: 'center', marginTop: 32 }}>
+          <Link to="/portal/login" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: 'var(--navy)', fontWeight: 800, textDecoration: 'none', fontSize: 14 }}>
+            <ArrowLeft size={16} /> Back to Login
+          </Link>
         </div>
-      </div>
+      </motion.div>
     </div>
   )
 }

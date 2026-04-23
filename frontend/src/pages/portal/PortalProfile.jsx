@@ -1,143 +1,149 @@
 import { useState } from 'react'
 import { useStaffPortal } from '../../context/StaffPortalContext'
-import { User, Phone, Mail, Briefcase, Building, Save } from 'lucide-react'
+import { User, Phone, Mail, Briefcase, Building, Save, Loader2 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import api from '../../api'
+import { motion } from 'framer-motion'
 
 export default function PortalProfile() {
   const { staffUser, setStaffUser } = useStaffPortal()
   const [phone, setPhone] = useState(staffUser?.phone || '')
   const [saving, setSaving] = useState(false)
 
-  const handleSave = async (e) => {
+  const handleUpdate = async (e) => {
     e.preventDefault()
     setSaving(true)
-    try {
-      const token = localStorage.getItem('staffToken')
-      await api.put('/portal/me', { phone }, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      await api.put('/portal/me', { phone })
       setStaffUser({ ...staffUser, phone })
-      toast.success('Profile updated successfully')
+      toast.success('Profile details updated.')
     } catch (err) {
-      toast.error('Failed to update profile')
+      toast.error(err.message || 'Update failed')
     } finally {
       setSaving(false)
     }
   }
 
   return (
-    <div className="space-y-6 max-w-4xl">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-        <div className="px-6 py-8 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center space-x-5">
-            <div className="h-20 w-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center border-4 border-white dark:border-gray-800 shadow-sm">
-              <User className="h-10 w-10 text-green-600 dark:text-green-400" />
+    <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+      <header style={{ marginBottom: 40 }}>
+        <h1 style={{ fontSize: 32, color: 'var(--navy)', marginBottom: 8 }}>Account Settings</h1>
+        <p style={{ color: 'var(--text-muted)', fontWeight: 500 }}>Manage your personal details and contact information.</p>
+      </header>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 32 }}>
+        {/* Profile Card */}
+        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="glass" style={{ padding: 40 }}>
+          <div style={{ display: 'flex', gap: 24, alignItems: 'center', marginBottom: 40 }}>
+            <div style={{ 
+              width: 80, height: 80, borderRadius: 24, background: 'var(--navy)', 
+              display: 'flex', alignItems: 'center', justifyContent: 'center', 
+              color: 'white', fontSize: 32, fontWeight: 800,
+              boxShadow: '0 10px 20px -5px rgba(15,23,42,0.3)'
+            }}>
+              {staffUser?.fullName?.charAt(0).toUpperCase()}
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{staffUser?.fullName}</h1>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mt-1">{staffUser?.designation}</p>
+              <h2 style={{ margin: 0, color: 'var(--navy)', fontSize: 24 }}>{staffUser?.fullName}</h2>
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 8 }}>
+                <span className="badge badge-navy">{staffUser?.designation}</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="px-6 py-6">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-6">Personal Information</h3>
-          
-          <form onSubmit={handleSave} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              
-              {/* Read-only fields */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Employee ID</label>
-                <div className="mt-1 relative rounded-md shadow-sm">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Briefcase className="h-4 w-4 text-gray-400" />
-                  </div>
-                  <input
-                    type="text"
-                    disabled
-                    value={staffUser?.employeeId || ''}
-                    className="pl-10 block w-full bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md py-2 text-gray-500 dark:text-gray-400 cursor-not-allowed sm:text-sm"
-                  />
-                </div>
+          <form onSubmit={handleUpdate} style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+            <div>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 800, color: 'var(--text-muted)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Personal Email</label>
+              <div style={{ position: 'relative' }}>
+                <Mail size={18} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-light)' }} />
+                <input
+                  type="email" disabled value={staffUser?.email || ''}
+                  style={{
+                    width: '100%', padding: '16px 16px 16px 50px', background: 'var(--bg)',
+                    border: '2px solid var(--border)', borderRadius: 16, outline: 'none', fontSize: 15,
+                    color: 'var(--text-muted)', cursor: 'not-allowed', fontWeight: 600
+                  }}
+                />
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email Address</label>
-                <div className="mt-1 relative rounded-md shadow-sm">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Mail className="h-4 w-4 text-gray-400" />
-                  </div>
-                  <input
-                    type="email"
-                    disabled
-                    value={staffUser?.email || ''}
-                    className="pl-10 block w-full bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md py-2 text-gray-500 dark:text-gray-400 cursor-not-allowed sm:text-sm"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Department</label>
-                <div className="mt-1 relative rounded-md shadow-sm">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Building className="h-4 w-4 text-gray-400" />
-                  </div>
-                  <input
-                    type="text"
-                    disabled
-                    value={staffUser?.department || 'Not specified'}
-                    className="pl-10 block w-full bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md py-2 text-gray-500 dark:text-gray-400 cursor-not-allowed sm:text-sm"
-                  />
-                </div>
-              </div>
-
-              {/* Editable fields */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Phone Number <span className="text-gray-400 font-normal ml-1">(Editable)</span></label>
-                <div className="mt-1 relative rounded-md shadow-sm">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Phone className="h-4 w-4 text-gray-400" />
-                  </div>
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="pl-10 block w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent sm:text-sm transition-shadow"
-                    placeholder="e.g. +91 9876543210"
-                  />
-                </div>
-              </div>
-
             </div>
 
-            <div className="flex justify-end pt-4 border-t border-gray-200 dark:border-gray-700">
-              <button
-                type="submit"
-                disabled={saving}
-                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 transition-colors"
-              >
-                {saving ? (
-                  'Saving...'
-                ) : (
-                  <>
-                    <Save className="h-4 w-4 mr-2" />
-                    Save Changes
-                  </>
-                )}
-              </button>
+            <div>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 800, color: 'var(--text-muted)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Phone Number</label>
+              <div style={{ position: 'relative' }}>
+                <Phone size={18} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-light)' }} />
+                <input
+                  type="tel" required
+                  value={phone}
+                  onChange={e => setPhone(e.target.value)}
+                  placeholder="+91 00000 00000"
+                  style={{
+                    width: '100%', padding: '16px 16px 16px 50px', background: 'var(--bg)',
+                    border: '2px solid var(--border)', borderRadius: 16, outline: 'none', fontSize: 15,
+                    color: 'var(--text)', transition: 'all 0.2s', fontWeight: 600
+                  }}
+                  className="btn-hover"
+                />
+              </div>
             </div>
+
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              type="submit" disabled={saving}
+              style={{
+                width: '100%', height: 56, background: 'var(--navy)', color: 'white',
+                border: 'none', borderRadius: 14, fontWeight: 700, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                boxShadow: '0 10px 20px -5px rgba(15,23,42,0.3)', transition: 'all 0.2s', marginTop: 16
+              }}
+            >
+              {saving ? <Loader2 size={20} className="animate-spin" /> : <Save size={20} />}
+              Save Changes
+            </motion.button>
           </form>
+        </motion.div>
 
-        </div>
-      </div>
-      
-      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 border border-blue-100 dark:border-blue-800">
-        <h4 className="text-sm font-medium text-blue-800 dark:text-blue-300">Need to update other information?</h4>
-        <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">
-          Role, salary, and designation changes must be requested through your HR administrator.
-        </p>
+        {/* Professional Context Card */}
+        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }} className="glass" style={{ padding: 40 }}>
+          <h3 style={{ color: 'var(--navy)', fontSize: 20, marginBottom: 32 }}>Work Context</h3>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+            <div style={{ display: 'flex', gap: 20 }}>
+              <div style={{ width: 48, height: 48, borderRadius: 12, background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+                <Building size={20} />
+              </div>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-light)', textTransform: 'uppercase', marginBottom: 4 }}>Department</div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--navy)' }}>{staffUser?.department || 'Operations'}</div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: 20 }}>
+              <div style={{ width: 48, height: 48, borderRadius: 12, background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+                <Briefcase size={20} />
+              </div>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-light)', textTransform: 'uppercase', marginBottom: 4 }}>Company</div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--navy)' }}>{staffUser?.companyName}</div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: 20 }}>
+              <div style={{ width: 48, height: 48, borderRadius: 12, background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+                <User size={20} />
+              </div>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-light)', textTransform: 'uppercase', marginBottom: 4 }}>Employee Code</div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--navy)' }}>{staffUser?.employeeId}</div>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ marginTop: 48, padding: 24, background: 'var(--bg)', borderRadius: 20, border: '1px solid var(--border)' }}>
+            <p style={{ margin: 0, fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>
+              <strong>Notice:</strong> Critical professional details can only be modified by your HR administrator. Please contact them for any corrections.
+            </p>
+          </div>
+        </motion.div>
       </div>
     </div>
   )

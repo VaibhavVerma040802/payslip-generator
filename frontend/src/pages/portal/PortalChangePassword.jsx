@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStaffPortal } from '../../context/StaffPortalContext'
-import { Lock, ShieldAlert } from 'lucide-react'
+import { Lock, ShieldAlert, Loader2, ArrowRight } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import api from '../../api'
+import { motion } from 'framer-motion'
 
 export default function PortalChangePassword() {
   const [currentPassword, setCurrentPassword] = useState('')
@@ -22,113 +23,135 @@ export default function PortalChangePassword() {
 
     setLoading(true)
     try {
-      const token = localStorage.getItem('staffToken')
       await api.post('/portal/change-password', {
         currentPassword,
         newPassword
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       })
 
-      toast.success('Password updated successfully')
+      toast.success('Security credentials updated.')
       
       // Update local state so ProtectedRoute lets them in
       setStaffUser(prev => ({ ...prev, mustChangePassword: false }))
       
-      navigate('/portal/dashboard')
+      // Small delay to let state propagate if needed, though navigate should wait
+      setTimeout(() => {
+        navigate('/portal/dashboard')
+      }, 100)
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to update password')
+      toast.error(err.message || 'Failed to update password')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8 transition-colors duration-200">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex justify-center">
-          <div className="rounded-full bg-red-100 p-3">
-            <ShieldAlert className="h-8 w-8 text-red-600" />
+    <div style={{
+      minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', 
+      background: 'var(--bg)', padding: 'clamp(20px, 5vw, 60px)', position: 'relative', overflow: 'hidden'
+    }}>
+      {/* Background Decor */}
+      <div style={{ position: 'absolute', top: '-10%', right: '-10%', width: '40%', height: '40%', background: 'var(--emerald)', opacity: 0.05, filter: 'blur(100px)', borderRadius: '50%' }} />
+      <div style={{ position: 'absolute', bottom: '-10%', left: '-10%', width: '40%', height: '40%', background: 'var(--navy)', opacity: 0.05, filter: 'blur(100px)', borderRadius: '50%' }} />
+
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        style={{
+          width: '100%', maxWidth: 480,
+          borderRadius: 32, padding: 'clamp(32px, 5vw, 60px)',
+          zIndex: 10
+        }}
+        className="glass"
+      >
+        <div style={{ textAlign: 'center', marginBottom: 40 }}>
+          <div style={{ 
+            width: 60, height: 60, borderRadius: 20, background: '#fee2e2', 
+            display: 'flex', alignItems: 'center', justifyContent: 'center', 
+            margin: '0 auto 24px', color: '#ef4444',
+            boxShadow: '0 10px 20px -5px rgba(239, 68, 68, 0.2)'
+          }}>
+            <ShieldAlert size={32} />
           </div>
+          <h2 style={{ fontSize: 28, color: 'var(--navy)', marginBottom: 12 }}>Mandatory Reset</h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: 15, fontWeight: 500, lineHeight: 1.6 }}>
+            For your security, you must set a permanent password before accessing your dashboard.
+          </p>
         </div>
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
-          Mandatory Password Change
-        </h2>
-        <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-          For your security, you must set a new password before continuing.
-        </p>
-      </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white dark:bg-gray-800 py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-gray-100 dark:border-gray-700">
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Current (Temporary) Password
-              </label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  type="password"
-                  required
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="pl-10 block w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent sm:text-sm"
-                />
-              </div>
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: 24 }}>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 800, color: 'var(--text-muted)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Temporary Password</label>
+            <div style={{ position: 'relative' }}>
+              <Lock size={18} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-light)' }} />
+              <input
+                type="password" required
+                value={currentPassword}
+                onChange={e => setCurrentPassword(e.target.value)}
+                placeholder="The password provided by Admin"
+                style={{
+                  width: '100%', padding: '16px 16px 16px 50px', background: 'var(--bg)',
+                  border: '2px solid var(--border)', borderRadius: 16, outline: 'none', fontSize: 15,
+                  color: 'var(--text)', transition: 'all 0.2s', fontWeight: 600
+                }}
+                className="btn-hover"
+              />
             </div>
+          </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                New Password
-              </label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  type="password"
-                  required
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="pl-10 block w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent sm:text-sm"
-                  placeholder="Min 8 chars, 1 uppercase, 1 special..."
-                />
-              </div>
+          <div style={{ marginBottom: 24 }}>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 800, color: 'var(--text-muted)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.05em' }}>New Secure Password</label>
+            <div style={{ position: 'relative' }}>
+              <Lock size={18} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-light)' }} />
+              <input
+                type="password" required
+                value={newPassword}
+                onChange={e => setNewPassword(e.target.value)}
+                placeholder="Min 8 chars, 1 uppercase, 1 symbol"
+                style={{
+                  width: '100%', padding: '16px 16px 16px 50px', background: 'var(--bg)',
+                  border: '2px solid var(--border)', borderRadius: 16, outline: 'none', fontSize: 15,
+                  color: 'var(--text)', transition: 'all 0.2s', fontWeight: 600
+                }}
+                className="btn-hover"
+              />
             </div>
+          </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Confirm New Password
-              </label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  type="password"
-                  required
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="pl-10 block w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent sm:text-sm"
-                />
-              </div>
+          <div style={{ marginBottom: 40 }}>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 800, color: 'var(--text-muted)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Confirm Password</label>
+            <div style={{ position: 'relative' }}>
+              <Lock size={18} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-light)' }} />
+              <input
+                type="password" required
+                value={confirmPassword}
+                onChange={e => setConfirmPassword(e.target.value)}
+                placeholder="Repeat your new password"
+                style={{
+                  width: '100%', padding: '16px 16px 16px 50px', background: 'var(--bg)',
+                  border: '2px solid var(--border)', borderRadius: 16, outline: 'none', fontSize: 15,
+                  color: 'var(--text)', transition: 'all 0.2s', fontWeight: 600
+                }}
+                className="btn-hover"
+              />
             </div>
+          </div>
 
-            <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 transition-colors"
-              >
-                {loading ? 'Updating...' : 'Update Password & Continue'}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
+          <motion.button
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.98 }}
+            type="submit" disabled={loading}
+            style={{
+              width: '100%', height: 60, background: 'var(--navy)', color: 'white',
+              border: 'none', borderRadius: 16, fontWeight: 800, fontSize: 16, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+              boxShadow: '0 15px 30px -10px rgba(15,23,42,0.4)', transition: 'all 0.3s'
+            }}
+          >
+            {loading ? <Loader2 size={24} className="animate-spin" /> : <>Update & Continue <ArrowRight size={20} /></>}
+          </motion.button>
+        </form>
+      </motion.div>
     </div>
   )
 }

@@ -1,90 +1,259 @@
-import { Outlet, Link, useLocation } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Outlet, NavLink, useLocation } from 'react-router-dom'
+import { 
+  LayoutDashboard, LogOut, User, Clock, 
+  CalendarDays, Menu, ChevronLeft, Sun, Moon, Monitor
+} from 'lucide-react'
 import { useStaffPortal } from '../context/StaffPortalContext'
-import { LogOut, User, Clock, LayoutDashboard, CalendarDays } from 'lucide-react'
+import { useTheme } from '../context/ThemeContext'
+import { motion } from 'framer-motion'
+
+const navItems = [
+  { to: '/portal/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/portal/attendance', label: 'Attendance', icon: Clock },
+  { to: '/portal/summary', label: 'Weekly Summary', icon: CalendarDays },
+  { to: '/portal/profile', label: 'My Profile', icon: User },
+]
+
+function useMediaQuery(query) {
+  const [matches, setMatches] = useState(false)
+  useEffect(() => {
+    const media = window.matchMedia(query)
+    setMatches(media.matches)
+    const listener = (e) => setMatches(e.matches)
+    media.addEventListener('change', listener)
+    return () => media.removeEventListener('change', listener)
+  }, [query])
+  return matches
+}
 
 export default function PortalLayout() {
+  const isMobile = useMediaQuery('(max-width: 1024px)')
+  const [sidebarOpen, setSidebarOpen] = useState(!isMobile)
   const { staffUser, logout } = useStaffPortal()
+  const { theme, setTheme } = useTheme()
   const location = useLocation()
 
-  const navLinks = [
-    { name: 'Dashboard', path: '/portal/dashboard', icon: LayoutDashboard },
-    { name: 'Profile', path: '/portal/profile', icon: User },
-    { name: 'Attendance', path: '/portal/attendance', icon: Clock },
-    { name: 'Summary', path: '/portal/summary', icon: CalendarDays },
-  ]
+  useEffect(() => {
+    setSidebarOpen(!window.matchMedia('(max-width: 1024px)').matches)
+  }, [])
+
+  useEffect(() => {
+    if (isMobile) setSidebarOpen(false)
+  }, [location.pathname, isMobile])
+
+  const toggleSidebar = () => setSidebarOpen(!sidebarOpen)
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200 flex flex-col">
-      {/* Top Navigation */}
-      <nav className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              {staffUser?.companyLogo ? (
-                <img src={staffUser.companyLogo} alt="Company Logo" className="h-8 w-auto rounded-md" />
-              ) : (
-                <div className="h-8 w-8 rounded-md bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                  <span className="text-green-700 dark:text-green-400 font-bold text-lg">
-                    {staffUser?.companyName?.charAt(0) || 'S'}
-                  </span>
-                </div>
-              )}
-              <span className="ml-3 font-bold text-xl text-gray-900 dark:text-white">Staff Portal</span>
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg)', color: 'var(--text)', transition: 'all 0.3s' }}>
+      {/* Mobile Overlay */}
+      {isMobile && sidebarOpen && (
+        <div 
+          onClick={() => setSidebarOpen(false)}
+          style={{ 
+            position: 'fixed', inset: 0, background: 'rgba(2, 6, 23, 0.5)', 
+            zIndex: 100, backdropFilter: 'blur(4px)', transition: 'all 0.3s'
+          }}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside style={{
+        width: 'var(--sidebar-w)',
+        background: 'var(--navy-dark)',
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'fixed',
+        top: 0, left: 0, bottom: 0,
+        zIndex: 120,
+        transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
+        transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+        borderRight: '1px solid rgba(255,255,255,0.05)',
+      }}>
+        {/* Brand Header */}
+        <div style={{
+          height: 'var(--header-h)',
+          padding: '0 24px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          borderBottom: '1px solid rgba(255,255,255,0.05)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{
+              width: 38, height: 38, borderRadius: 12,
+              background: 'linear-gradient(135deg, var(--emerald) 0%, #059669 100%)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
+            }}>
+              <Clock size={20} color="white" strokeWidth={2.5} />
             </div>
-            
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600 dark:text-gray-300 hidden sm:block">
-                Welcome, {staffUser?.fullName}
-              </span>
-              <button
-                onClick={logout}
-                className="inline-flex items-center justify-center p-2 rounded-md text-gray-500 hover:text-red-600 hover:bg-red-50 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-red-900/20 transition-colors"
-                title="Log out"
-              >
-                <LogOut className="h-5 w-5" />
-              </button>
+            <div>
+              <div style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 19, fontWeight: 800,
+                color: 'white', letterSpacing: '-0.02em'
+              }}>Staff<span style={{ color: 'var(--emerald)' }}>Portal</span></div>
             </div>
           </div>
+          {isMobile && (
+            <button onClick={() => setSidebarOpen(false)} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', cursor: 'pointer', padding: 6, borderRadius: 8 }}>
+              <ChevronLeft size={20} />
+            </button>
+          )}
         </div>
-      </nav>
 
-      <div className="flex-1 flex flex-col md:flex-row max-w-7xl w-full mx-auto sm:px-6 lg:px-8 py-6 gap-6">
-        {/* Sidebar Nav (Desktop) / Top Tabs (Mobile) */}
-        <div className="w-full md:w-64 flex-shrink-0">
-          <nav className="flex md:flex-col space-x-2 md:space-x-0 md:space-y-1 overflow-x-auto pb-2 md:pb-0 px-4 sm:px-0">
-            {navLinks.map((item) => {
-              const isActive = location.pathname === item.path
-              return (
-                <Link
-                  key={item.name}
-                  to={item.path}
-                  className={`
-                    group flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-colors whitespace-nowrap
-                    ${isActive 
-                      ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400' 
-                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white'
-                    }
-                  `}
+        {/* Navigation Sidebar */}
+        <nav style={{ padding: '24px 16px', flex: 1, overflowY: 'auto' }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em', padding: '0 12px 16px', textTransform: 'uppercase' }}>
+            Work Tools
+          </div>
+          {navItems.map(({ to, label, icon: Icon }) => (
+            <NavLink
+              key={to}
+              to={to}
+              style={({ isActive }) => ({
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                padding: '12px 16px',
+                borderRadius: 12,
+                marginBottom: 6,
+                textDecoration: 'none',
+                fontSize: 14,
+                fontWeight: isActive ? 600 : 500,
+                color: isActive ? 'white' : 'rgba(255,255,255,0.5)',
+                background: isActive ? 'rgba(255,255,255,0.08)' : 'transparent',
+                transition: 'all 0.2s ease',
+              })}
+            >
+              <Icon size={18} opacity={0.8} />
+              {label}
+            </NavLink>
+          ))}
+        </nav>
+
+        {/* User Profile Hook */}
+        <div style={{
+          padding: '20px 16px',
+          background: 'rgba(0,0,0,0.2)',
+          borderTop: '1px solid rgba(255,255,255,0.05)',
+        }}>
+          <div style={{ 
+            display: 'flex', alignItems: 'center', gap: 12, 
+            padding: '12px', background: 'rgba(255,255,255,0.03)', 
+            borderRadius: 16, marginBottom: 12 
+          }}>
+            <div style={{ 
+              width: 36, height: 36, borderRadius: 10, 
+              background: 'var(--navy-light)', border: '1px solid rgba(255,255,255,0.1)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center' 
+            }}>
+              <User size={16} color="white" />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13, color: 'white', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {staffUser?.fullName}
+              </div>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>{staffUser?.designation}</div>
+            </div>
+          </div>
+          <button 
+            onClick={logout}
+            style={{
+              width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, 
+              background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)',
+              padding: '10px', borderRadius: 12, color: '#f87171', fontSize: 13, 
+              cursor: 'pointer', fontWeight: 600, transition: 'all 0.2s'
+            }}
+          >
+            <LogOut size={16} /> Sign Out
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Framework */}
+      <main style={{ 
+        marginLeft: isMobile ? 0 : (sidebarOpen ? 'var(--sidebar-w)' : 0), 
+        flex: 1, 
+        display: 'flex', 
+        flexDirection: 'column',
+        transition: 'margin 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+        minWidth: 0
+      }}>
+        
+        {/* Universal Header */}
+        <header style={{
+          height: 'var(--header-h)', 
+          background: 'var(--surface)', 
+          borderBottom: '1px solid var(--border)',
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between', 
+          padding: '0 clamp(16px, 4vw, 32px)',
+          position: 'sticky', 
+          top: 0, 
+          zIndex: 80,
+          backdropFilter: 'blur(8px)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <button 
+              onClick={toggleSidebar}
+              style={{ 
+                background: 'var(--bg)', border: '1px solid var(--border)', 
+                color: 'var(--text)', cursor: 'pointer', 
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                width: 40, height: 40, borderRadius: 12, transition: 'all 0.2s'
+              }}
+              className="btn-hover"
+            >
+              <Menu size={20} />
+            </button>
+            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--navy)', opacity: 0.9, letterSpacing: '-0.01em' }}>
+              Staff Portal Console
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-muted)', display: isMobile ? 'none' : 'block' }}>
+              {staffUser?.companyName}
+            </div>
+
+            {/* Theme Control System */}
+            <div style={{ 
+              display: 'flex', background: 'var(--bg)', borderRadius: 14, 
+              padding: 3, border: '1.5px solid var(--border)' 
+            }}>
+              {[
+                { id: 'light', icon: Sun, label: 'Light' },
+                { id: 'dark', icon: Moon, label: 'Dark' },
+                { id: 'system', icon: Monitor, label: 'Sys' }
+              ].map(t => (
+                <button 
+                  key={t.id}
+                  onClick={() => setTheme(t.id)}
+                  style={{
+                    background: theme === t.id ? 'var(--surface)' : 'transparent',
+                    color: theme === t.id ? 'var(--gold)' : 'var(--text-light)',
+                    boxShadow: theme === t.id ? 'var(--shadow-sm)' : 'none',
+                    border: 'none', borderRadius: 11, padding: '7px 14px',
+                    display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer',
+                    fontSize: 12, fontWeight: 700, transition: 'all 0.2s'
+                  }}
                 >
-                  <item.icon
-                    className={`
-                      flex-shrink-0 -ml-1 mr-3 h-5 w-5
-                      ${isActive ? 'text-green-500 dark:text-green-400' : 'text-gray-400 group-hover:text-gray-500 dark:group-hover:text-gray-300'}
-                    `}
-                    aria-hidden="true"
-                  />
-                  <span className="truncate">{item.name}</span>
-                </Link>
-              )
-            })}
-          </nav>
-        </div>
+                  <t.icon size={15} strokeWidth={2.5} />
+                  <span style={{ display: isMobile ? 'none' : 'inline' }}>{t.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </header>
 
-        {/* Main Content Area */}
-        <main className="flex-1 overflow-hidden px-4 sm:px-0">
+        {/* Global Body */}
+        <div style={{ flex: 1, position: 'relative', padding: 'clamp(16px, 4vw, 32px)' }}>
           <Outlet />
-        </main>
-      </div>
+        </div>
+      </main>
     </div>
   )
 }

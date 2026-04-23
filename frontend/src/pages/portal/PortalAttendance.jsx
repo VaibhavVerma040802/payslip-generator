@@ -1,129 +1,130 @@
 import { useState, useEffect } from 'react'
-import { Calendar, Clock, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { Calendar as CalendarIcon, Clock, AlertCircle, Loader2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { toast } from 'react-hot-toast'
 import api from '../../api'
+import { motion } from 'framer-motion'
 
 export default function PortalAttendance() {
   const [history, setHistory] = useState([])
+  const [summary, setSummary] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [month, setMonth] = useState(new Date().getMonth() + 1)
+  const [year, setYear] = useState(new Date().getFullYear())
 
   useEffect(() => {
     fetchHistory()
-  }, [])
+  }, [month, year])
 
   const fetchHistory = async () => {
+    setLoading(true)
     try {
-      const token = localStorage.getItem('staffToken')
-      const res = await api.get('/attendance/history', {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      const res = await api.get(`/attendance/history?month=${month}&year=${year}`)
       setHistory(res.data.history)
+      setSummary(res.data.summary)
     } catch (err) {
-      console.error('Failed to fetch history', err)
+      toast.error(err.message || 'Failed to fetch history')
     } finally {
       setLoading(false)
     }
   }
 
-  const formatTime = (dateString) => {
-    if (!dateString) return '--:--'
-    return new Date(dateString).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+  const formatTime = (date) => date ? new Date(date).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '--:--'
+  const formatDate = (date) => new Date(date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', weekday: 'short' })
+
+  const handlePrevMonth = () => {
+    if (month === 1) { setMonth(12); setYear(year - 1); }
+    else setMonth(month - 1);
   }
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-IN', {
-      weekday: 'short',
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    })
+  const handleNextMonth = () => {
+    if (month === 12) { setMonth(1); setYear(year + 1); }
+    else setMonth(month + 1);
   }
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-        <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-          <div>
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center">
-              <Calendar className="h-5 w-5 mr-2 text-green-600 dark:text-green-400" />
-              Attendance History
-            </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Last 30 days</p>
-          </div>
+    <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+      <header style={{ marginBottom: 40, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 20 }}>
+        <div>
+          <h1 style={{ fontSize: 32, color: 'var(--navy)', marginBottom: 8 }}>Attendance History</h1>
+          <p style={{ color: 'var(--text-muted)', fontWeight: 500 }}>Review your detailed work logs and monthly summaries.</p>
         </div>
+        
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, background: 'var(--surface)', padding: '8px 16px', borderRadius: 16, border: '1px solid var(--border)' }}>
+          <button onClick={handlePrevMonth} style={{ background: 'none', border: 'none', color: 'var(--text)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}><ChevronLeft size={20} /></button>
+          <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--navy)', minWidth: 140, textAlign: 'center' }}>
+            {new Date(year, month - 1).toLocaleString('default', { month: 'long', year: 'numeric' })}
+          </div>
+          <button onClick={handleNextMonth} style={{ background: 'none', border: 'none', color: 'var(--text)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}><ChevronRight size={20} /></button>
+        </div>
+      </header>
 
-        {loading ? (
-          <div className="p-12 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
-          </div>
-        ) : history.length === 0 ? (
-          <div className="p-12 text-center text-gray-500 dark:text-gray-400">
-            No attendance records found for the last 30 days.
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead className="bg-gray-50 dark:bg-gray-900/50">
+      {/* Summary Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 24, marginBottom: 40 }}>
+        {[
+          { label: 'Total Present', value: summary?.presentDays || 0, icon: CalendarIcon, color: 'var(--emerald)' },
+          { label: 'Avg. Daily Hours', value: `${(summary?.avgHours || 0).toFixed(1)}h`, icon: Clock, color: 'var(--navy)' },
+          { label: 'Overtime Total', value: `${(summary?.totalOT || 0).toFixed(1)}h`, icon: Clock, color: 'var(--gold)' },
+          { label: 'Flagged Records', value: summary?.flaggedCount || 0, icon: AlertCircle, color: '#ef4444' },
+        ].map((stat, i) => (
+          <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="glass" style={{ padding: 24, display: 'flex', alignItems: 'center', gap: 20 }}>
+            <div style={{ width: 48, height: 48, borderRadius: 14, background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: stat.color }}>
+              <stat.icon size={24} />
+            </div>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-light)', textTransform: 'uppercase', letterSpacing: '0.02em', marginBottom: 4 }}>{stat.label}</div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--navy)' }}>{stat.value}</div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* History Table */}
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="glass" style={{ overflow: 'hidden' }}>
+        <div style={{ overflowX: 'auto' }}>
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Punch In</th>
+                <th>Punch Out</th>
+                <th>Work Hours</th>
+                <th>Overtime</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
                 <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Punch In</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Punch Out</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Hours</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Overtime</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                  <td colSpan="6" style={{ padding: 60, textAlign: 'center' }}>
+                    <Loader2 size={32} className="animate-spin text-muted" style={{ margin: '0 auto' }} />
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {history.map((record) => (
-                  <tr key={record._id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                      {formatDate(record.date)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                      <div className="flex items-center">
-                        <Clock className="h-3.5 w-3.5 mr-1.5 text-gray-400" />
-                        {formatTime(record.punchIn)}
+              ) : history.length === 0 ? (
+                <tr>
+                  <td colSpan="6" style={{ padding: 60, textAlign: 'center', color: 'var(--text-muted)', fontWeight: 500 }}>
+                    No records found for this period.
+                  </td>
+                </tr>
+              ) : (
+                history.map((row, i) => (
+                  <tr key={i}>
+                    <td style={{ fontWeight: 700, color: 'var(--navy)' }}>{formatDate(row.date)}</td>
+                    <td>{formatTime(row.punchIn)}</td>
+                    <td>{formatTime(row.punchOut)}</td>
+                    <td><span style={{ fontWeight: 600 }}>{row.totalHours.toFixed(2)}h</span></td>
+                    <td>{row.overtimeHours > 0 ? <span style={{ color: 'var(--emerald)', fontWeight: 700 }}>+{row.overtimeHours.toFixed(2)}h</span> : '--'}</td>
+                    <td>
+                      <div className={`badge ${row.status === 'flagged' ? 'badge-red' : 'badge-emerald'}`}>
+                        {row.status.toUpperCase()}
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                      <div className="flex items-center">
-                        <Clock className="h-3.5 w-3.5 mr-1.5 text-gray-400" />
-                        {formatTime(record.punchOut)}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                      {record.totalHours > 0 ? `${record.totalHours.toFixed(2)}h` : '-'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      {record.overtimeHours > 0 ? (
-                        <span className="text-purple-600 dark:text-purple-400 font-medium">
-                          +{record.overtimeHours.toFixed(2)}h
-                        </span>
-                      ) : (
-                        <span className="text-gray-400">-</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {record.status === 'complete' ? (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-                          <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Complete
-                        </span>
-                      ) : record.status === 'incomplete' ? (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
-                          <Clock className="h-3.5 w-3.5 mr-1" /> Active
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400" title={record.notes}>
-                          <AlertCircle className="h-3.5 w-3.5 mr-1" /> Flagged
-                        </span>
-                      )}
                     </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </motion.div>
     </div>
   )
 }

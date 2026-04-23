@@ -15,12 +15,11 @@ export function StaffPortalProvider({ children }) {
     const initAuth = async () => {
       const token = localStorage.getItem('staffToken');
       if (token) {
-        // Use a generic interceptor logic or specifically set headers for staff requests
         try {
-          const res = await api.get('/portal/me', {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          setStaffUser(res.data.staff);
+          const res = await api.get('/portal/me');
+          // Ensure we preserve the mustChangePassword state if it's there
+          // Note: /me might not return it, so we default to false if not present
+          setStaffUser({ ...res.data.staff, mustChangePassword: res.data.staff.mustChangePassword || false });
         } catch (err) {
           console.error('Staff auth failed', err);
           localStorage.removeItem('staffToken');
@@ -34,7 +33,8 @@ export function StaffPortalProvider({ children }) {
   const login = async (email, password) => {
     const res = await api.post('/portal/login', { email, password });
     localStorage.setItem('staffToken', res.data.token);
-    setStaffUser(res.data.staff);
+    // Combine staff data with mustChangePassword flag
+    setStaffUser({ ...res.data.staff, mustChangePassword: res.data.mustChangePassword });
     return res.data;
   };
 

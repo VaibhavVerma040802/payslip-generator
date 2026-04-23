@@ -1,189 +1,157 @@
 import { useState, useEffect } from 'react'
-import { LogIn, LogOut, Clock, Calendar as CalendarIcon, AlertCircle } from 'lucide-react'
+import { LogIn, LogOut, Clock, Calendar as CalendarIcon, AlertCircle, Loader2, Timer } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import api from '../../api'
+import { motion } from 'framer-motion'
 
 export default function PortalDashboard() {
-  const [todayRecord, setTodayRecord] = useState(null)
-  const [loading, setLoading] = useState(true)
   const [currentTime, setCurrentTime] = useState(new Date())
+  const [activeShift, setActiveShift] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [actionLoading, setActionLoading] = useState(false)
 
   useEffect(() => {
-    // Clock tick
     const timer = setInterval(() => setCurrentTime(new Date()), 1000)
+    fetchActiveShift()
     return () => clearInterval(timer)
   }, [])
 
-  useEffect(() => {
-    fetchTodayRecord()
-  }, [])
-
-  const fetchTodayRecord = async () => {
+  const fetchActiveShift = async () => {
     try {
-      const token = localStorage.getItem('staffToken')
-      const res = await api.get('/attendance/today', {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      setTodayRecord(res.data.attendance)
+      const res = await api.get('/attendance/active')
+      setActiveShift(res.data.activeShift)
     } catch (err) {
-      console.error('Failed to fetch attendance', err)
+      console.error('Failed to fetch active shift', err)
     } finally {
       setLoading(false)
     }
   }
 
-  const handlePunchIn = async () => {
+  const handlePunch = async (type) => {
+    setActionLoading(true)
     try {
-      const token = localStorage.getItem('staffToken')
-      const res = await api.post('/attendance/punch-in', {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      setTodayRecord(res.data.attendance)
-      toast.success('Punched in successfully!')
+      const endpoint = type === 'in' ? '/attendance/punch-in' : '/attendance/punch-out'
+      const res = await api.post(endpoint, {})
+      toast.success(res.data.message)
+      fetchActiveShift()
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to punch in')
+      toast.error(err.message || `Failed to punch ${type}`)
+    } finally {
+      setActionLoading(false)
     }
   }
 
-  const handlePunchOut = async () => {
-    try {
-      const token = localStorage.getItem('staffToken')
-      const res = await api.post('/attendance/punch-out', {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      setTodayRecord(res.data.attendance)
-      toast.success('Punched out successfully!')
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to punch out')
-    }
+  const formatDuration = (start) => {
+    const diff = Math.floor((new Date() - new Date(start)) / 1000)
+    const h = Math.floor(diff / 3600)
+    const m = Math.floor((diff % 3600) / 60)
+    const s = diff % 60
+    return `${h}h ${m}m ${s}s`
   }
 
-  // Calculate live duration if punched in
-  let liveDuration = 0
-  if (todayRecord?.punchIn && !todayRecord?.punchOut) {
-    liveDuration = (currentTime - new Date(todayRecord.punchIn)) / (1000 * 60 * 60)
-  }
-
-  const formatTime = (dateString) => {
-    if (!dateString) return '--:--'
-    return new Date(dateString).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
-  }
-
-  if (loading) {
-    return <div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div></div>
-  }
+  if (loading) return (
+    <div style={{ display: 'flex', justifyContent: 'center', padding: 100 }}>
+      <Loader2 size={40} className="animate-spin text-muted" />
+    </div>
+  )
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 sm:p-8">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="text-center md:text-left">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Attendance Overview</h2>
-            <p className="text-gray-500 dark:text-gray-400 mt-1">
-              {currentTime.toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-            </p>
-          </div>
-          
-          <div className="bg-gray-50 dark:bg-gray-900 px-6 py-4 rounded-lg border border-gray-200 dark:border-gray-700 min-w-[200px] text-center">
-            <p className="text-sm text-gray-500 dark:text-gray-400 uppercase font-semibold tracking-wider mb-1">Current Time</p>
-            <p className="text-3xl font-mono font-bold text-gray-900 dark:text-white">
-              {currentTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-            </p>
-          </div>
-        </div>
+    <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+      <header style={{ marginBottom: 40 }}>
+        <h1 style={{ fontSize: 32, color: 'var(--navy)', marginBottom: 8 }}>Good {currentTime.getHours() < 12 ? 'Morning' : currentTime.getHours() < 17 ? 'Afternoon' : 'Evening'}</h1>
+        <p style={{ color: 'var(--text-muted)', fontWeight: 500 }}>Ready to track your progress today?</p>
+      </header>
 
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Punch Widget */}
-          <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-6 border border-gray-200 dark:border-gray-700 flex flex-col items-center justify-center text-center">
-            {!todayRecord ? (
-              <>
-                <div className="h-16 w-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mb-4">
-                  <LogIn className="h-8 w-8 text-blue-600 dark:text-blue-400" />
-                </div>
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">You haven't punched in yet</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 max-w-xs">Standard working hours start at 10:30 AM.</p>
-                <button
-                  onClick={handlePunchIn}
-                  className="w-full sm:w-auto px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-sm transition-colors text-lg"
-                >
-                  Punch In Now
-                </button>
-              </>
-            ) : !todayRecord.punchOut ? (
-              <>
-                <div className="h-16 w-16 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mb-4">
-                  <LogOut className="h-8 w-8 text-amber-600 dark:text-amber-400" />
-                </div>
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">You are currently clocked in</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Since {formatTime(todayRecord.punchIn)}</p>
-                <button
-                  onClick={handlePunchOut}
-                  className="w-full sm:w-auto px-8 py-3 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg shadow-sm transition-colors text-lg"
-                >
-                  Punch Out
-                </button>
-              </>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
+        {/* Live Clock Card */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass" style={{ padding: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
+          <div style={{ width: 64, height: 64, borderRadius: 20, background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--navy)', marginBottom: 20 }}>
+            <Clock size={32} />
+          </div>
+          <div style={{ fontSize: 48, fontWeight: 800, fontFamily: 'var(--font-display)', color: 'var(--navy)', letterSpacing: '-0.02em', marginBottom: 8 }}>
+            {currentTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-muted)', fontWeight: 600 }}>
+            <CalendarIcon size={16} />
+            {currentTime.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+          </div>
+        </motion.div>
+
+        {/* Action Card */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass" style={{ padding: 32 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 32 }}>
+            <div>
+              <h3 style={{ margin: 0, color: 'var(--navy)', fontSize: 18 }}>Shift Status</h3>
+              <p style={{ margin: '4px 0 0', color: 'var(--text-muted)', fontSize: 14 }}>{activeShift ? 'Currently PUNCHED IN' : 'Currently PUNCHED OUT'}</p>
+            </div>
+            <div className={`badge ${activeShift ? 'badge-emerald' : 'badge-navy'}`}>
+              {activeShift ? 'Active' : 'Off-Duty'}
+            </div>
+          </div>
+
+          {activeShift && (
+            <div style={{ marginBottom: 32, padding: 16, background: 'var(--bg)', borderRadius: 16, border: '1px solid var(--border)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: 'var(--text-muted)', fontSize: 13, marginBottom: 8, fontWeight: 600 }}>
+                <Timer size={16} /> SESSION DURATION
+              </div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--navy)', fontFamily: 'var(--font-display)' }}>
+                {formatDuration(activeShift.punchIn)}
+              </div>
+            </div>
+          )}
+
+          <div style={{ display: 'flex', gap: 16 }}>
+            {!activeShift ? (
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => handlePunch('in')}
+                disabled={actionLoading}
+                style={{
+                  flex: 1, height: 56, background: 'var(--emerald)', color: 'white',
+                  border: 'none', borderRadius: 14, fontWeight: 700, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                  boxShadow: '0 10px 20px -5px rgba(16, 185, 129, 0.3)', transition: 'all 0.2s'
+                }}
+              >
+                {actionLoading ? <Loader2 size={20} className="animate-spin" /> : <LogIn size={20} />}
+                Punch In
+              </motion.button>
             ) : (
-              <>
-                <div className="h-16 w-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mb-4">
-                  <CalendarIcon className="h-8 w-8 text-green-600 dark:text-green-400" />
-                </div>
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Shift Completed</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">You've completed your work for today.</p>
-                <div className="bg-white dark:bg-gray-800 rounded px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
-                  Total Hours: {todayRecord.totalHours.toFixed(2)}h
-                </div>
-              </>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => handlePunch('out')}
+                disabled={actionLoading}
+                style={{
+                  flex: 1, height: 56, background: '#ef4444', color: 'white',
+                  border: 'none', borderRadius: 14, fontWeight: 700, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                  boxShadow: '0 10px 20px -5px rgba(239, 68, 68, 0.3)', transition: 'all 0.2s'
+                }}
+              >
+                {actionLoading ? <Loader2 size={20} className="animate-spin" /> : <LogOut size={20} />}
+                Punch Out
+              </motion.button>
             )}
           </div>
+        </motion.div>
+      </div>
 
-          {/* Stats Widget */}
-          <div className="flex flex-col gap-4">
-            <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-5 border border-gray-200 dark:border-gray-700 flex items-center">
-              <div className="h-12 w-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center mr-4">
-                <Clock className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Today's Active Hours</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {todayRecord?.totalHours 
-                    ? todayRecord.totalHours.toFixed(2) 
-                    : liveDuration.toFixed(2)}<span className="text-base font-normal text-gray-500">h</span>
-                </p>
-              </div>
-            </div>
-
-            <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-5 border border-gray-200 dark:border-gray-700 flex items-center">
-              <div className="h-12 w-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mr-4">
-                <CalendarIcon className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Standard Target</p>
-                <div className="flex items-end justify-between">
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    8.50<span className="text-base font-normal text-gray-500">h</span>
-                  </p>
-                  {todayRecord?.overtimeHours > 0 && (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400">
-                      + {todayRecord.overtimeHours.toFixed(2)}h OT
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {todayRecord?.status === 'flagged' && (
-              <div className="bg-red-50 dark:bg-red-900/20 rounded-xl p-4 border border-red-200 dark:border-red-800 flex items-start">
-                <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 mr-3 mt-0.5 flex-shrink-0" />
-                <div>
-                  <h4 className="text-sm font-medium text-red-800 dark:text-red-300">Review Required</h4>
-                  <p className="text-xs text-red-700 dark:text-red-400 mt-1">{todayRecord.notes}</p>
-                </div>
-              </div>
-            )}
+      {/* Info Card */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} style={{ marginTop: 24 }} className="glass">
+        <div style={{ padding: 24, display: 'flex', gap: 16, alignItems: 'center' }}>
+          <div style={{ width: 48, height: 48, borderRadius: 12, background: 'var(--gold-pale)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gold)' }}>
+            <AlertCircle size={24} />
+          </div>
+          <div>
+            <h4 style={{ margin: 0, color: 'var(--navy)', fontSize: 15 }}>Work Hours Policy</h4>
+            <p style={{ margin: '4px 0 0', color: 'var(--text-muted)', fontSize: 13, lineHeight: 1.5 }}>
+              Standard shift is 8.5 hours. Overtime is tracked automatically up to 4 hours per day. Please ensure you punch out at the end of your shift to avoid records being flagged.
+            </p>
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   )
 }

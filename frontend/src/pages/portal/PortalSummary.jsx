@@ -1,105 +1,123 @@
 import { useState, useEffect } from 'react'
-import { BarChart3, Clock, CalendarDays, TrendingUp } from 'lucide-react'
+import { Calendar as CalendarIcon, Clock, AlertCircle, Loader2, ChevronLeft, ChevronRight, BarChart3 } from 'lucide-react'
+import { toast } from 'react-hot-toast'
 import api from '../../api'
+import { motion } from 'framer-motion'
 
 export default function PortalSummary() {
   const [summary, setSummary] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [currentWeek, setCurrentWeek] = useState(new Date())
 
   useEffect(() => {
-    fetchSummary()
-  }, [])
+    fetchWeeklySummary()
+  }, [currentWeek])
 
-  const fetchSummary = async () => {
+  const fetchWeeklySummary = async () => {
+    setLoading(true)
     try {
-      const token = localStorage.getItem('staffToken')
-      const res = await api.get('/attendance/summary', {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      const d = currentWeek
+      const res = await api.get(`/attendance/weekly?date=${d.toISOString()}`)
       setSummary(res.data.summary)
     } catch (err) {
-      console.error('Failed to fetch summary', err)
+      toast.error(err.message || 'Failed to fetch summary')
     } finally {
       setLoading(false)
     }
   }
 
-  if (loading) {
-    return <div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div></div>
+  const handlePrevWeek = () => {
+    const d = new Date(currentWeek)
+    d.setDate(d.getDate() - 7)
+    setCurrentWeek(d)
+  }
+
+  const handleNextWeek = () => {
+    const d = new Date(currentWeek)
+    d.setDate(d.getDate() + 7)
+    setCurrentWeek(d)
+  }
+
+  const getWeekRange = () => {
+    const d = new Date(currentWeek)
+    const day = d.getDay()
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1)
+    const monday = new Date(d.setDate(diff))
+    const sunday = new Date(monday)
+    sunday.setDate(monday.getDate() + 6)
+    return `${monday.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })} - ${sunday.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}`
   }
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 sm:p-8">
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
-            <BarChart3 className="h-6 w-6 mr-2 text-green-600 dark:text-green-400" />
-            Weekly Summary
-          </h2>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">
-            Your attendance analytics for the current week (Mon-Sun).
-          </p>
+    <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+      <header style={{ marginBottom: 40, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 20 }}>
+        <div>
+          <h1 style={{ fontSize: 32, color: 'var(--navy)', marginBottom: 8 }}>Weekly Performance</h1>
+          <p style={{ color: 'var(--text-muted)', fontWeight: 500 }}>A snapshot of your productivity and work-life balance.</p>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-6 border border-green-100 dark:border-green-800">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-medium text-green-800 dark:text-green-300">Total Hours</h3>
-              <Clock className="h-5 w-5 text-green-600 dark:text-green-400" />
-            </div>
-            <p className="text-3xl font-bold text-green-900 dark:text-green-100">
-              {summary?.totalWeekHours?.toFixed(2) || '0.00'}
-              <span className="text-base font-normal text-green-700 dark:text-green-400 ml-1">h</span>
-            </p>
+        
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, background: 'var(--surface)', padding: '8px 16px', borderRadius: 16, border: '1px solid var(--border)' }}>
+          <button onClick={handlePrevWeek} style={{ background: 'none', border: 'none', color: 'var(--text)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}><ChevronLeft size={20} /></button>
+          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--navy)', minWidth: 160, textAlign: 'center' }}>
+            {getWeekRange()}
           </div>
-
-          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-6 border border-blue-100 dark:border-blue-800">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-medium text-blue-800 dark:text-blue-300">Days Present</h3>
-              <CalendarDays className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-            </div>
-            <p className="text-3xl font-bold text-blue-900 dark:text-blue-100">
-              {summary?.validDays || 0}
-              <span className="text-base font-normal text-blue-700 dark:text-blue-400 ml-1">days</span>
-            </p>
-          </div>
-
-          <div className="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-6 border border-purple-100 dark:border-purple-800">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-medium text-purple-800 dark:text-purple-300">Daily Average</h3>
-              <TrendingUp className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-            </div>
-            <p className="text-3xl font-bold text-purple-900 dark:text-purple-100">
-              {summary?.weeklyAverage?.toFixed(2) || '0.00'}
-              <span className="text-base font-normal text-purple-700 dark:text-purple-400 ml-1">h/day</span>
-            </p>
-          </div>
+          <button onClick={handleNextWeek} style={{ background: 'none', border: 'none', color: 'var(--text)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}><ChevronRight size={20} /></button>
         </div>
+      </header>
 
-        <div className="mt-8 bg-gray-50 dark:bg-gray-900 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Payroll Implications</h3>
-          <ul className="space-y-3 text-sm text-gray-600 dark:text-gray-400">
-            <li className="flex items-start">
-              <div className="flex-shrink-0 h-5 w-5 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center border border-green-200 dark:border-green-800 mt-0.5 mr-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-600 dark:bg-green-400"></span>
-              </div>
-              <p>A day counts as a full working day only if a complete punch-in and punch-out sequence is recorded.</p>
-            </li>
-            <li className="flex items-start">
-              <div className="flex-shrink-0 h-5 w-5 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center border border-amber-200 dark:border-amber-800 mt-0.5 mr-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-600 dark:bg-amber-400"></span>
-              </div>
-              <p>Overtime is calculated for any time exceeding 8.5 hours per day, capped at a maximum of 4 hours of overtime per day.</p>
-            </li>
-            <li className="flex items-start">
-              <div className="flex-shrink-0 h-5 w-5 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center border border-red-200 dark:border-red-800 mt-0.5 mr-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-red-600 dark:bg-red-400"></span>
-              </div>
-              <p>Missing punch-outs or shifts extending beyond 16 hours are flagged for HR review and may delay accurate payroll processing.</p>
-            </li>
-          </ul>
+      {loading ? (
+        <div style={{ display: 'flex', justifyContent: 'center', padding: 100 }}>
+          <Loader2 size={40} className="animate-spin text-muted" />
         </div>
-      </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
+          {/* Main Stat Card */}
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="glass" style={{ padding: 32, gridColumn: '1 / -1', background: 'linear-gradient(135deg, var(--navy) 0%, #1e293b 100%)', color: 'white' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Total Work Hours</div>
+                <div style={{ fontSize: 48, fontWeight: 900, fontFamily: 'var(--font-display)' }}>{(summary?.totalHours || 0).toFixed(1)}h</div>
+              </div>
+              <div style={{ width: 64, height: 64, borderRadius: 20, background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <BarChart3 size={32} color="var(--emerald)" />
+              </div>
+            </div>
+            <div style={{ marginTop: 32, display: 'flex', gap: 40 }}>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>DAYS WORKED</div>
+                <div style={{ fontSize: 18, fontWeight: 700 }}>{summary?.presentDays || 0} / 7</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>OVERTIME</div>
+                <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--emerald)' }}>{(summary?.totalOT || 0).toFixed(1)}h</div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Productivity Insights */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass" style={{ padding: 32 }}>
+            <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 24 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--navy)' }}>
+                <Clock size={20} />
+              </div>
+              <h3 style={{ margin: 0, fontSize: 18, color: 'var(--navy)' }}>Avg. Shift</h3>
+            </div>
+            <div style={{ fontSize: 32, fontWeight: 800, color: 'var(--navy)' }}>{(summary?.avgHours || 0).toFixed(1)}h</div>
+            <p style={{ color: 'var(--text-muted)', fontSize: 14, marginTop: 8 }}>Average duration of your shifts this week.</p>
+          </motion.div>
+
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass" style={{ padding: 32 }}>
+            <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 24 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444' }}>
+                <AlertCircle size={20} />
+              </div>
+              <h3 style={{ margin: 0, fontSize: 18, color: 'var(--navy)' }}>Flags</h3>
+            </div>
+            <div style={{ fontSize: 32, fontWeight: 800, color: 'var(--navy)' }}>{summary?.flaggedCount || 0}</div>
+            <p style={{ color: 'var(--text-muted)', fontSize: 14, marginTop: 8 }}>Records requiring administrative review.</p>
+          </motion.div>
+        </div>
+      )}
     </div>
   )
 }
