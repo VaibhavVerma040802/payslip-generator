@@ -409,17 +409,17 @@ export default function GeneratePayslip() {
             boxShadow: '0 40px 100px -20px rgba(0,0,0,0.12)', border: '1px solid var(--border)',
             position: 'relative'
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 32, borderBottom: '2px solid var(--bg)', paddingBottom: 24 }}>
-              <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32, borderBottom: '2px solid var(--bg)', paddingBottom: 24 }}>
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center', minWidth: 0, flex: 1 }}>
                 {form.companyLogo && (
-                  <img src={form.companyLogo} alt="Logo" style={{ height: 48, width: 'auto', borderRadius: 12, objectFit: 'contain', background: '#f8fafc', padding: 4 }} />
+                  <img src={form.companyLogo} alt="Logo" style={{ height: 44, width: 44, borderRadius: 10, objectFit: 'contain', background: '#f8fafc', padding: 4, flexShrink: 0 }} />
                 )}
-                <div>
-                  <div style={{ fontSize: 17, fontWeight: 900, color: 'var(--navy)', letterSpacing: '-0.02em' }}>{form.companyName || 'Corporate Entity'}</div>
-                  <div className="badge badge-gold" style={{ marginTop: 2 }}>Certified Payload</div>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 15, fontWeight: 900, color: 'var(--navy)', letterSpacing: '-0.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{form.companyName || 'Corporate Entity'}</div>
+                  <div className="badge badge-gold" style={{ marginTop: 4, display: 'inline-block' }}>Certified Payload</div>
                 </div>
               </div>
-              <div style={{ textAlign: 'right' }}>
+              <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 12 }}>
                 <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>Period</div>
                 <div style={{ fontSize: 14, fontWeight: 800 }}>{form.month} {form.year}</div>
               </div>
