@@ -1,29 +1,29 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Mail, ArrowLeft } from 'lucide-react'
+import { Mail, ArrowLeft, Loader2, Send } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import api from '../../api'
+import { motion } from 'framer-motion'
 
 export default function PortalForgotPassword() {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
-  const [success, setSuccess] = useState(false)
+  const [sent, setSent] = useState(false)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
     try {
       await api.post('/portal/forgot-password', { email })
-      setSuccess(true)
-      toast.success('If that email exists, a reset link has been sent.')
+      setSent(true)
+      toast.success('Reset link sent successfully.')
     } catch (err) {
-      toast.error('Something went wrong. Please try again.')
+      toast.error(err.message || 'Something went wrong.')
     } finally {
       setLoading(false)
     }
   }
 
-  if (success) {
   return (
     <div style={{
       minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', 
