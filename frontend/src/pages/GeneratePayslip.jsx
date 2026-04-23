@@ -1,10 +1,10 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useNavigate, useLocation, Link } from 'react-router-dom'
-import { motion, AnimatePresence, LayoutGroup } from 'framer-motion'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
 import { 
-  Building2, User, Calendar, TrendingUp, Minus, 
-  ChevronRight, ChevronLeft, CheckCircle2, Loader2,
-  FileText, IndianRupee, Landmark, Wallet, Plus, Download, Send, Search
+  Building2, User, Calendar,
+  ChevronRight, CheckCircle2, Loader2,
+  IndianRupee, Landmark, Send
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import toast from 'react-hot-toast'

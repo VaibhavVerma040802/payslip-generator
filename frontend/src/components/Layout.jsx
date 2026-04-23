@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
+import { Outlet, NavLink, useLocation } from 'react-router-dom'
 import { 
-  LayoutDashboard, PlusCircle, List, Menu, X, 
+  LayoutDashboard, PlusCircle, List, Menu,
   FileSpreadsheet, Settings, LogOut, User, Users,
   Sun, Moon, Monitor, ChevronLeft, Activity, Download
 } from 'lucide-react'

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link, useNavigate } from 'react-router-dom'
-import { Plus, Search, Filter, Briefcase, ChevronRight, X, Loader2, User, IndianRupee } from 'lucide-react'
+import { Plus, Search, Briefcase, ChevronRight, X, Loader2, User } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../api'
 
