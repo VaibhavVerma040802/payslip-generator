@@ -44,12 +44,21 @@ export default function Layout() {
       setDeferredPrompt(e)
     }
 
+    const handleAppInstalled = () => {
+      window.deferredPrompt = null
+      setDeferredPrompt(null)
+    }
+
     if (window.deferredPrompt) {
       setDeferredPrompt(window.deferredPrompt)
     }
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
-    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+    window.addEventListener('appinstalled', handleAppInstalled)
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+      window.removeEventListener('appinstalled', handleAppInstalled)
+    }
   }, [])
 
   const handleInstallClick = async () => {
@@ -248,19 +257,21 @@ export default function Layout() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <button
-              onClick={handleInstallClick}
-              style={{
-                background: 'var(--navy)', color: 'white', border: 'none',
-                display: 'flex', alignItems: 'center', gap: 8,
-                padding: '8px 16px', borderRadius: 12, fontSize: 13, fontWeight: 700,
-                cursor: 'pointer', boxShadow: '0 4px 12px rgba(15,23,42,0.15)',
-                transition: 'all 0.2s'
-              }}
-              className="btn-hover"
-            >
-              <Download size={16} /> <span style={{ display: isMobile ? 'none' : 'inline' }}>Install App</span>
-            </button>
+            {deferredPrompt && (
+              <button
+                onClick={handleInstallClick}
+                style={{
+                  background: 'var(--navy)', color: 'white', border: 'none',
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  padding: '8px 16px', borderRadius: 12, fontSize: 13, fontWeight: 700,
+                  cursor: 'pointer', boxShadow: '0 4px 12px rgba(15,23,42,0.15)',
+                  transition: 'all 0.2s'
+                }}
+                className="btn-hover"
+              >
+                <Download size={16} /> <span style={{ display: isMobile ? 'none' : 'inline' }}>Install App</span>
+              </button>
+            )}
 
             {/* Theme Control System */}
             <div style={{ 
