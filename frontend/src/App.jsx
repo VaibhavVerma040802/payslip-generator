@@ -50,6 +50,22 @@ function PortalProtectedRoute({ children }) {
 export default function App() {
   return (
     <Routes>
+      {/* Staff Portal Routes - Specific paths first */}
+      <Route path="/portal/login" element={<PortalLogin />} />
+      <Route path="/portal/forgot-password" element={<PortalForgotPassword />} />
+      <Route path="/portal/reset-password" element={<PortalResetPassword />} />
+      <Route path="/portal/change-password" element={<PortalProtectedRoute><PortalChangePassword /></PortalProtectedRoute>} />
+
+      <Route path="/portal" element={<PortalProtectedRoute><PortalLayout /></PortalProtectedRoute>}>
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<PortalDashboard />} />
+        <Route path="profile" element={<PortalProfile />} />
+        <Route path="attendance" element={<PortalAttendance />} />
+        <Route path="summary" element={<PortalSummary />} />
+        <Route path="*" element={<Navigate to="dashboard" replace />} />
+      </Route>
+
+      {/* Main Admin Portal Routes */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
@@ -66,23 +82,7 @@ export default function App() {
         <Route path="staff/:id" element={<StaffDetail />} />
         <Route path="audit-logs" element={<AuditLogs />} />
         <Route path="profile" element={<Profile />} />
-        {/* Admin fallback catch-all */}
         <Route path="*" element={<Navigate to="/" replace />} />
-      </Route>
-
-      {/* Staff Portal Routes */}
-      <Route path="/portal/login" element={<PortalLogin />} />
-      <Route path="/portal/forgot-password" element={<PortalForgotPassword />} />
-      <Route path="/portal/reset-password" element={<PortalResetPassword />} />
-      <Route path="/portal/change-password" element={<PortalProtectedRoute><PortalChangePassword /></PortalProtectedRoute>} />
-
-      <Route path="/portal" element={<PortalProtectedRoute><PortalLayout /></PortalProtectedRoute>}>
-        <Route index element={<Navigate to="dashboard" replace />} />
-        <Route path="dashboard" element={<PortalDashboard />} />
-        <Route path="profile" element={<PortalProfile />} />
-        <Route path="attendance" element={<PortalAttendance />} />
-        <Route path="summary" element={<PortalSummary />} />
-        <Route path="*" element={<Navigate to="dashboard" replace />} />
       </Route>
     </Routes>
   )

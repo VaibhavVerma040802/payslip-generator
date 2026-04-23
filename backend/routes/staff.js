@@ -92,7 +92,9 @@ router.post('/:id/provision-portal', protect, async (req, res) => {
     // Send email to staff.email with tempPassword
     try {
       if (emailService && emailService.sendStaffProvisionEmail) {
-        const origin = process.env.FRONTEND_URL || req.get('origin') || `${req.protocol}://${req.get('host')}`;
+        const origin = process.env.FRONTEND_URL || 
+                       req.get('origin') || 
+                       (req.get('x-forwarded-proto') && req.get('x-forwarded-host') ? `${req.get('x-forwarded-proto')}://${req.get('x-forwarded-host')}` : `${req.protocol}://${req.get('host')}`);
         const loginLink = `${origin}/portal/login`;
         await emailService.sendStaffProvisionEmail(staff, tempPassword, loginLink);
       } else {

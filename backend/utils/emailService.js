@@ -255,7 +255,7 @@ function buildEmailHTML(payslip) {
 // ─────────────────────────────────────────────────────────────
 // Send password-reset email with a secure link
 // ─────────────────────────────────────────────────────────────
-async function sendPasswordResetEmail(user, token, origin) {
+async function sendPasswordResetEmail(user, token, origin, customLink) {
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
     console.warn('⚠️ Email credentials missing — skipping password reset email.');
     return;
@@ -264,7 +264,8 @@ async function sendPasswordResetEmail(user, token, origin) {
   const finalAppUrl = (origin || '').replace(/\/$/, '') ||
     process.env.FRONTEND_URL ||
     'https://payslip-gen-rouge.vercel.app';
-  const resetUrl = `${finalAppUrl}/reset-password?token=${token}`;
+  
+  const resetUrl = customLink || `${finalAppUrl}/reset-password?token=${token}`;
 
   console.log(`✉️ Sending password reset email to: ${user.email}`);
 

@@ -152,7 +152,9 @@ router.post('/forgot-password', async (req, res) => {
     await staff.save();
 
     try {
-      const origin = process.env.FRONTEND_URL || req.get('origin') || `${req.protocol}://${req.get('host')}`;
+      const origin = process.env.FRONTEND_URL || 
+                     req.get('origin') || 
+                     (req.get('x-forwarded-proto') && req.get('x-forwarded-host') ? `${req.get('x-forwarded-proto')}://${req.get('x-forwarded-host')}` : `${req.protocol}://${req.get('host')}`);
       // Note: We use a modified generic email sender or adapt the existing one.
       // Since sendPasswordResetEmail takes user object, we can pass staff and a flag, or just use it.
       // The emailService might need a small tweak to point to /portal/reset-password
