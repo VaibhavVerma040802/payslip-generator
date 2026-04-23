@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FileText, Send, DollarSign, TrendingUp, PlusCircle, ArrowRight, Calendar, Building2 } from 'lucide-react'
+import { FileText, Send, IndianRupee, TrendingUp, PlusCircle, ArrowRight, Calendar, Building2 } from 'lucide-react'
 import { Plus, ChevronRight } from 'lucide-react'
 import api from '../api'
 import { useAuth } from '../context/AuthContext'
@@ -94,7 +94,7 @@ export default function Dashboard() {
         <StatCard icon={FileText} label="Total Volume" value={loading ? '—' : (stats?.totalPayslips || 0)} sub="Lifetime Generation" color="#6366f1" delay={0} />
         <StatCard icon={TrendingUp} label="This Month" value={loading ? '—' : (stats?.thisMonthPayslips || 0)} sub="New Payroll Cycle" color="var(--gold)" delay={100} />
         <StatCard icon={Send} label="Email Delivery" value={loading ? '—' : (stats?.emailsSent || 0)} sub="Successful Pushes" color="#0ea5e9" delay={200} />
-        <StatCard icon={DollarSign} label="Total Amount Paid" value={loading ? '—' : fmtCurrency(stats?.totalPayroll)} sub="Total Payroll Disbursed" color="var(--emerald)" delay={300} />
+        <StatCard icon={IndianRupee} label="Total Amount Paid" value={loading ? '—' : fmtCurrency(stats?.totalPayroll)} sub="Total Payroll Disbursed" color="var(--emerald)" delay={300} />
       </div>
 
 

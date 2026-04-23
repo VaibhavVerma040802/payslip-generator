@@ -115,13 +115,16 @@ export default function StaffList() {
         <button 
           onClick={() => setShowModal(true)}
           style={{
-            background: 'var(--gold)', color: 'var(--navy-dark)', padding: '12px 24px', borderRadius: 12,
-            border: 'none', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer',
-            boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)'
+            display: 'flex', alignItems: 'center', gap: 10,
+            background: 'var(--navy)', color: 'white',
+            border: 'none', borderRadius: 14, padding: '14px 28px',
+            fontWeight: 800, fontSize: 15, cursor: 'pointer',
+            boxShadow: '0 10px 20px -5px rgba(15,23,42,0.3)',
+            transition: 'all 0.3s',
           }}
           className="btn-hover"
         >
-          <Plus size={20} /> Add New Staff
+          <Plus size={18} strokeWidth={3} /> Add New Staff
         </button>
       </header>
 
