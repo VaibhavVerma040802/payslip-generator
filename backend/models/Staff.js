@@ -23,11 +23,16 @@ const staffSchema = new mongoose.Schema(
     phone: String,
     designation: String,
     department: String,
+    pfNumber: String,
     joiningDate: Date,
     type: {
       type: String,
       enum: ['Employee', 'Intern'],
       default: 'Employee',
+    },
+    overtimeEligible: {
+      type: Boolean,
+      default: false,
     },
     financials: {
       panNumber: String,

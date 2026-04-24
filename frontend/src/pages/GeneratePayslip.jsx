@@ -280,9 +280,10 @@ export default function GeneratePayslip() {
                       onChange={(e) => {
                         const s = staffList.find(x => x._id === e.target.value);
                         if(s) {
+                           const empType = s.type === 'Employee' ? 'regular' : 'intern';
                            setForm(f => ({
                              ...f,
-                             employmentType: s.type.toLowerCase(),
+                             employmentType: empType,
                              employeeName: s.fullName,
                              employeeId: s.employeeId,
                              employeeEmail: s.email,
@@ -290,6 +291,7 @@ export default function GeneratePayslip() {
                              department: s.department || '',
                              dateOfJoining: s.joiningDate ? s.joiningDate.split('T')[0] : '',
                              panNumber: s.financials?.panNumber || '',
+                             pfNumber: s.pfNumber || '',
                              bankAccount: s.financials?.accountNumber || '',
                              bankName: s.financials?.bankName || '',
                              annualCTC: s.type === 'Employee' ? (s.salaryDetails?.annualCTC || '') : '',

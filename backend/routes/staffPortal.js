@@ -224,6 +224,8 @@ router.get('/me', authStaff, async (req, res) => {
       designation: req.staff.designation,
       department: req.staff.department,
       phone: req.staff.phone,
+      overtimeEligible: req.staff.overtimeEligible || false,
+      mustChangePassword: req.staff.mustChangePassword || false,
       companyName: req.staff.user?.companyName,
       companyLogo: req.staff.user?.companyLogo,
     }

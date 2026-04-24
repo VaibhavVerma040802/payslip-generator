@@ -41,7 +41,7 @@ export default function StaffList() {
 
   const [formData, setFormData] = useState({
     fullName: '', employeeId: '', email: '', phone: '', designation: '', department: '',
-    type: 'Employee', joiningDate: '', panNumber: '', bankName: '',
+    type: 'Employee', joiningDate: '', panNumber: '', pfNumber: '', bankName: '',
     accountNumber: '', ifscCode: '', annualCTC: '', baseSalary: ''
   })
 
@@ -87,7 +87,7 @@ export default function StaffList() {
       toast.success('Staff member added successfully')
       setFormData({
         fullName: '', employeeId: '', email: '', phone: '', designation: '', department: '',
-        type: 'Employee', joiningDate: '', panNumber: '', bankName: '',
+        type: 'Employee', joiningDate: '', panNumber: '', pfNumber: '', bankName: '',
         accountNumber: '', ifscCode: '', annualCTC: '', baseSalary: ''
       })
     } catch (err) {
@@ -248,6 +248,7 @@ export default function StaffList() {
                     <InputField label="Joining Date" type="date" name="joiningDate" value={formData.joiningDate} onChange={handleInputChange} required />
                     <InputField label="Designation" name="designation" value={formData.designation} onChange={handleInputChange} required />
                     <InputField label="Department" name="department" value={formData.department} onChange={handleInputChange} required />
+                    <InputField label="PF Number" name="pfNumber" value={formData.pfNumber} onChange={handleInputChange} placeholder="XX/XXX/0000000" />
                   </div>
 
                   <h4 style={{ color: 'var(--navy)', marginTop: 24, marginBottom: 16 }}>Financial Information</h4>
@@ -274,7 +275,7 @@ export default function StaffList() {
               </div>
 
               <div style={{ padding: '24px 32px', borderTop: '1px solid var(--border)', background: 'var(--bg)', display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
-                <button type="button" onClick={() => setShowModal(false)} style={{ padding: '12px 24px', borderRadius: 12, border: '2px solid var(--border)', background: 'transparent', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+                <button type="button" onClick={() => setShowModal(false)} style={{ padding: '12px 24px', borderRadius: 12, border: '2px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
                 <button type="submit" form="addStaffForm" disabled={submitting} style={{ padding: '12px 24px', borderRadius: 12, border: 'none', background: 'var(--navy)', color: 'white', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
                   {submitting ? <Loader2 size={18} className="animate-spin" /> : 'Save Staff Member'}
                 </button>

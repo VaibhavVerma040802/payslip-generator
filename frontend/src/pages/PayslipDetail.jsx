@@ -294,7 +294,7 @@ export default function PayslipDetail() {
               disabled={downloading}
               style={{
                 display: 'flex', alignItems: 'center', gap: 7,
-                background: 'var(--green)', color: 'white',
+                background: '#16a34a', color: 'white',
                 border: 'none', borderRadius: 9, padding: '10px 18px',
                 fontWeight: 600, fontSize: 13.5, cursor: downloading ? 'wait' : 'pointer',
               }}

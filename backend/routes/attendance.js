@@ -19,28 +19,30 @@ const getStartOfDay = (dateString = null) => {
 router.post('/punch-in', authStaff, async (req, res) => {
   try {
     const today = getStartOfDay();
-    
-    let attendance = await Attendance.findOne({
-      staff: req.staff._id,
-      date: today
-    });
+    const dayOfWeek = new Date().getUTCDay(); // 0=Sun, 6=Sat
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
 
+    // Block weekend punch-in unless staff is overtime-eligible
+    if (isWeekend && !req.staff.overtimeEligible) {
+      return res.status(403).json({
+        success: false,
+        message: 'Today is a weekend. You are not authorised to work on weekends. Please contact your administrator.'
+      });
+    }
+
+    let attendance = await Attendance.findOne({ staff: req.staff._id, date: today });
     if (attendance) {
       return res.status(400).json({ success: false, message: 'Already punched in for today' });
     }
 
-    // Working time starts at 10:30 AM (could log late arrival if needed)
-    
     attendance = new Attendance({
       staff: req.staff._id,
-      admin: req.staff.user._id, // Owner of the company
+      admin: req.staff.user._id,
       date: today,
       punchIn: new Date(),
       status: 'incomplete'
     });
-
     await attendance.save();
-
     res.json({ success: true, message: 'Punched in successfully', attendance });
   } catch (err) {
     console.error('Punch in error:', err);
@@ -52,29 +54,29 @@ router.post('/punch-in', authStaff, async (req, res) => {
 router.post('/punch-out', authStaff, async (req, res) => {
   try {
     const today = getStartOfDay();
-    
-    const attendance = await Attendance.findOne({
-      staff: req.staff._id,
-      date: today
-    });
+    const dayOfWeek = new Date().getUTCDay();
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
 
+    if (isWeekend && !req.staff.overtimeEligible) {
+      return res.status(403).json({
+        success: false,
+        message: 'Weekend punch-out is not permitted for your account.'
+      });
+    }
+
+    const attendance = await Attendance.findOne({ staff: req.staff._id, date: today });
     if (!attendance) {
       return res.status(400).json({ success: false, message: 'No punch-in record found for today' });
     }
-    
     if (attendance.punchOut) {
       return res.status(400).json({ success: false, message: 'Already punched out for today' });
     }
 
     attendance.punchOut = new Date();
-    
-    // Calculate hours
     const durationMs = attendance.punchOut - attendance.punchIn;
     const durationHours = durationMs / (1000 * 60 * 60);
-    
     attendance.totalHours = parseFloat(durationHours.toFixed(2));
-    
-    // 8.5 standard hours, max 4 hours overtime
+
     if (attendance.totalHours > 8.5) {
       let ot = attendance.totalHours - 8.5;
       attendance.overtimeHours = parseFloat(Math.min(ot, 4.0).toFixed(2));
@@ -82,16 +84,12 @@ router.post('/punch-out', authStaff, async (req, res) => {
       attendance.overtimeHours = 0;
     }
 
-    // Flag overnight or extreme hours (e.g. > 16)
+    attendance.status = attendance.totalHours > 16 ? 'flagged' : 'complete';
     if (attendance.totalHours > 16) {
-      attendance.status = 'flagged';
       attendance.notes = 'System: Shift duration exceeds 16 hours. Requires admin review.';
-    } else {
-      attendance.status = 'complete';
     }
 
     await attendance.save();
-
     res.json({ success: true, message: 'Punched out successfully', attendance });
   } catch (err) {
     console.error('Punch out error:', err);

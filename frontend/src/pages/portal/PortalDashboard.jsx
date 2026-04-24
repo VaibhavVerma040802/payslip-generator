@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback } from 'react'
-import { LogIn, LogOut, Clock, Calendar as CalendarIcon, AlertCircle, Loader2, Timer } from 'lucide-react'
+import { LogIn, LogOut, Clock, Calendar as CalendarIcon, AlertCircle, Loader2, Timer, Coffee } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import api from '../../api'
 import { motion } from 'framer-motion'
+import { useStaffPortal } from '../../context/StaffPortalContext'
 
 export default function PortalDashboard() {
+  const { staffUser } = useStaffPortal()
   const [currentTime, setCurrentTime] = useState(new Date())
   const [activeShift, setActiveShift] = useState(null) // null = not punched in
   const [loading, setLoading] = useState(true)
@@ -20,7 +22,6 @@ export default function PortalDashboard() {
   const fetchActiveShift = useCallback(async () => {
     try {
       const res = await api.get('/attendance/active')
-      // activeShift is the open record (punched in but NOT punched out yet)
       setActiveShift(res.data.activeShift || null)
     } catch (err) {
       console.error('Failed to fetch active shift:', err)
@@ -40,7 +41,6 @@ export default function PortalDashboard() {
       const endpoint = type === 'in' ? '/attendance/punch-in' : '/attendance/punch-out'
       const res = await api.post(endpoint, {})
       toast.success(res.data.message)
-      // Re-fetch active shift to update button state
       await fetchActiveShift()
     } catch (err) {
       toast.error(err.message || `Failed to punch ${type}`)
@@ -57,7 +57,13 @@ export default function PortalDashboard() {
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
   }
 
+  const dayOfWeek = new Date().getDay() // 0=Sun, 6=Sat
+  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
   const isPunchedIn = Boolean(activeShift && !activeShift.punchOut)
+
+  // Weekend + not overtime-eligible = show day off card
+  const isOvertimeEligible = staffUser?.overtimeEligible || false
+  const isOffDay = isWeekend && !isOvertimeEligible
 
   if (loading) return (
     <div style={{ display: 'flex', justifyContent: 'center', padding: 100 }}>
@@ -73,6 +79,28 @@ export default function PortalDashboard() {
         </h1>
         <p style={{ color: 'var(--text-muted)', fontWeight: 500 }}>Ready to track your progress today?</p>
       </header>
+
+      {/* Weekend Day-Off Banner */}
+      {isOffDay && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+          style={{
+            marginBottom: 32, padding: 24, borderRadius: 20,
+            background: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)',
+            display: 'flex', alignItems: 'center', gap: 20, color: 'white'
+          }}
+        >
+          <Coffee size={40} style={{ flexShrink: 0 }} />
+          <div>
+            <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 4 }}>
+              {dayOfWeek === 0 ? 'Sunday' : 'Saturday'} — Your Day Off 🎉
+            </div>
+            <div style={{ fontSize: 14, opacity: 0.85 }}>
+              Attendance tracking is paused for weekends. Relax and recharge! If you believe you should have weekend access, contact your administrator.
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
         {/* Live Clock Card */}

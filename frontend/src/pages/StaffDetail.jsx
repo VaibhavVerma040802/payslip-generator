@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Mail, Phone, Briefcase, Calendar, Landmark, CreditCard, Trash2, Code, FileText, Loader2, IndianRupee, Key, Ban } from 'lucide-react'
+import { ArrowLeft, Mail, Phone, Briefcase, Calendar, Landmark, CreditCard, Trash2, Code, FileText, Loader2, IndianRupee, Key, Ban, Shield, FileDigit } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../api'
 
@@ -28,6 +28,7 @@ export default function StaffDetail() {
   const [provisioning, setProvisioning] = useState(false)
   const [revoking, setRevoking] = useState(false)
   const [tempPassword, setTempPassword] = useState('')
+  const [savingOT, setSavingOT] = useState(false)
 
   useEffect(() => {
     const fetchDetail = async () => {
@@ -101,6 +102,19 @@ export default function StaffDetail() {
     }
   }
 
+  const handleToggleOvertimeEligible = async () => {
+    setSavingOT(true)
+    try {
+      const res = await api.put(`/staff/${id}`, { overtimeEligible: !staff.overtimeEligible })
+      setStaff(res.data.data)
+      toast.success(`Weekend overtime ${!staff.overtimeEligible ? 'enabled' : 'disabled'}`)
+    } catch (err) {
+      toast.error('Failed to update overtime eligibility')
+    } finally {
+      setSavingOT(false)
+    }
+  }
+
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', padding: 100 }}><Loader2 size={40} className="animate-spin text-muted" /></div>
   if (!staff) return null
 
@@ -130,10 +144,21 @@ export default function StaffDetail() {
               </div>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 12 }}>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <button onClick={() => navigate('/generate', { state: { predefinedStaff: staff } })} style={{ padding: '10px 20px', borderRadius: 12, border: 'none', background: 'var(--navy)', color: 'white', fontWeight: 600, cursor: 'pointer', display: 'flex', gap: 8, alignItems: 'center' }}>
                <FileText size={16} /> Generate Payslip
             </button>
+            {!staff.isPortalEnabled ? (
+              <button onClick={handleProvision} disabled={provisioning} style={{ padding: '10px 20px', borderRadius: 12, border: 'none', background: 'var(--emerald)', color: 'white', fontWeight: 600, cursor: 'pointer', display: 'flex', gap: 8, alignItems: 'center' }}>
+                {provisioning ? <Loader2 size={16} className="animate-spin" /> : <Key size={16} />}
+                Grant Portal Access
+              </button>
+            ) : (
+              <button onClick={handleRevoke} disabled={revoking} style={{ padding: '10px 20px', borderRadius: 12, border: '1px solid #fee2e2', background: '#fef2f2', color: '#ef4444', fontWeight: 600, cursor: 'pointer', display: 'flex', gap: 8, alignItems: 'center' }}>
+                {revoking ? <Loader2 size={16} className="animate-spin" /> : <Ban size={16} />}
+                Revoke Access
+              </button>
+            )}
             <button onClick={handleDelete} disabled={deleting} style={{ padding: '10px', borderRadius: 12, border: '1px solid #fee2e2', background: '#fef2f2', color: '#ef4444', fontWeight: 600, cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
               {deleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={18} />}
             </button>
@@ -149,6 +174,25 @@ export default function StaffDetail() {
             <DetailRow icon={Phone} label="Phone Number" value={staff.phone} />
             <DetailRow icon={Briefcase} label="Department" value={staff.department} />
             <DetailRow icon={Calendar} label="Date of Joining" value={staff.joiningDate ? new Date(staff.joiningDate).toLocaleDateString() : ''} />
+            {staff.pfNumber && <DetailRow icon={FileDigit} label="PF Number" value={staff.pfNumber} />}
+
+            {/* Overtime / Weekend Eligibility Toggle */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', borderTop: '1px solid var(--border)', marginTop: 8 }}>
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                <div style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gold)' }}><Shield size={18} /></div>
+                <div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>WEEKEND OVERTIME</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{staff.overtimeEligible ? 'Allowed (Sat/Sun work permitted)' : 'Not Eligible (Sat/Sun Off)'}</div>
+                </div>
+              </div>
+              <button
+                onClick={handleToggleOvertimeEligible}
+                disabled={savingOT}
+                style={{ padding: '8px 16px', borderRadius: 10, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: staff.overtimeEligible ? '#fee2e2' : 'var(--emerald)', color: staff.overtimeEligible ? '#ef4444' : 'white' }}
+              >
+                {savingOT ? <Loader2 size={14} className="animate-spin" style={{ display: 'inline' }} /> : (staff.overtimeEligible ? 'Disable' : 'Enable')}
+              </button>
+            </div>
           </div>
 
           {/* Financials */}
