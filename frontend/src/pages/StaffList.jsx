@@ -247,6 +247,7 @@ export default function StaffList() {
                     <InputField label="Phone Number" name="phone" value={formData.phone} onChange={handleInputChange} required />
                     <InputField label="Joining Date" type="date" name="joiningDate" value={formData.joiningDate} onChange={handleInputChange} required />
                     <InputField label="Designation" name="designation" value={formData.designation} onChange={handleInputChange} required />
+                    <InputField label="Department" name="department" value={formData.department} onChange={handleInputChange} required />
                   </div>
 
                   <h4 style={{ color: 'var(--navy)', marginTop: 24, marginBottom: 16 }}>Financial Information</h4>

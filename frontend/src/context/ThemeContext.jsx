@@ -4,7 +4,7 @@ const ThemeContext = createContext()
 
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
-    return localStorage.getItem('theme') || 'system'
+    return localStorage.getItem('theme') || 'light'
   })
 
   useEffect(() => {
@@ -13,16 +13,8 @@ export function ThemeProvider({ children }) {
     const applyTheme = (currentTheme) => {
       if (currentTheme === 'dark') {
         root.setAttribute('data-theme', 'dark')
-      } else if (currentTheme === 'light') {
-        root.removeAttribute('data-theme')
       } else {
-        // system
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-        if (prefersDark) {
-          root.setAttribute('data-theme', 'dark')
-        } else {
-          root.removeAttribute('data-theme')
-        }
+        root.removeAttribute('data-theme')
       }
     }
 

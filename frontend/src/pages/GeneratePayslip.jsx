@@ -284,16 +284,16 @@ export default function GeneratePayslip() {
                              ...f,
                              employmentType: s.type.toLowerCase(),
                              employeeName: s.fullName,
-                             employeeId: s.employeeId || f.employeeId,
+                             employeeId: s.employeeId,
                              employeeEmail: s.email,
-                             designation: s.designation || f.designation,
-                             department: s.department || f.department,
+                             designation: s.designation || '',
+                             department: s.department || '',
                              dateOfJoining: s.joiningDate ? s.joiningDate.split('T')[0] : '',
                              panNumber: s.financials?.panNumber || '',
                              bankAccount: s.financials?.accountNumber || '',
                              bankName: s.financials?.bankName || '',
-                             annualCTC: s.type === 'Employee' ? (s.salaryDetails?.annualCTC || '') : f.annualCTC,
-                             baseSalary: s.type === 'Intern' ? (s.salaryDetails?.baseSalary || '') : f.baseSalary,
+                             annualCTC: s.type === 'Employee' ? (s.salaryDetails?.annualCTC || '') : '',
+                             baseSalary: s.type === 'Intern' ? (s.salaryDetails?.baseSalary || '') : '',
                            }))
                         }
                       }}

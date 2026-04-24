@@ -5,6 +5,7 @@ const { generatePayslipPDF } = require('../utils/pdfGenerator');
 const { sendPayslipEmail } = require('../utils/emailService');
 const { auth } = require('./auth');
 const Staff = require('../models/Staff');
+const Attendance = require('../models/Attendance');
 
 // Apply auth middleware to all routes
 router.use(auth);
@@ -125,6 +126,19 @@ router.get('/stats/summary', async (req, res) => {
     // New metrics: Total Employees and Active Portals
     const totalEmployees = await Staff.countDocuments({ user: req.user._id });
     const activePortals = await Staff.countDocuments({ user: req.user._id, isPortalEnabled: true });
+    
+    // Workforce Split
+    const employeeCount = await Staff.countDocuments({ user: req.user._id, type: 'Employee' });
+    const internCount = await Staff.countDocuments({ user: req.user._id, type: 'Intern' });
+
+    // Attendance Flags (Flagged status OR Incomplete status > 12 hours)
+    const flaggedAttendance = await Attendance.countDocuments({ 
+      admin: req.user._id, 
+      $or: [
+        { status: 'flagged' },
+        { status: 'incomplete', punchIn: { $lt: new Date(Date.now() - 12 * 3600000) } }
+      ]
+    });
 
     const netSalaryAgg = await Payslip.aggregate([
       { $match: { user: req.user._id } },
@@ -139,6 +153,8 @@ router.get('/stats/summary', async (req, res) => {
         emailsSent,
         totalEmployees,
         activePortals,
+        workforceSplit: { employees: employeeCount, interns: internCount },
+        attendanceFlags: flaggedAttendance,
         totalPayroll: netSalaryAgg[0]?.totalNet || 0,
         avgSalary: Math.round(netSalaryAgg[0]?.avgNet || 0),
       },

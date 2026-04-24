@@ -226,8 +226,7 @@ export default function PortalLayout() {
             }}>
               {[
                 { id: 'light', icon: Sun, label: 'Light' },
-                { id: 'dark', icon: Moon, label: 'Dark' },
-                { id: 'system', icon: Monitor, label: 'Sys' }
+                { id: 'dark', icon: Moon, label: 'Dark' }
               ].map(t => (
                 <button 
                   key={t.id}

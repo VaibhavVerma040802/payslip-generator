@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FileText, Users, IndianRupee, LayoutDashboard, Calendar, BarChart3 } from 'lucide-react'
+import { FileText, Users, IndianRupee, LayoutDashboard, Calendar, AlertTriangle, PieChart } from 'lucide-react'
 import { Plus } from 'lucide-react'
 import api from '../api'
 import { useAuth } from '../context/AuthContext'
@@ -92,8 +92,8 @@ export default function Dashboard() {
         marginBottom: 40 
       }}>
         <StatCard icon={Users} label="Total Employees" value={loading ? '—' : (stats?.totalEmployees || 0)} sub="Workforce Strength" color="#6366f1" delay={0} />
-        <StatCard icon={LayoutDashboard} label="Active Portals" value={loading ? '—' : (stats?.activePortals || 0)} sub="Staff Self-Service" color="#0ea5e9" delay={100} />
-        <StatCard icon={BarChart3} label="Average Salary" value={loading ? '—' : fmtCurrency(stats?.avgSalary)} sub="Per Employee / Month" color="var(--gold)" delay={200} />
+        <StatCard icon={PieChart} label="Workforce Split" value={loading ? '—' : `${stats?.workforceSplit?.employees || 0}E | ${stats?.workforceSplit?.interns || 0}I`} sub="Emp vs Interns" color="#8b5cf6" delay={100} />
+        <StatCard icon={AlertTriangle} label="Attendance Flags" value={loading ? '—' : (stats?.attendanceFlags || 0)} sub="Action Required" color="#f59e0b" delay={200} />
         <StatCard icon={IndianRupee} label="Total Salary Disbursed" value={loading ? '—' : fmtCurrency(stats?.totalPayroll)} sub="Lifetime Cumulative" color="var(--emerald)" delay={300} />
       </div>
 
