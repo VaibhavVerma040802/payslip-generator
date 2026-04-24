@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FileText, Send, IndianRupee, TrendingUp, Calendar } from 'lucide-react'
+import { FileText, Users, IndianRupee, LayoutDashboard, Calendar, BarChart3 } from 'lucide-react'
 import { Plus } from 'lucide-react'
 import api from '../api'
 import { useAuth } from '../context/AuthContext'
@@ -91,10 +91,10 @@ export default function Dashboard() {
         gap: 24, 
         marginBottom: 40 
       }}>
-        <StatCard icon={FileText} label="Total Volume" value={loading ? '—' : (stats?.totalPayslips || 0)} sub="Lifetime Generation" color="#6366f1" delay={0} />
-        <StatCard icon={TrendingUp} label="This Month" value={loading ? '—' : (stats?.thisMonthPayslips || 0)} sub="New Payroll Cycle" color="var(--gold)" delay={100} />
-        <StatCard icon={Send} label="Email Delivery" value={loading ? '—' : (stats?.emailsSent || 0)} sub="Successful Pushes" color="#0ea5e9" delay={200} />
-        <StatCard icon={IndianRupee} label="Total Amount Paid" value={loading ? '—' : fmtCurrency(stats?.totalPayroll)} sub="Total Payroll Disbursed" color="var(--emerald)" delay={300} />
+        <StatCard icon={Users} label="Total Employees" value={loading ? '—' : (stats?.totalEmployees || 0)} sub="Workforce Strength" color="#6366f1" delay={0} />
+        <StatCard icon={LayoutDashboard} label="Active Portals" value={loading ? '—' : (stats?.activePortals || 0)} sub="Staff Self-Service" color="#0ea5e9" delay={100} />
+        <StatCard icon={BarChart3} label="Average Salary" value={loading ? '—' : fmtCurrency(stats?.avgSalary)} sub="Per Employee / Month" color="var(--gold)" delay={200} />
+        <StatCard icon={IndianRupee} label="Total Salary Disbursed" value={loading ? '—' : fmtCurrency(stats?.totalPayroll)} sub="Lifetime Cumulative" color="var(--emerald)" delay={300} />
       </div>
 
 

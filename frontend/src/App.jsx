@@ -50,22 +50,23 @@ function PortalProtectedRoute({ children }) {
 export default function App() {
   return (
     <Routes>
-      {/* Staff Portal Routes - Specific paths first */}
+      {/* 1. Staff Portal - Public Routes */}
       <Route path="/portal/login" element={<PortalLogin />} />
       <Route path="/portal/forgot-password" element={<PortalForgotPassword />} />
       <Route path="/portal/reset-password" element={<PortalResetPassword />} />
-      <Route path="/portal/change-password" element={<PortalProtectedRoute><PortalChangePassword /></PortalProtectedRoute>} />
 
+      {/* 2. Staff Portal - Protected Routes */}
       <Route path="/portal" element={<PortalProtectedRoute><PortalLayout /></PortalProtectedRoute>}>
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<PortalDashboard />} />
         <Route path="profile" element={<PortalProfile />} />
         <Route path="attendance" element={<PortalAttendance />} />
         <Route path="summary" element={<PortalSummary />} />
+        <Route path="change-password" element={<PortalChangePassword />} />
         <Route path="*" element={<Navigate to="dashboard" replace />} />
       </Route>
 
-      {/* Main Admin Portal Routes */}
+      {/* 3. Corporate Portal - Public Routes */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
@@ -73,8 +74,10 @@ export default function App() {
       <Route path="/forgot" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
 
+      {/* 4. Corporate Portal - Protected Routes */}
       <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route index element={<Dashboard />} />
+        <Route path="dashboard" element={<Dashboard />} />
         <Route path="generate" element={<GeneratePayslip />} />
         <Route path="payslips" element={<PayslipList />} />
         <Route path="payslips/:id" element={<PayslipDetail />} />

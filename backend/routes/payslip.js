@@ -4,6 +4,7 @@ const Payslip = require('../models/Payslip');
 const { generatePayslipPDF } = require('../utils/pdfGenerator');
 const { sendPayslipEmail } = require('../utils/emailService');
 const { auth } = require('./auth');
+const Staff = require('../models/Staff');
 
 // Apply auth middleware to all routes
 router.use(auth);
@@ -121,6 +122,10 @@ router.get('/stats/summary', async (req, res) => {
     const thisMonthCount = await Payslip.countDocuments({ ...filter, month: monthName, year });
     const emailsSent = await Payslip.countDocuments({ ...filter, emailSent: true });
 
+    // New metrics: Total Employees and Active Portals
+    const totalEmployees = await Staff.countDocuments({ user: req.user._id });
+    const activePortals = await Staff.countDocuments({ user: req.user._id, isPortalEnabled: true });
+
     const netSalaryAgg = await Payslip.aggregate([
       { $match: { user: req.user._id } },
       { $group: { _id: null, totalNet: { $sum: '$netSalary' }, avgNet: { $avg: '$netSalary' } } },
@@ -132,6 +137,8 @@ router.get('/stats/summary', async (req, res) => {
         totalPayslips: total,
         thisMonthPayslips: thisMonthCount,
         emailsSent,
+        totalEmployees,
+        activePortals,
         totalPayroll: netSalaryAgg[0]?.totalNet || 0,
         avgSalary: Math.round(netSalaryAgg[0]?.avgNet || 0),
       },
