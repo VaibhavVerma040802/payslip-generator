@@ -263,7 +263,7 @@ router.put('/admin/:id', authAdmin, async (req, res) => {
 });
 
 // GET /api/attendance/admin/pending — Get all flagged or long-incomplete records for dashboard
-router.get('/admin/pending', protect, async (req, res) => {
+router.get('/admin/pending', authAdmin, async (req, res) => {
   try {
     const pending = await Attendance.find({
       admin: req.user._id,
