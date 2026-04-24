@@ -4,6 +4,7 @@ const Staff = require('../models/Staff');
 const { auth: protect } = require('./auth');
 const crypto = require('crypto');
 const emailService = require('../utils/emailService');
+const { logActivity } = require('../utils/logger');
 router.get('/', protect, async (req, res) => {
   try {
     const staff = await Staff.find({ user: req.user._id }).sort({ createdAt: -1 });
@@ -16,12 +17,15 @@ router.get('/', protect, async (req, res) => {
 // Add new staff
 router.post('/', protect, async (req, res) => {
   try {
-    const newStaff = new Staff({
+    const staff = new Staff({
       ...req.body,
       user: req.user._id,
     });
-    const savedStaff = await newStaff.save();
-    res.status(201).json({ success: true, data: savedStaff });
+    await staff.save();
+
+    await logActivity(req.user._id, 'STAFF_CREATED', `Added new staff: ${staff.fullName} (${staff.employeeId})`, { staffId: staff._id });
+
+    res.status(201).json({ success: true, data: staff });
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });
   }
@@ -51,6 +55,9 @@ router.put('/:id', protect, async (req, res) => {
     if (!updatedStaff) {
       return res.status(404).json({ success: false, message: 'Staff member not found' });
     }
+    
+    await logActivity(req.user._id, 'STAFF_UPDATED', `Updated details for ${updatedStaff.fullName}`, { staffId: updatedStaff._id });
+
     res.json({ success: true, data: updatedStaff });
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });
@@ -64,6 +71,9 @@ router.delete('/:id', protect, async (req, res) => {
     if (!deletedStaff) {
       return res.status(404).json({ success: false, message: 'Staff member not found' });
     }
+
+    await logActivity(req.user._id, 'STAFF_DELETED', `Deleted staff: ${deletedStaff.fullName}`, { staffId: deletedStaff._id });
+
     res.json({ success: true, data: {} });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -115,6 +125,10 @@ router.post('/:id/provision-portal', protect, async (req, res) => {
       });
     }
 
+    await staff.save();
+
+    await logActivity(req.user._id, 'PORTAL_ACCESS_GRANTED', `Granted portal access to ${staff.fullName}`, { staffId: staff._id });
+
     res.json({ success: true, message: 'Portal access granted and credentials emailed.' });
   } catch (err) {
     console.error('Provisioning error:', err);
@@ -134,6 +148,8 @@ router.delete('/:id/revoke-portal', protect, async (req, res) => {
     staff.portalPassword = undefined;
     
     await staff.save();
+
+    await logActivity(req.user._id, 'PORTAL_ACCESS_REVOKED', `Revoked portal access for ${staff.fullName}`, { staffId: staff._id });
 
     res.json({ success: true, message: 'Portal access revoked.' });
   } catch (err) {

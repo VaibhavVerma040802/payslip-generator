@@ -6,6 +6,7 @@ const { sendPayslipEmail } = require('../utils/emailService');
 const { auth } = require('./auth');
 const Staff = require('../models/Staff');
 const Attendance = require('../models/Attendance');
+const { logActivity } = require('../utils/logger');
 
 // Apply auth middleware to all routes
 router.use(auth);
@@ -43,6 +44,8 @@ router.post('/', async (req, res) => {
 
     const payslip = new Payslip(payslipData);
     await payslip.save();
+
+    await logActivity(userId, 'PAYSLIP_GENERATED', `Generated payslip for ${payslip.employeeName} (${payslip.month} ${payslip.year})`, { payslipId: payslip._id });
 
     console.log(`✅ Payslip saved: ${payslip._id} for ${payslip.employeeName}`);
     res.status(201).json({ success: true, message: 'Payslip created successfully', data: payslip });
@@ -272,6 +275,8 @@ router.post('/:id/email', async (req, res) => {
     payslip.emailSentAt = new Date();
     await payslip.save();
 
+    await logActivity(req.user._id, 'EMAIL_SENT', `Emailed payslip to ${targetEmail} (${payslip.employeeName})`, { payslipId: payslip._id });
+
     res.json({
       success: true,
       message: `Payslip emailed successfully to ${targetEmail}`,
@@ -283,6 +288,54 @@ router.post('/:id/email', async (req, res) => {
       success: false,
       message: err.message || 'Failed to send email.',
     });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────
+// POST /api/payslips/bulk-email-month — Bulk email all unsent slips for a month
+// ─────────────────────────────────────────────────────────────
+router.post('/bulk-email-month', async (req, res) => {
+  try {
+    const { month, year } = req.body;
+    if (!month || !year) return res.status(400).json({ success: false, message: 'Month and year are required' });
+
+    const unsentSlips = await Payslip.find({
+      user: req.user._id,
+      month,
+      year: parseInt(year),
+      emailSent: { $ne: true }
+    });
+
+    if (unsentSlips.length === 0) {
+      return res.json({ success: true, message: 'No unsent payslips found for this period.', count: 0 });
+    }
+
+    // Process in parallel with error handling for each
+    const results = await Promise.allSettled(unsentSlips.map(async (p) => {
+      if (!p.employeeEmail) throw new Error(`No email for ${p.employeeName}`);
+      await sendPayslipEmail(p);
+      p.emailSent = true;
+      p.emailSentAt = new Date();
+      await p.save();
+      return p.employeeEmail;
+    }));
+
+    const successful = results.filter(r => r.status === 'fulfilled').length;
+    const failed = results.filter(r => r.status === 'rejected').length;
+
+    if (successful > 0) {
+      await logActivity(req.user._id, 'BULK_EMAIL', `Bulk emailed ${successful} payslips for ${month} ${year}`, { successful, failed });
+    }
+
+    res.json({
+      success: true,
+      message: `Bulk email complete. ${successful} sent, ${failed} failed.`,
+      count: successful,
+      failedCount: failed
+    });
+  } catch (err) {
+    console.error('Bulk email error:', err);
+    res.status(500).json({ success: false, message: 'Bulk operation failed' });
   }
 });
 

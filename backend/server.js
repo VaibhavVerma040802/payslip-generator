@@ -8,6 +8,7 @@ const { router: authRoutes } = require('./routes/auth');
 const staffRoutes = require('./routes/staff');
 const { router: staffPortalRoutes } = require('./routes/staffPortal');
 const attendanceRoutes = require('./routes/attendance');
+const activitiesRoutes = require('./routes/activities');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -23,6 +24,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/staff', staffRoutes);
 app.use('/api/portal', staffPortalRoutes);
 app.use('/api/attendance', attendanceRoutes);
+app.use('/api/activities', activitiesRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

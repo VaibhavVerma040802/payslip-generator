@@ -3,6 +3,7 @@ const router = express.Router();
 const Attendance = require('../models/Attendance');
 const { authStaff } = require('./staffPortal');
 const { auth: authAdmin } = require('./auth');
+const { logActivity } = require('../utils/logger');
 
 // Helper to get start of day in UTC for querying
 const getStartOfDay = (dateString = null) => {
@@ -90,6 +91,7 @@ router.post('/punch-out', authStaff, async (req, res) => {
     }
 
     await attendance.save();
+    await logActivity(req.staff.user._id, 'PUNCH_OUT', `Punched out for ${req.staff.fullName}`, { attendanceId: attendance._id });
     res.json({ success: true, message: 'Punched out successfully', attendance });
   } catch (err) {
     console.error('Punch out error:', err);
@@ -274,6 +276,47 @@ router.get('/admin/pending', authAdmin, async (req, res) => {
     }).populate('staff', 'fullName employeeId').sort({ date: -1 });
 
     res.json({ success: true, data: pending });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// POST /api/attendance/admin/force-punch-out — Close all "incomplete" shifts from previous days
+router.get('/admin/export-csv', authAdmin, async (req, res) => {
+  try {
+    const records = await Attendance.find({ admin: req.user._id })
+      .populate('staff', 'fullName employeeId')
+      .sort({ date: -1 });
+
+    let csv = 'Employee,ID,Date,Punch In,Punch Out,Total Hours,Overtime,Status\n';
+    records.forEach(r => {
+      const date = new Date(r.date).toLocaleDateString();
+      const punchIn = r.punchIn ? new Date(r.punchIn).toLocaleTimeString() : 'N/A';
+      const punchOut = r.punchOut ? new Date(r.punchOut).toLocaleTimeString() : 'N/A';
+      csv += `"${r.staff?.fullName}","${r.staff?.employeeId}","${date}","${punchIn}","${punchOut}",${r.totalHours},${r.overtimeHours},${r.status}\n`;
+    });
+
+    res.header('Content-Type', 'text/csv');
+    res.attachment(`Attendance_Export_${new Date().toISOString().split('T')[0]}.csv`);
+    res.send(csv);
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Export failed' });
+  }
+});
+
+router.post('/admin/force-punch-out', authAdmin, async (req, res) => {
+  try {
+    const today = getStartOfDay();
+    const result = await Attendance.updateMany(
+      { admin: req.user._id, status: 'incomplete', date: { $lt: today } },
+      { $set: { status: 'flagged' } } // Mark as flagged so admin can fix them
+    );
+
+    if (result.modifiedCount > 0) {
+      await logActivity(req.user._id, 'FORCE_PUNCH_OUT', `Bulk closed ${result.modifiedCount} stale attendance shifts.`);
+    }
+
+    res.json({ success: true, message: `Closed ${result.modifiedCount} stale shifts. They are now flagged for review.` });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

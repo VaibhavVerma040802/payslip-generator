@@ -1,19 +1,43 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Building2, ChevronRight, Activity } from 'lucide-react'
+import { Building2, ChevronRight, Activity, UserPlus, UserMinus, UserCheck, Key, Ban, FileText, Send, Download, LogOut, Clock, AlertTriangle, Zap, CheckCircle2, UserCog } from 'lucide-react'
 import api from '../api'
+import { formatDistanceToNow } from 'date-fns'
 
-const RecentRow = React.memo(({ p, navigate }) => {
+const RecentRow = React.memo(({ log, navigate }) => {
+  const getActionConfig = (action) => {
+    switch (action) {
+      case 'PAYSLIP_GENERATED': return { icon: FileText, color: '#6366f1', label: 'Payslip' }
+      case 'EMAIL_SENT': return { icon: Send, color: '#10b981', label: 'Email' }
+      case 'BULK_EMAIL': return { icon: Zap, color: '#0ea5e9', label: 'Bulk Email' }
+      case 'STAFF_CREATED': return { icon: UserPlus, color: '#8b5cf6', label: 'Staff' }
+      case 'STAFF_UPDATED': return { icon: UserCog, color: '#f59e0b', label: 'Update' }
+      case 'STAFF_DELETED': return { icon: UserMinus, color: '#ef4444', label: 'Deletion' }
+      case 'PORTAL_ACCESS_GRANTED': return { icon: Key, color: '#10b981', label: 'Access' }
+      case 'PORTAL_ACCESS_REVOKED': return { icon: Ban, color: '#ef4444', label: 'Revoke' }
+      case 'PUNCH_OUT': return { icon: Clock, color: '#6366f1', label: 'Attendance' }
+      case 'ATTENDANCE_RESOLVED': return { icon: CheckCircle2, color: '#10b981', label: 'Resolved' }
+      case 'FORCE_PUNCH_OUT': return { icon: LogOut, color: '#f43f5e', label: 'Admin Fix' }
+      default: return { icon: Activity, color: 'var(--navy)', label: 'System' }
+    }
+  }
+
+  const config = getActionConfig(log.action)
+  const Icon = config.icon
+
   return (
     <div
-      onClick={() => navigate(`/payslips/${p._id}`)}
+      onClick={() => {
+        if (log.metadata?.payslipId) navigate(`/payslips/${log.metadata.payslipId}`)
+        else if (log.metadata?.staffId) navigate(`/staff/${log.metadata.staffId}`)
+      }}
       style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '16px 20px',
-        borderRadius: 14,
-        cursor: 'pointer',
+        padding: '16px 24px',
+        borderRadius: 16,
+        cursor: (log.metadata?.payslipId || log.metadata?.staffId) ? 'pointer' : 'default',
         transition: 'all 0.2s',
-        marginBottom: 8,
+        marginBottom: 10,
         background: 'var(--surface)',
         border: '1px solid var(--border)'
       }}
@@ -23,26 +47,24 @@ const RecentRow = React.memo(({ p, navigate }) => {
         <div style={{
           width: 44, height: 44,
           borderRadius: 12,
-          background: 'var(--navy)',
+          background: `${config.color}15`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: 'var(--gold)', fontWeight: 900, fontSize: 16,
-          flexShrink: 0, boxShadow: '0 4px 12px rgba(15,23,42,0.15)'
+          color: config.color, flexShrink: 0
         }}>
-          {p.employeeName.charAt(0).toUpperCase()}
+          <Icon size={20} />
         </div>
         <div>
-          <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--text)' }}>{p.employeeName}</div>
-          <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>{p.designation} · {p.month} {p.year}</div>
+          <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--navy)', marginBottom: 2 }}>{log.details}</div>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+             <span style={{ color: config.color, fontWeight: 800, textTransform: 'uppercase', fontSize: 10 }}>{config.label}</span>
+             <span>•</span>
+             {formatDistanceToNow(new Date(log.createdAt), { addSuffix: true })}
+          </div>
         </div>
       </div>
-      <div style={{ textAlign: 'right' }}>
-        <div style={{ fontWeight: 800, color: 'var(--emerald)', fontSize: 16 }}>
-          ₹{parseFloat(p.netSalary || 0).toLocaleString('en-IN')}
-        </div>
-        {p.emailSent && (
-          <div className="badge badge-green" style={{ marginTop: 4, transform: 'scale(0.9)', transformOrigin: 'right' }}>Delivered</div>
-        )}
-      </div>
+      {(log.metadata?.payslipId || log.metadata?.staffId) && (
+        <ChevronRight size={18} color="var(--text-light)" />
+      )}
     </div>
   )
 });
@@ -55,7 +77,7 @@ export default function AuditLogs() {
   useEffect(() => {
     const fetchActivities = async () => {
       try {
-        const res = await api.get('/payslips?limit=20')
+        const res = await api.get('/api/activities?limit=50')
         setRecent(res.data?.data || [])
       } catch (e) {
         console.error(e)
@@ -89,8 +111,8 @@ export default function AuditLogs() {
           background: 'var(--bg)'
         }}>
           <div>
-            <div style={{ fontWeight: 800, fontSize: 17, color: 'var(--navy)' }}>Recent Activity</div>
-            <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>Latest salary slips generated</div>
+            <div style={{ fontWeight: 800, fontSize: 17, color: 'var(--navy)' }}>Comprehensive Activity Timeline</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>Tracking every workspace action and system event</div>
           </div>
         </div>
 
@@ -116,7 +138,7 @@ export default function AuditLogs() {
               </button>
             </div>
           ) : (
-            recent.map((p) => <RecentRow key={p._id} p={p} navigate={navigate} />)
+            recent.map((log) => <RecentRow key={log._id} log={log} navigate={navigate} />)
           )}
         </div>
       </div>

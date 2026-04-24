@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link, useNavigate } from 'react-router-dom'
-import { Plus, Search, Briefcase, ChevronRight, X, Loader2, User, Mail, Phone, Key, Ban, Edit, Info } from 'lucide-react'
+import { Plus, Search, Briefcase, ChevronRight, X, Loader2, User, Mail, Phone, Key, Ban, Edit, Info, Clock } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../api'
 
@@ -155,6 +155,20 @@ export default function StaffList() {
     }
   }
 
+  const handleToggleOvertime = async (e, person) => {
+    e.stopPropagation()
+    setActionLoading(person._id + '_ot')
+    try {
+      await api.put(`/staff/${person._id}`, { overtimeEligible: !person.overtimeEligible })
+      toast.success(`Overtime ${!person.overtimeEligible ? 'enabled' : 'disabled'}`)
+      fetchStaff()
+    } catch (err) {
+      toast.error('Failed to update overtime status')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
   const filteredStaff = staff.filter(s => {
     const matchesSearch = s.fullName.toLowerCase().includes(search.toLowerCase()) || 
                           s.email.toLowerCase().includes(search.toLowerCase()) ||
@@ -281,35 +295,61 @@ export default function StaffList() {
                 ) : (
                   <span className="badge" style={{ background: '#f3f4f6', color: '#4b5563' }}>Portal Disabled</span>
                 )}
+                {person.overtimeEligible && (
+                  <span className="badge" style={{ background: '#fef3c7', color: '#d97706' }}>Overtime Enabled</span>
+                )}
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 16, borderTop: '1px solid var(--border)', gap: 12 }}>
-                <button 
-                  onClick={(e) => handleToggleAccess(e, person)}
-                  disabled={actionLoading === person._id}
-                  style={{
-                    flex: 1, padding: '8px 12px', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                    background: person.isPortalEnabled ? '#fef2f2' : 'var(--emerald)',
-                    color: person.isPortalEnabled ? '#ef4444' : 'white',
-                    border: person.isPortalEnabled ? '1px solid #fee2e2' : 'none'
-                  }}
-                >
-                  {actionLoading === person._id ? (
-                    <Loader2 size={14} className="animate-spin" />
-                  ) : person.isPortalEnabled ? (
-                    <><Ban size={14} /> Revoke</>
-                  ) : (
-                    <><Key size={14} /> Grant Access</>
-                  )}
-                </button>
-                <div style={{ textAlign: 'right' }}>
-                   <div style={{ fontSize: 11, color: 'var(--text-light)', fontWeight: 600, textTransform: 'uppercase' }}>
-                     {person.type === 'Employee' ? 'Annual CTC' : 'Stipend'}
-                   </div>
-                   <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--navy)' }}>
-                     ₹{person.type === 'Employee' ? (person.salaryDetails?.annualCTC?.toLocaleString() || 0) : (person.salaryDetails?.baseSalary?.toLocaleString() || 0)}
-                   </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button 
+                    onClick={(e) => handleToggleAccess(e, person)}
+                    disabled={actionLoading === person._id}
+                    style={{
+                      flex: 1, padding: '8px 12px', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                      background: person.isPortalEnabled ? '#fef2f2' : 'var(--emerald)',
+                      color: person.isPortalEnabled ? '#ef4444' : 'white',
+                      border: person.isPortalEnabled ? '1px solid #fee2e2' : 'none'
+                    }}
+                  >
+                    {actionLoading === person._id ? (
+                      <Loader2 size={14} className="animate-spin" />
+                    ) : person.isPortalEnabled ? (
+                      <><Ban size={14} /> Revoke Access</>
+                    ) : (
+                      <><Key size={14} /> Grant Access</>
+                    )}
+                  </button>
+                  <button 
+                    onClick={(e) => handleToggleOvertime(e, person)}
+                    disabled={actionLoading === person._id + '_ot'}
+                    style={{
+                      flex: 1, padding: '8px 12px', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                      background: person.overtimeEligible ? '#fff7ed' : '#f0f9ff',
+                      color: person.overtimeEligible ? '#ea580c' : '#0284c7',
+                      border: person.overtimeEligible ? '1px solid #ffedd5' : '1px solid #e0f2fe'
+                    }}
+                  >
+                    {actionLoading === person._id + '_ot' ? (
+                      <Loader2 size={14} className="animate-spin" />
+                    ) : (
+                      <><Clock size={14} /> {person.overtimeEligible ? 'Disable OT' : 'Enable OT'}</>
+                    )}
+                  </button>
+                </div>
+                
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ textAlign: 'left' }}>
+                     <div style={{ fontSize: 11, color: 'var(--text-light)', fontWeight: 600, textTransform: 'uppercase' }}>
+                       {person.type === 'Employee' ? 'Annual CTC' : 'Stipend'}
+                     </div>
+                     <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--navy)' }}>
+                       ₹{person.type === 'Employee' ? (person.salaryDetails?.annualCTC?.toLocaleString() || 0) : (person.salaryDetails?.baseSalary?.toLocaleString() || 0)}
+                     </div>
+                  </div>
+                  <ChevronRight size={18} color="var(--text-light)" />
                 </div>
               </div>
             </motion.div>
