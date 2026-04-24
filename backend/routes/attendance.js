@@ -262,4 +262,21 @@ router.put('/admin/:id', authAdmin, async (req, res) => {
   }
 });
 
+// GET /api/attendance/admin/pending — Get all flagged or long-incomplete records for dashboard
+router.get('/admin/pending', protect, async (req, res) => {
+  try {
+    const pending = await Attendance.find({
+      admin: req.user._id,
+      $or: [
+        { status: 'flagged' },
+        { status: 'incomplete', date: { $lt: getStartOfDay() } } // Incomplete from previous days
+      ]
+    }).populate('staff', 'fullName employeeId').sort({ date: -1 });
+
+    res.json({ success: true, data: pending });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 module.exports = router;

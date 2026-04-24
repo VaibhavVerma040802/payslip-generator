@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link, useNavigate } from 'react-router-dom'
-import { Plus, Search, Briefcase, ChevronRight, X, Loader2, User } from 'lucide-react'
+import { Plus, Search, Briefcase, ChevronRight, X, Loader2, User, Mail, Phone, Key, Ban, Edit, Info } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../api'
 
@@ -36,7 +36,9 @@ export default function StaffList() {
   const [search, setSearch] = useState('')
   const [filterType, setFilterType] = useState('All')
   const [showModal, setShowModal] = useState(false)
+  const [editingStaff, setEditingStaff] = useState(null)
   const [submitting, setSubmitting] = useState(false)
+  const [actionLoading, setActionLoading] = useState(null) // ID of staff being modified
   const navigate = useNavigate()
 
   const [formData, setFormData] = useState({
@@ -81,19 +83,75 @@ export default function StaffList() {
           baseSalary: parseFloat(formData.baseSalary) || 0
         }
       }
-      const res = await api.post('/staff', payload)
-      setStaff([res.data.data, ...staff])
+      
+      let res;
+      if (editingStaff) {
+        res = await api.put(`/staff/${editingStaff._id}`, payload)
+        setStaff(staff.map(s => s._id === editingStaff._id ? res.data.data : s))
+        toast.success('Staff details updated')
+      } else {
+        res = await api.post('/staff', payload)
+        setStaff([res.data.data, ...staff])
+        toast.success('Staff member added successfully')
+      }
+      
       setShowModal(false)
-      toast.success('Staff member added successfully')
-      setFormData({
-        fullName: '', employeeId: '', email: '', phone: '', designation: '', department: '',
-        type: 'Employee', joiningDate: '', panNumber: '', pfNumber: '', bankName: '',
-        accountNumber: '', ifscCode: '', annualCTC: '', baseSalary: ''
-      })
+      setEditingStaff(null)
+      resetForm()
     } catch (err) {
-      toast.error(err.message || 'Failed to add staff')
+      toast.error(err.message || 'Action failed')
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  const resetForm = () => {
+    setFormData({
+      fullName: '', employeeId: '', email: '', phone: '', designation: '', department: '',
+      type: 'Employee', joiningDate: '', panNumber: '', pfNumber: '', bankName: '',
+      accountNumber: '', ifscCode: '', annualCTC: '', baseSalary: ''
+    })
+  }
+
+  const handleEdit = (e, person) => {
+    e.stopPropagation()
+    setEditingStaff(person)
+    setFormData({
+      fullName: person.fullName,
+      employeeId: person.employeeId,
+      email: person.email,
+      phone: person.phone || '',
+      designation: person.designation || '',
+      department: person.department || '',
+      type: person.type || 'Employee',
+      joiningDate: person.joiningDate ? person.joiningDate.split('T')[0] : '',
+      panNumber: person.financials?.panNumber || '',
+      pfNumber: person.pfNumber || '',
+      bankName: person.financials?.bankName || '',
+      accountNumber: person.financials?.accountNumber || '',
+      ifscCode: person.financials?.ifscCode || '',
+      annualCTC: person.salaryDetails?.annualCTC || '',
+      baseSalary: person.salaryDetails?.baseSalary || ''
+    })
+    setShowModal(true)
+  }
+
+  const handleToggleAccess = async (e, person) => {
+    e.stopPropagation()
+    setActionLoading(person._id)
+    try {
+      if (person.isPortalEnabled) {
+        await api.delete(`/staff/${person._id}/revoke-portal`)
+        toast.success('Access revoked')
+      } else {
+        await api.post(`/staff/${person._id}/provision-portal`)
+        toast.success('Portal access granted')
+      }
+      fetchStaff() // Refresh to get updated status
+    } catch (err) {
+      toast.error('Failed to update portal access')
+    } finally {
+      setActionLoading(null)
     }
   }
 
@@ -178,31 +236,81 @@ export default function StaffList() {
               onClick={() => navigate(`/staff/${person._id}`)}
               style={{
                 background: 'var(--surface)', borderRadius: 20, padding: 24, border: '1px solid var(--border)',
-                cursor: 'pointer', transition: 'all 0.3s', boxShadow: '0 4px 6px rgba(0,0,0,0.02)'
+                cursor: 'pointer', transition: 'all 0.3s', boxShadow: '0 4px 6px rgba(0,0,0,0.02)',
+                position: 'relative', overflow: 'hidden'
               }}
               className="hover:border-gold hover:-translate-y-1"
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
                 <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                   <div style={{ width: 48, height: 48, borderRadius: 14, background: person.type === 'Employee' ? 'var(--navy)' : 'var(--emerald)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 20, fontWeight: 800 }}>
                     {person.fullName.charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <h3 style={{ margin: 0, fontSize: 16, color: 'var(--navy)' }}>{person.fullName}</h3>
-                    <div style={{ fontSize: 12, color: 'var(--gold)', fontWeight: 700, marginBottom: 2 }}>{person.employeeId}</div>
-                    <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 500 }}>{person.designation || 'No designation'}</div>
+                    <h3 style={{ margin: 0, fontSize: 16, color: 'var(--navy)', fontWeight: 800 }}>{person.fullName}</h3>
+                    <div style={{ fontSize: 12, color: 'var(--gold)', fontWeight: 800 }}>{person.employeeId}</div>
                   </div>
                 </div>
+                <button 
+                   onClick={(e) => handleEdit(e, person)}
+                   style={{ padding: 8, borderRadius: 10, border: 'none', background: 'var(--bg)', color: 'var(--text-muted)', cursor: 'pointer' }}
+                >
+                  <Edit size={16} />
+                </button>
               </div>
-              <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-muted)', fontSize: 13 }}>
+                  <Briefcase size={14} /> {person.designation || 'No designation'}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-muted)', fontSize: 13 }}>
+                  <Mail size={14} /> {person.email}
+                </div>
+                {person.phone && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-muted)', fontSize: 13 }}>
+                    <Phone size={14} /> {person.phone}
+                  </div>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
                 <span className={`badge ${person.type === 'Employee' ? 'badge-navy' : 'badge-emerald'}`}>{person.type}</span>
                 <span className="badge" style={{ background: 'var(--bg)', color: 'var(--text-muted)' }}>{person.department || 'General'}</span>
+                {person.isPortalEnabled ? (
+                  <span className="badge badge-emerald">Portal Active</span>
+                ) : (
+                  <span className="badge" style={{ background: '#f3f4f6', color: '#4b5563' }}>Portal Disabled</span>
+                )}
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 16, borderTop: '1px solid var(--border)' }}>
-                <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-                  {person.type === 'Employee' ? 'CTC: ₹' + (person.salaryDetails?.annualCTC?.toLocaleString() || 0) : 'Stipend: ₹' + (person.salaryDetails?.baseSalary?.toLocaleString() || 0)}
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 16, borderTop: '1px solid var(--border)', gap: 12 }}>
+                <button 
+                  onClick={(e) => handleToggleAccess(e, person)}
+                  disabled={actionLoading === person._id}
+                  style={{
+                    flex: 1, padding: '8px 12px', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                    background: person.isPortalEnabled ? '#fef2f2' : 'var(--emerald)',
+                    color: person.isPortalEnabled ? '#ef4444' : 'white',
+                    border: person.isPortalEnabled ? '1px solid #fee2e2' : 'none'
+                  }}
+                >
+                  {actionLoading === person._id ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : person.isPortalEnabled ? (
+                    <><Ban size={14} /> Revoke</>
+                  ) : (
+                    <><Key size={14} /> Grant Access</>
+                  )}
+                </button>
+                <div style={{ textAlign: 'right' }}>
+                   <div style={{ fontSize: 11, color: 'var(--text-light)', fontWeight: 600, textTransform: 'uppercase' }}>
+                     {person.type === 'Employee' ? 'Annual CTC' : 'Stipend'}
+                   </div>
+                   <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--navy)' }}>
+                     ₹{person.type === 'Employee' ? (person.salaryDetails?.annualCTC?.toLocaleString() || 0) : (person.salaryDetails?.baseSalary?.toLocaleString() || 0)}
+                   </div>
                 </div>
-                <ChevronRight size={18} color="var(--text-light)" />
               </div>
             </motion.div>
           ))}
@@ -219,8 +327,8 @@ export default function StaffList() {
               style={{ background: 'var(--surface)', borderRadius: 24, width: '100%', maxWidth: 700, maxHeight: '90vh', display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 1, overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}
             >
               <div style={{ padding: '24px 32px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h2 style={{ margin: 0, color: 'var(--navy)' }}>Add New Staff Member</h2>
-                <button onClick={() => setShowModal(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-light)' }}><X size={24} /></button>
+                <h2 style={{ margin: 0, color: 'var(--navy)' }}>{editingStaff ? 'Edit Staff Member' : 'Add New Staff Member'}</h2>
+                <button onClick={() => { setShowModal(false); setEditingStaff(null); resetForm(); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-light)' }}><X size={24} /></button>
               </div>
               
               <div style={{ padding: 32, overflowY: 'auto', flex: 1 }}>
@@ -275,9 +383,9 @@ export default function StaffList() {
               </div>
 
               <div style={{ padding: '24px 32px', borderTop: '1px solid var(--border)', background: 'var(--bg)', display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
-                <button type="button" onClick={() => setShowModal(false)} style={{ padding: '12px 24px', borderRadius: 12, border: '2px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+                <button type="button" onClick={() => { setShowModal(false); setEditingStaff(null); resetForm(); }} style={{ padding: '12px 24px', borderRadius: 12, border: '2px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
                 <button type="submit" form="addStaffForm" disabled={submitting} style={{ padding: '12px 24px', borderRadius: 12, border: 'none', background: 'var(--navy)', color: 'white', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  {submitting ? <Loader2 size={18} className="animate-spin" /> : 'Save Staff Member'}
+                  {submitting ? <Loader2 size={18} className="animate-spin" /> : (editingStaff ? 'Update Staff Member' : 'Save Staff Member')}
                 </button>
               </div>
             </motion.div>

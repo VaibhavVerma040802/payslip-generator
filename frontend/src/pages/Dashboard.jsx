@@ -36,12 +36,17 @@ export default function Dashboard() {
   const [stats, setStats] = useState(null)
 
   const [loading, setLoading] = useState(true)
+  const [pendingActions, setPendingActions] = useState([])
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const statsRes = await api.get('/payslips/stats/summary')
+        const [statsRes, pendingRes] = await Promise.all([
+          api.get('/payslips/stats/summary'),
+          api.get('/attendance/admin/pending')
+        ])
         setStats(statsRes.data?.data || null)
+        setPendingActions(pendingRes.data?.data || [])
       } catch (e) { console.error(e) } finally { setLoading(false) }
     }
     fetchData()
@@ -89,7 +94,7 @@ export default function Dashboard() {
         display: 'grid', 
         gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', 
         gap: 24, 
-        marginBottom: 40 
+        marginBottom: 48 
       }}>
         <StatCard icon={Users} label="Total Employees" value={loading ? '—' : (stats?.totalEmployees || 0)} sub="Workforce Strength" color="#6366f1" delay={0} />
         <StatCard icon={PieChart} label="Workforce Split" value={loading ? '—' : `${stats?.workforceSplit?.employees || 0}E | ${stats?.workforceSplit?.interns || 0}I`} sub="Emp vs Interns" color="#8b5cf6" delay={100} />
@@ -97,6 +102,58 @@ export default function Dashboard() {
         <StatCard icon={IndianRupee} label="Total Salary Disbursed" value={loading ? '—' : fmtCurrency(stats?.totalPayroll)} sub="Lifetime Cumulative" color="var(--emerald)" delay={300} />
       </div>
 
+      {/* Pending Actions Section */}
+      {!loading && pendingActions.length > 0 && (
+        <div className="fade-up" style={{ marginBottom: 40 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+            <div style={{ width: 40, height: 40, borderRadius: 12, background: '#fffbeb', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f59e0b', border: '1px solid #fef3c7' }}>
+              <AlertTriangle size={20} />
+            </div>
+            <div>
+              <h2 style={{ margin: 0, fontSize: 20, color: 'var(--navy)' }}>Attendance Actions Required</h2>
+              <p style={{ margin: 0, fontSize: 13, color: 'var(--text-muted)' }}>Review and correct flagged or incomplete attendance records.</p>
+            </div>
+          </div>
+
+          <div style={{ background: 'var(--surface)', borderRadius: 20, border: '1px solid var(--border)', overflow: 'hidden' }}>
+            {pendingActions.map((action, idx) => (
+              <div key={action._id} style={{ 
+                padding: '20px 24px', 
+                borderBottom: idx === pendingActions.length - 1 ? 'none' : '1px solid var(--border)',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap',
+                transition: 'background 0.2s'
+              }} className="hover:bg-gray-50">
+                <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+                   <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--navy)', fontWeight: 800 }}>
+                     {action.staff?.fullName?.charAt(0).toUpperCase()}
+                   </div>
+                   <div>
+                     <div style={{ fontWeight: 700, color: 'var(--navy)' }}>{action.staff?.fullName}</div>
+                     <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{action.staff?.employeeId} · {new Date(action.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</div>
+                   </div>
+                </div>
+                
+                <div style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
+                  <div style={{ textAlign: 'right' }}>
+                    <div className="badge" style={{ background: action.status === 'flagged' ? '#fee2e2' : '#fffbeb', color: action.status === 'flagged' ? '#ef4444' : '#f59e0b', fontSize: 11, fontWeight: 700, textTransform: 'uppercase' }}>
+                      {action.status === 'flagged' ? 'Over 16h' : 'Missing Out'}
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--text-light)', marginTop: 4 }}>
+                      In: {new Date(action.punchIn).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => navigate(`/staff/${action.staff?._id}`)}
+                    style={{ padding: '10px 20px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--navy)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
+                  >
+                    Resolve
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
     </div>
   )

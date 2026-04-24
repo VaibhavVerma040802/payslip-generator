@@ -145,9 +145,6 @@ export default function StaffDetail() {
             </div>
           </div>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            <button onClick={() => navigate('/generate', { state: { predefinedStaff: staff } })} style={{ padding: '10px 20px', borderRadius: 12, border: 'none', background: 'var(--navy)', color: 'white', fontWeight: 600, cursor: 'pointer', display: 'flex', gap: 8, alignItems: 'center' }}>
-               <FileText size={16} /> Generate Payslip
-            </button>
             {!staff.isPortalEnabled ? (
               <button onClick={handleProvision} disabled={provisioning} style={{ padding: '10px 20px', borderRadius: 12, border: 'none', background: 'var(--emerald)', color: 'white', fontWeight: 600, cursor: 'pointer', display: 'flex', gap: 8, alignItems: 'center' }}>
                 {provisioning ? <Loader2 size={16} className="animate-spin" /> : <Key size={16} />}
