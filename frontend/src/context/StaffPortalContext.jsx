@@ -14,18 +14,23 @@ export function StaffPortalProvider({ children }) {
   useEffect(() => {
     const initAuth = async () => {
       const token = localStorage.getItem('staffToken');
-      if (token) {
-        try {
-          const res = await api.get('/portal/me');
-          // Ensure we preserve the mustChangePassword state if it's there
-          // Note: /me might not return it, so we default to false if not present
-          setStaffUser({ ...res.data.staff, mustChangePassword: res.data.staff.mustChangePassword || false });
-        } catch (err) {
-          console.error('Staff auth failed', err);
-          localStorage.removeItem('staffToken');
-        }
+      if (!token) {
+        setLoading(false);
+        return;
       }
-      setLoading(false);
+      try {
+        const res = await api.get('/portal/me');
+        setStaffUser({
+          ...res.data.staff,
+          mustChangePassword: res.data.staff.mustChangePassword || false,
+        });
+      } catch (err) {
+        console.error('Staff auth init failed:', err);
+        localStorage.removeItem('staffToken');
+        setStaffUser(null);
+      } finally {
+        setLoading(false);
+      }
     };
     initAuth();
   }, []);
@@ -33,7 +38,6 @@ export function StaffPortalProvider({ children }) {
   const login = async (email, password) => {
     const res = await api.post('/portal/login', { email, password });
     localStorage.setItem('staffToken', res.data.token);
-    // Combine staff data with mustChangePassword flag
     setStaffUser({ ...res.data.staff, mustChangePassword: res.data.mustChangePassword });
     return res.data;
   };
@@ -43,17 +47,13 @@ export function StaffPortalProvider({ children }) {
     setStaffUser(null);
   };
 
-  const value = {
-    staffUser,
-    loading,
-    login,
-    logout,
-    setStaffUser
-  };
+  const value = { staffUser, loading, login, logout, setStaffUser };
 
+  // Always render children — individual routes handle loading states themselves
+  // This prevents the entire app from being blocked during staff auth init
   return (
     <StaffPortalContext.Provider value={value}>
-      {!loading && children}
+      {children}
     </StaffPortalContext.Provider>
   );
 }

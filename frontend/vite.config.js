@@ -36,7 +36,10 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png}'],
         navigateFallback: '/index.html',
-        navigateFallbackDenylist: [/^\/api/],
+        // Deny SW interception for API calls AND all portal routes
+        navigateFallbackDenylist: [/^\/api/, /^\/portal/],
+        skipWaiting: true,
+        clientsClaim: true,
       },
     }),
   ],
