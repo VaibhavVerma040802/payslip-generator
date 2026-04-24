@@ -77,7 +77,7 @@ export default function AuditLogs() {
   useEffect(() => {
     const fetchActivities = async () => {
       try {
-        const res = await api.get('/api/activities?limit=50')
+        const res = await api.get('/activities?limit=50')
         setRecent(res.data?.data || [])
       } catch (e) {
         console.error(e)

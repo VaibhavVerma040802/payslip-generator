@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import { FileText, Users, IndianRupee, LayoutDashboard, Calendar, AlertTriangle, PieChart, Send, Download, LogOut, UserPlus, Zap, CheckCircle2, Loader2, FileSpreadsheet, UserCheck, Briefcase } from 'lucide-react'
 import { Plus } from 'lucide-react'
 import api from '../api'
