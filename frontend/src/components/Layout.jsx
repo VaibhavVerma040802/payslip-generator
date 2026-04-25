@@ -15,6 +15,7 @@ const navItems = [
   { to: '/generate', label: 'Generate Payslip', icon: PlusCircle },
   { to: '/payslips', label: 'All Payslips', icon: List },
   { to: '/staff', label: 'Staff Management', icon: Users },
+  { to: '/leave-requests', label: 'Leave Requests', icon: Bell },
   { to: '/audit-logs', label: 'Audit Logs', icon: Activity },
   { to: '/profile', label: 'Company Profile', icon: Settings },
 ]
@@ -300,7 +301,7 @@ export default function Layout() {
                 }}
                 className="btn-hover"
               >
-                <Download size={16} /> <span style={{ display: isMobile ? 'none' : 'inline' }}>Install App</span>
+                <Download size={16} />
               </button>
             )}
 
@@ -402,7 +403,6 @@ export default function Layout() {
                   }}
                 >
                   <t.icon size={15} strokeWidth={2.5} />
-                  <span style={{ display: isMobile ? 'none' : 'inline' }}>{t.label}</span>
                 </button>
               ))}
             </div>

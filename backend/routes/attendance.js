@@ -335,10 +335,15 @@ router.get('/admin/export-csv', authAdmin, async (req, res) => {
 
     let csv = 'Employee,ID,Date,Punch In,Punch Out,Total Hours,Overtime,Status\n';
     records.forEach(r => {
-      const date = new Date(r.date).toLocaleDateString();
-      const punchIn = r.punchIn ? new Date(r.punchIn).toLocaleTimeString() : 'N/A';
-      const punchOut = r.punchOut ? new Date(r.punchOut).toLocaleTimeString() : 'N/A';
-      csv += `"${r.staff?.fullName}","${r.staff?.employeeId}","${date}","${punchIn}","${punchOut}",${r.totalHours},${r.overtimeHours},${r.status}\n`;
+      const date = new Date(r.date).toLocaleDateString('en-GB'); // DD/MM/YYYY
+      const formatTime = (dt) => {
+        if (!dt) return 'N/A';
+        const d = new Date(dt);
+        return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }).replace(/,/g, '');
+      };
+      const punchIn = formatTime(r.punchIn);
+      const punchOut = formatTime(r.punchOut);
+      csv += `"${r.staff?.fullName || 'N/A'}","${r.staff?.employeeId || 'N/A'}","${date}","${punchIn}","${punchOut}",${r.totalHours || 0},${r.overtimeHours || 0},"${r.status}"\n`;
     });
 
     res.header('Content-Type', 'text/csv');

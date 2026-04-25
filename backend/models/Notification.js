@@ -13,6 +13,11 @@ const notificationSchema = new mongoose.Schema(
       ref: 'Staff',
       required: true
     },
+    recipientType: {
+      type: String,
+      enum: ['admin', 'staff'],
+      default: 'admin'
+    },
     type: {
       type: String,
       enum: ['LEAVE_REQUEST', 'PROFILE_UPDATE', 'OTHER'],

@@ -8,13 +8,9 @@ export default function PortalSummary() {
   const [currentWeek, setCurrentWeek] = useState(new Date())
   const [summary, setSummary] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [payslips, setPayslips] = useState([])
-  const [payslipsLoading, setPayslipsLoading] = useState(false)
-  const [search, setSearch] = useState('')
 
   useEffect(() => {
     fetchWeeklySummary()
-    fetchPayslips()
   }, [currentWeek])
 
   const fetchWeeklySummary = async () => {
@@ -48,39 +44,6 @@ export default function PortalSummary() {
     const sunday = new Date(monday)
     sunday.setDate(monday.getDate() + 6)
     return `${monday.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} - ${sunday.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}`
-  }
-
-  const fetchPayslips = async (query = '') => {
-    setPayslipsLoading(true)
-    try {
-      const res = await api.get(`/portal/payslips?search=${query}`)
-      setPayslips(res.data.data)
-    } catch (err) {
-      console.error('Payslips error:', err)
-    } finally {
-      setPayslipsLoading(false)
-    }
-  }
-
-  const handleDownload = async (id) => {
-    try {
-      const response = await api.get(`/payslips/${id}/download`, { responseType: 'blob' })
-      const url = window.URL.createObjectURL(new Blob([response.data]))
-      const link = document.createElement('a')
-      link.href = url
-      link.setAttribute('download', `Payslip_${id}.pdf`)
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
-    } catch (err) {
-      toast.error('Download failed')
-    }
-  }
-
-  const handleSearch = (e) => {
-    const val = e.target.value
-    setSearch(val)
-    fetchPayslips(val)
   }
 
   return (
@@ -152,56 +115,6 @@ export default function PortalSummary() {
               <div style={{ fontSize: 32, fontWeight: 800, color: 'var(--navy)' }}>{summary?.flaggedCount || 0}</div>
               <p style={{ color: 'var(--text-muted)', fontSize: 14, marginTop: 8 }}>Records requiring administrative review.</p>
             </motion.div>
-          </div>
-        )}
-      </section>
-
-      <section>
-        <header style={{ marginBottom: 32, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <h2 style={{ fontSize: 24, color: 'var(--navy)', marginBottom: 4 }}>Payslip Archive</h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>Access your pushed payslips from the last 3 months.</p>
-          </div>
-          <input
-            type="text"
-            placeholder="Search by month or year..."
-            value={search}
-            onChange={handleSearch}
-            style={{
-              padding: '10px 16px', borderRadius: 12, border: '1px solid var(--border)',
-              background: 'var(--surface)', fontSize: 14, outline: 'none', width: 240
-            }}
-          />
-        </header>
-
-        {payslipsLoading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}>
-            <Loader2 size={32} className="animate-spin text-muted" />
-          </div>
-        ) : payslips.length === 0 ? (
-          <div className="glass" style={{ padding: 60, textAlign: 'center', color: 'var(--text-muted)' }}>
-            <CalendarIcon size={48} style={{ marginBottom: 16, opacity: 0.2 }} />
-            <p>No payslips found for the last 3 months.</p>
-          </div>
-        ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
-            {payslips.map((p) => (
-              <motion.div key={p._id} whileHover={{ y: -5 }} className="glass" style={{ padding: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--navy)' }}>{p.month} {p.year}</div>
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>Net: ₹{p.netSalary.toLocaleString()}</div>
-                </div>
-                <button
-                  onClick={() => handleDownload(p._id)}
-                  style={{
-                    padding: '8px 16px', borderRadius: 8, background: 'var(--emerald)', color: 'white',
-                    border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer'
-                  }}
-                >
-                  Download
-                </button>
-              </motion.div>
-            ))}
           </div>
         )}
       </section>

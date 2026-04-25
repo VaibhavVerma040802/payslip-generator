@@ -176,7 +176,7 @@ export default function Dashboard() {
         marginBottom: 48 
       }}>
         <StatCard icon={Users} label="Total Employees" value={loading ? '—' : (stats?.totalEmployees || 0)} sub="Workforce Strength" color="#6366f1" delay={0} />
-        <StatCard icon={PieChart} label="Workforce Split" value={loading ? '—' : `${stats?.workforceSplit?.employees || 0}E | ${stats?.workforceSplit?.interns || 0}I`} sub="Emp vs Interns" color="#8b5cf6" delay={100} />
+        <StatCard icon={PieChart} label="Active Portals" value={loading ? '—' : (stats?.activePortals || 0)} sub="Staff Portal Access" color="#8b5cf6" delay={100} />
         <StatCard icon={AlertTriangle} label="Attendance Flags" value={loading ? '—' : (stats?.attendanceFlags || 0)} sub="Action Required" color="#f59e0b" delay={200} />
         <StatCard icon={IndianRupee} label="Total Salary Disbursed" value={loading ? '—' : fmtCurrency(stats?.totalPayroll)} sub="Lifetime Cumulative" color="var(--emerald)" delay={300} />
       </div>

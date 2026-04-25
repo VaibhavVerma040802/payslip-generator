@@ -349,6 +349,16 @@ export default function StaffList() {
                        ₹{person.type === 'Employee' ? (person.salaryDetails?.annualCTC?.toLocaleString() || 0) : (person.salaryDetails?.baseSalary?.toLocaleString() || 0)}
                      </div>
                   </div>
+                  <button 
+                    onClick={() => navigate(`/staff/${person._id}`)}
+                    style={{
+                      background: 'var(--navy)', color: 'white', border: 'none', borderRadius: 10,
+                      padding: '8px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', gap: 6
+                    }}
+                  >
+                    <Info size={14} /> View Details
+                  </button>
                   <ChevronRight size={18} color="var(--text-light)" />
                 </div>
               </div>

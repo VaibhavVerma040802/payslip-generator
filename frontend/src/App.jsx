@@ -8,6 +8,7 @@ import PayslipDetail from './pages/PayslipDetail'
 import StaffList from './pages/StaffList'
 import StaffDetail from './pages/StaffDetail'
 import AuditLogs from './pages/AuditLogs'
+import LeaveRequests from './pages/LeaveRequests'
 import { useAuth } from './context/AuthContext'
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -28,6 +29,7 @@ import PortalDashboard from './pages/portal/PortalDashboard'
 import PortalProfile from './pages/portal/PortalProfile'
 import PortalAttendance from './pages/portal/PortalAttendance'
 import PortalSummary from './pages/portal/PortalSummary'
+import PortalPayslips from './pages/portal/PortalPayslips'
 
 // ─────────────────────────────────────────────
 // Guard for Corporate Portal
@@ -75,6 +77,7 @@ export default function App() {
         <Route path="profile" element={<PortalProfile />} />
         <Route path="attendance" element={<PortalAttendance />} />
         <Route path="summary" element={<PortalSummary />} />
+        <Route path="payslips" element={<PortalPayslips />} />
         <Route path="*" element={<Navigate to="dashboard" replace />} />
       </Route>
 
@@ -101,6 +104,7 @@ export default function App() {
         <Route path="staff" element={<StaffList />} />
         <Route path="staff/:id" element={<StaffDetail />} />
         <Route path="audit-logs" element={<AuditLogs />} />
+        <Route path="leave-requests" element={<LeaveRequests />} />
         <Route path="profile" element={<Profile />} />
         {/* Only catch genuinely unknown corporate paths, not /portal/* */}
         <Route path="*" element={<Navigate to="/" replace />} />

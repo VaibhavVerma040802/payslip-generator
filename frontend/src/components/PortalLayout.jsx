@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Outlet, NavLink, useLocation } from 'react-router-dom'
 import { 
   LayoutDashboard, LogOut, User, Clock, 
-  CalendarDays, Menu, ChevronLeft, Sun, Moon, Monitor
+  CalendarDays, Menu, ChevronLeft, Sun, Moon, Monitor, FileText
 } from 'lucide-react'
 import { useStaffPortal } from '../context/StaffPortalContext'
 import { useTheme } from '../context/ThemeContext'
@@ -11,6 +11,7 @@ import { motion } from 'framer-motion'
 const navItems = [
   { to: '/portal/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/portal/attendance', label: 'Attendance', icon: Clock },
+  { to: '/portal/payslips', label: 'My Payslips', icon: FileText },
   { to: '/portal/summary', label: 'Weekly Summary', icon: CalendarDays },
   { to: '/portal/profile', label: 'My Profile', icon: User },
 ]
@@ -241,7 +242,6 @@ export default function PortalLayout() {
                   }}
                 >
                   <t.icon size={15} strokeWidth={2.5} />
-                  <span style={{ display: isMobile ? 'none' : 'inline' }}>{t.label}</span>
                 </button>
               ))}
             </div>

@@ -162,7 +162,8 @@ export default function GeneratePayslip() {
       const baseMonthly = parseFloat(form.baseSalary) || 0;
       const lossOfPay = workingDays > 0 ? Math.round((baseMonthly / workingDays) * Math.max(0, workingDays - paidDays)) : 0;
       const netStipend = baseMonthly - lossOfPay;
-      return { basic: baseMonthly, hra: 0, special: 0, gross: baseMonthly, pf: 0, esi: 0, pt: 0, lossOfPay: lossOfPay, deductions: lossOfPay, net: netStipend }
+      // For interns, set basic/hra/special to 0 and only use stipend field to avoid double counting in backend
+      return { basic: 0, hra: 0, special: 0, gross: baseMonthly, pf: 0, esi: 0, pt: 0, lossOfPay: lossOfPay, deductions: lossOfPay, net: netStipend, baseStipend: baseMonthly }
     }
 
     const basicAnnual = annualCTC * 0.5;
@@ -182,9 +183,9 @@ export default function GeneratePayslip() {
     const special = Math.round(standardSpecial * prorationFactor);
     const gross = basic + hra + special;
 
-    const empPF = form.automationEnabled ? Math.round(basic * 0.12) : (parseFloat(form.providentFund) || 0);
-    const esi = form.automationEnabled ? (gross <= 21000 ? Math.ceil(gross * 0.0075) : 0) : (parseFloat(form.esi) || 0);
-    const pt = form.automationEnabled ? ((paidDays > 0 && gross >= 15000) ? 200 : (paidDays > 0 && gross >= 10000) ? 150 : 0) : (parseFloat(form.professionalTax) || 0); 
+    const empPF = form.automationEnabled ? Math.round(basic * 0.12) : 0;
+    const esi = form.automationEnabled ? (gross <= 21000 ? Math.ceil(gross * 0.0075) : 0) : 0;
+    const pt = form.automationEnabled ? ((paidDays > 0 && gross >= 15000) ? 200 : (paidDays > 0 && gross >= 10000) ? 150 : 0) : 0; 
     const tds = Math.round(parseFloat(form.tds) || 0);
     const loan = Math.round(parseFloat(form.loanDeduction) || 0);
 
@@ -192,7 +193,7 @@ export default function GeneratePayslip() {
     const net = Math.round(gross - deductions);
 
     return { basic, hra, special, gross, pf: empPF, esi, pt, deductions, net, lossOfPay: 0 }
-  }, [form.annualCTC, form.baseSalary, form.employmentType, form.workingDays, form.paidDays, form.tds, form.loanDeduction, form.automationEnabled, form.providentFund, form.esi, form.professionalTax]);
+  }, [form.annualCTC, form.baseSalary, form.employmentType, form.workingDays, form.paidDays, form.tds, form.loanDeduction, form.automationEnabled]);
 
   useEffect(() => {
     setForm(f => ({
@@ -258,6 +259,28 @@ export default function GeneratePayslip() {
             <AnimatePresence mode="wait">
               {step === 1 && (
                 <motion.div key="s1" initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 12 }}>
+                  <div style={{ marginBottom: 24, padding: 20, background: 'rgba(245,158,11,0.05)', borderRadius: 20, border: '1px solid rgba(245,158,11,0.2)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <h4 style={{ margin: 0, color: 'var(--navy)', fontSize: 15 }}>Statutory Automation</h4>
+                        <p style={{ margin: '4px 0 0', color: 'var(--text-muted)', fontSize: 12 }}>Auto-calculate PF, ESI, and PT based on earnings.</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setForm({...form, automationEnabled: !form.automationEnabled})}
+                        style={{
+                          width: 52, height: 28, borderRadius: 14, background: form.automationEnabled ? 'var(--emerald)' : 'var(--border)',
+                          position: 'relative', border: 'none', cursor: 'pointer', transition: 'all 0.3s'
+                        }}
+                      >
+                        <div style={{
+                          position: 'absolute', top: 4, left: form.automationEnabled ? 28 : 4,
+                          width: 20, height: 20, borderRadius: '50%', background: 'white', transition: 'all 0.3s'
+                        }} />
+                      </button>
+                    </div>
+                  </div>
+
                   <label style={{ display: 'block', fontSize: 12, fontWeight: 800, color: 'var(--text-muted)', marginBottom: 12, textTransform: 'uppercase' }}>Employment Category</label>
                   <div style={{ display: 'flex', gap: 10, marginBottom: 32, background: 'var(--bg)', padding: 6, borderRadius: 16, border: '1px solid var(--border)' }}>
                     {['regular', 'intern'].map(type => (
@@ -361,30 +384,6 @@ export default function GeneratePayslip() {
 
               {step === 3 && (
                 <motion.div key="s3" initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 12 }}>
-                  {form.employmentType === 'regular' && (
-                    <div style={{ marginBottom: 24, padding: 20, background: 'rgba(245,158,11,0.05)', borderRadius: 20, border: '1px solid rgba(245,158,11,0.2)' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div>
-                          <h4 style={{ margin: 0, color: 'var(--navy)', fontSize: 15 }}>Statutory Automation</h4>
-                          <p style={{ margin: '4px 0 0', color: 'var(--text-muted)', fontSize: 12 }}>Auto-calculate PF, ESI, and PT based on earnings.</p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setForm({...form, automationEnabled: !form.automationEnabled})}
-                          style={{
-                            width: 52, height: 28, borderRadius: 14, background: form.automationEnabled ? 'var(--emerald)' : 'var(--border)',
-                            position: 'relative', border: 'none', cursor: 'pointer', transition: 'all 0.3s'
-                          }}
-                        >
-                          <div style={{
-                            position: 'absolute', top: 4, left: form.automationEnabled ? 28 : 4,
-                            width: 20, height: 20, borderRadius: '50%', background: 'white', transition: 'all 0.3s'
-                          }} />
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                  
                   {form.employmentType === 'intern' ? (
                      <InputField label="Monthly Stipend (Base Salary)" required type="number" min="0" value={form.baseSalary || ''} onChange={e => setForm({...form, baseSalary: Math.max(0, parseFloat(e.target.value) || 0)})} placeholder="Stipend in INR" icon={IndianRupee} />
                   ) : (
@@ -472,7 +471,7 @@ export default function GeneratePayslip() {
               <PreviewRow label="Identity Code" value={form.employeeId || '—'} type="text" />
               {form.employmentType === 'intern' ? (
                 <>
-                  <PreviewRow label="Monthly Stipend (Base)" value={totals.basic} />
+                  <PreviewRow label="Monthly Stipend (Base)" value={totals.baseStipend} />
                   {totals.lossOfPay > 0 && <PreviewRow label="Absent Deduction (Loss of Pay)" value={totals.lossOfPay} isDeduction />}
                 </>
               ) : (

@@ -57,6 +57,18 @@ router.get('/my-requests', authStaff, async (req, res) => {
   }
 });
 
+// GET /api/leaves/notifications — Staff views their notifications
+router.get('/notifications', authStaff, async (req, res) => {
+  try {
+    const notifications = await Notification.find({ staff: req.staff._id, recipientType: 'staff' })
+      .sort({ createdAt: -1 })
+      .limit(20);
+    res.json({ success: true, data: notifications });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to fetch notifications' });
+  }
+});
+
 // ─────────────────────────────────────────────────────────────
 // ADMIN ENDPOINTS
 // ─────────────────────────────────────────────────────────────
@@ -101,7 +113,20 @@ router.post('/admin/respond', authAdmin, async (req, res) => {
     }
 
     // Mark related notifications as read
-    await Notification.updateMany({ referenceId: leave._id }, { $set: { isRead: true } });
+    await Notification.updateMany({ referenceId: leave._id, recipientType: 'admin' }, { $set: { isRead: true } });
+    
+    // Create Notification for Staff
+    const staffNotification = new Notification({
+      admin: req.user._id,
+      staff: leave.staff,
+      recipientType: 'staff',
+      type: 'LEAVE_REQUEST',
+      referenceId: leave._id,
+      message: `Your leave request for ${leave.type} (${new Date(leave.startDate).toLocaleDateString()}) has been ${status.toUpperCase()}. ${adminNotes ? 'Note: ' + adminNotes : ''}`
+    });
+    await staffNotification.save();
+
+    await logActivity(req.user._id, 'LEAVE_RESPONSE', `Responded ${status} to ${leave.type} leave for staff ${leave.staff}`, { leaveId: leave._id });
     
     res.json({ success: true, message: `Leave ${status.toLowerCase()} successfully`, leave });
   } catch (err) {
