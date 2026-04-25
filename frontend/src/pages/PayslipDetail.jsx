@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import {
   ArrowLeft, Download, Mail, Printer, Loader2,
-  Building2, User, Calendar, Banknote, CheckCircle2,
+  Building2, User, Calendar, Banknote, CheckCircle2, Share2
 } from 'lucide-react'
 import api from '../api'
 
@@ -181,6 +181,7 @@ export default function PayslipDetail() {
   const [loading, setLoading] = useState(true)
   const [downloading, setDownloading] = useState(false)
   const [showEmailModal, setShowEmailModal] = useState(false)
+  const [actionLoading, setActionLoading] = useState({})
 
   const fetchPayslip = async () => {
     try {
@@ -211,6 +212,19 @@ export default function PayslipDetail() {
       toast.error('Download failed')
     } finally {
       setDownloading(false)
+    }
+  }
+
+  const handlePush = async (id) => {
+    setActionLoading(a => ({ ...a, [`push_${id}`]: true }))
+    try {
+      const res = await api.post(`/payslips/${id}/push`)
+      toast.success(res.data.message)
+      fetchPayslip()
+    } catch (err) {
+      toast.error('Failed to update portal visibility')
+    } finally {
+      setActionLoading(a => ({ ...a, [`push_${id}`]: false }))
     }
   }
 
@@ -303,6 +317,19 @@ export default function PayslipDetail() {
                 ? <><Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> Generating...</>
                 : <><Download size={14} /> Download PDF</>
               }
+            </button>
+            <button
+              onClick={() => handlePush(p._id)}
+              disabled={actionLoading[`push_${p._id}`]}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 7,
+                background: p.isPushedToPortal ? 'var(--emerald)' : 'var(--navy)', color: 'white',
+                border: 'none', borderRadius: 9, padding: '10px 18px',
+                fontWeight: 600, fontSize: 13.5, cursor: 'pointer',
+              }}
+            >
+              {actionLoading[`push_${p._id}`] ? <Loader2 size={14} className="animate-spin" /> : <Share2 size={14} />}
+              {p.isPushedToPortal ? 'Live on Portal' : 'Push to Portal'}
             </button>
             <button
               onClick={() => setShowEmailModal(true)}

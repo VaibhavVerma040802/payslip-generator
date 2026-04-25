@@ -11,6 +11,7 @@ export default function PortalDashboard() {
   const [activeShift, setActiveShift] = useState(null) // null = not punched in
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
+  const [leaveHistory, setLeaveHistory] = useState([])
 
   // Tick clock every second
   useEffect(() => {
@@ -33,7 +34,17 @@ export default function PortalDashboard() {
 
   useEffect(() => {
     fetchActiveShift()
+    fetchLeaveHistory()
   }, [fetchActiveShift])
+
+  const fetchLeaveHistory = async () => {
+    try {
+      const res = await api.get('/leaves/my-requests')
+      setLeaveHistory(res.data.data)
+    } catch (err) {
+      console.error('Failed to fetch leave history')
+    }
+  }
 
   const [leaveModalOpen, setLeaveModalOpen] = useState(false)
   const [leaveData, setLeaveData] = useState({ type: 'Casual', startDate: '', endDate: '', reason: '' })
@@ -73,6 +84,7 @@ export default function PortalDashboard() {
       toast.success('Leave request submitted')
       setLeaveModalOpen(false)
       setLeaveData({ type: 'Casual', startDate: '', endDate: '', reason: '' })
+      fetchLeaveHistory()
     } catch (err) {
       toast.error(err.message || 'Failed to submit leave')
     } finally {
@@ -268,6 +280,57 @@ export default function PortalDashboard() {
             </div>
           </div>
         </div>
+      </motion.div>
+
+      {/* Leave History Section */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} style={{ marginTop: 48 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+          <h2 style={{ fontSize: 24, color: 'var(--navy)', margin: 0 }}>My Leave Requests</h2>
+          <div className="badge badge-navy">{leaveHistory.length} Total</div>
+        </div>
+        
+        {leaveHistory.length === 0 ? (
+          <div className="glass" style={{ padding: 48, textAlign: 'center', color: 'var(--text-muted)' }}>
+            <CalendarIcon size={40} style={{ marginBottom: 16, opacity: 0.2 }} />
+            <p>You haven't submitted any leave requests yet.</p>
+          </div>
+        ) : (
+          <div className="glass" style={{ overflowX: 'auto', padding: 0 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 14 }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid var(--border)', background: 'rgba(15,23,42,0.02)' }}>
+                  <th style={{ padding: '16px 24px', fontWeight: 700, color: 'var(--navy)' }}>Type</th>
+                  <th style={{ padding: '16px 24px', fontWeight: 700, color: 'var(--navy)' }}>Period</th>
+                  <th style={{ padding: '16px 24px', fontWeight: 700, color: 'var(--navy)' }}>Reason</th>
+                  <th style={{ padding: '16px 24px', fontWeight: 700, color: 'var(--navy)' }}>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {leaveHistory.map((req) => (
+                  <tr key={req._id} style={{ borderBottom: '1px solid var(--border)' }}>
+                    <td style={{ padding: '16px 24px', fontWeight: 600 }}>{req.type}</td>
+                    <td style={{ padding: '16px 24px' }}>
+                      {new Date(req.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} — {new Date(req.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </td>
+                    <td style={{ padding: '16px 24px', color: 'var(--text-muted)', maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{req.reason}</td>
+                    <td style={{ padding: '16px 24px' }}>
+                      <span className={`badge ${
+                        req.status === 'Approved' ? 'badge-emerald' : 
+                        req.status === 'Rejected' ? 'badge-red' : 
+                        'badge-navy'
+                      }`}>
+                        {req.status}
+                      </span>
+                      {req.adminNotes && (
+                        <div style={{ fontSize: 11, color: 'var(--text-light)', marginTop: 4 }}>Note: {req.adminNotes}</div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </motion.div>
 
       {/* Leave Request Modal */}

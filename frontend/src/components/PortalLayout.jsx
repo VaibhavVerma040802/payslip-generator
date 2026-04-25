@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Outlet, NavLink, useLocation } from 'react-router-dom'
 import { 
   LayoutDashboard, LogOut, User, Clock, 
-  CalendarDays, Menu, ChevronLeft, Sun, Moon, Monitor, FileText
+  CalendarDays, Menu, ChevronLeft, Sun, Moon, Monitor, FileText, Bell, X
 } from 'lucide-react'
 import { useStaffPortal } from '../context/StaffPortalContext'
 import { useTheme } from '../context/ThemeContext'
@@ -34,6 +34,9 @@ export default function PortalLayout() {
   const { staffUser, logout } = useStaffPortal()
   const { theme, setTheme } = useTheme()
   const location = useLocation()
+  const [notifications, setNotifications] = useState([])
+  const [showNotif, setShowNotif] = useState(false)
+  const [notifLoading, setNotifLoading] = useState(false)
 
   useEffect(() => {
     setSidebarOpen(!window.matchMedia('(max-width: 1024px)').matches)
@@ -44,6 +47,22 @@ export default function PortalLayout() {
   }, [location.pathname, isMobile])
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen)
+
+  const fetchNotifications = async () => {
+    setNotifLoading(true)
+    try {
+      const res = await api.get('/leaves/notifications')
+      setNotifications(res.data.data)
+    } catch (err) {
+      console.error('Notif error:', err)
+    } finally {
+      setNotifLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (staffUser) fetchNotifications()
+  }, [staffUser])
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg)', color: 'var(--text)', transition: 'all 0.3s' }}>
@@ -215,7 +234,67 @@ export default function PortalLayout() {
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            {/* Notification Bell */}
+            <div style={{ position: 'relative' }}>
+              <button 
+                onClick={() => { setShowNotif(!showNotif); if(!showNotif) fetchNotifications(); }}
+                style={{
+                  background: 'var(--bg)', border: '1px solid var(--border)', 
+                  color: 'var(--text)', cursor: 'pointer', 
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  width: 40, height: 40, borderRadius: 12, transition: 'all 0.2s',
+                  position: 'relative'
+                }}
+                className="btn-hover"
+              >
+                <Bell size={20} />
+                {notifications.length > 0 && (
+                  <span style={{ position: 'absolute', top: -4, right: -4, width: 18, height: 18, background: '#ef4444', color: 'white', fontSize: 10, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, border: '2px solid var(--surface)' }}>
+                    {notifications.length}
+                  </span>
+                )}
+              </button>
+
+              <AnimatePresence>
+                {showNotif && (
+                  <>
+                    <div style={{ position: 'fixed', inset: 0, zIndex: 90 }} onClick={() => setShowNotif(false)} />
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      style={{
+                        position: 'absolute', top: '100%', right: 0, marginTop: 12,
+                        width: 320, background: 'var(--surface)', borderRadius: 20,
+                        border: '1px solid var(--border)', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)',
+                        zIndex: 100, overflow: 'hidden'
+                      }}
+                    >
+                      <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg)' }}>
+                        <h4 style={{ margin: 0, fontSize: 14, color: 'var(--navy)', fontWeight: 800 }}>Notifications</h4>
+                        <button onClick={() => setShowNotif(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><X size={16} /></button>
+                      </div>
+                      <div style={{ maxHeight: 360, overflowY: 'auto' }}>
+                        {notifLoading ? (
+                          <div style={{ padding: 40, textAlign: 'center' }}><Loader2 size={24} className="animate-spin text-muted" /></div>
+                        ) : notifications.length === 0 ? (
+                          <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>No new notifications</div>
+                        ) : (
+                          notifications.map((n) => (
+                            <div key={n._id} style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', transition: 'all 0.2s' }} className="btn-hover">
+                              <div style={{ fontSize: 13, color: 'var(--text)', lineHeight: 1.5, marginBottom: 6 }}>{n.message}</div>
+                              <div style={{ fontSize: 11, color: 'var(--text-light)', fontWeight: 600 }}>{new Date(n.createdAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-muted)', display: isMobile ? 'none' : 'block' }}>
               {staffUser?.companyName}
             </div>

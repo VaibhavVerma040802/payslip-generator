@@ -5,6 +5,7 @@ const Notification = require('../models/Notification');
 const Staff = require('../models/Staff');
 const { authStaff } = require('./staffPortal');
 const { auth: authAdmin } = require('./auth');
+const { logActivity } = require('../utils/logger');
 
 // ─────────────────────────────────────────────────────────────
 // STAFF ENDPOINTS
