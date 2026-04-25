@@ -21,9 +21,9 @@ export default function LeaveRequests() {
     try {
       setLoading(true)
       const res = await api.get('/leaves/admin/pending')
-      // Since pending endpoint only returns pending, I might need another endpoint for all history.
-      // But for now, let's just use what we have or assume we want to see pending primarily.
       setRequests(res.data.data)
+      // Also mark notifications as read when viewing this page
+      api.post('/leaves/admin/mark-as-read').catch(console.error);
     } catch (err) {
       toast.error('Failed to fetch requests')
     } finally {

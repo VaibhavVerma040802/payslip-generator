@@ -308,7 +308,12 @@ export default function Layout() {
             {/* Notification System */}
             <div style={{ position: 'relative' }}>
               <button 
-                onClick={() => setNotifOpen(!notifOpen)}
+                onClick={() => {
+                  if (!notifOpen && notifications.length > 0) {
+                    api.post('/leaves/admin/mark-as-read').then(() => fetchNotifications()).catch(console.error);
+                  }
+                  setNotifOpen(!notifOpen);
+                }}
                 style={{ 
                   background: 'var(--bg)', border: '1px solid var(--border)', 
                   color: 'var(--text)', cursor: 'pointer', 

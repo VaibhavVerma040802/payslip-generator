@@ -238,7 +238,13 @@ export default function PortalLayout() {
             {/* Notification Bell */}
             <div style={{ position: 'relative' }}>
               <button 
-                onClick={() => { setShowNotif(!showNotif); if(!showNotif) fetchNotifications(); }}
+                onClick={() => {
+                  if (!showNotif && notifications.length > 0) {
+                    api.post('/leaves/mark-as-read').then(() => fetchNotifications()).catch(console.error);
+                  }
+                  setShowNotif(!showNotif);
+                  if(!showNotif) fetchNotifications();
+                }}
                 style={{
                   background: 'var(--bg)', border: '1px solid var(--border)', 
                   color: 'var(--text)', cursor: 'pointer', 

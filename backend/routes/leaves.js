@@ -70,6 +70,19 @@ router.get('/notifications', authStaff, async (req, res) => {
   }
 });
 
+// POST /api/leaves/mark-as-read — Mark all staff notifications as read
+router.post('/mark-as-read', authStaff, async (req, res) => {
+  try {
+    await Notification.updateMany(
+      { staff: req.staff._id, recipientType: 'staff', isRead: false },
+      { $set: { isRead: true } }
+    );
+    res.json({ success: true, message: 'Notifications marked as read' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Action failed' });
+  }
+});
+
 // ─────────────────────────────────────────────────────────────
 // ADMIN ENDPOINTS
 // ─────────────────────────────────────────────────────────────
@@ -145,6 +158,19 @@ router.get('/admin/notifications', authAdmin, async (req, res) => {
     res.json({ success: true, data: notifications });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Failed to fetch notifications' });
+  }
+});
+
+// POST /api/leaves/admin/mark-as-read — Mark all admin notifications as read
+router.post('/admin/mark-as-read', authAdmin, async (req, res) => {
+  try {
+    await Notification.updateMany(
+      { admin: req.user._id, recipientType: 'admin', isRead: false },
+      { $set: { isRead: true } }
+    );
+    res.json({ success: true, message: 'Notifications marked as read' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Action failed' });
   }
 });
 
