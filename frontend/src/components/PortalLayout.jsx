@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react'
 import { Outlet, NavLink, useLocation } from 'react-router-dom'
 import { 
   LayoutDashboard, LogOut, User, Clock, 
-  CalendarDays, Menu, ChevronLeft, Sun, Moon, Monitor, FileText, Bell, X
+  CalendarDays, Menu, ChevronLeft, Sun, Moon, Monitor, FileText, Bell, X, Loader2
 } from 'lucide-react'
 import { useStaffPortal } from '../context/StaffPortalContext'
 import { useTheme } from '../context/ThemeContext'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
+import api from '../api'
 
 const navItems = [
   { to: '/portal/dashboard', label: 'Dashboard', icon: LayoutDashboard },
