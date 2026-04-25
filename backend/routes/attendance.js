@@ -19,8 +19,10 @@ const getStartOfDay = (dateString = null) => {
 // POST /api/attendance/punch-in
 router.post('/punch-in', authStaff, async (req, res) => {
   try {
+    const { lat, lng } = req.body;
     const today = getStartOfDay();
-    const dayOfWeek = new Date().getUTCDay(); // 0=Sun, 6=Sat
+    const now = new Date();
+    const dayOfWeek = now.getUTCDay(); // 0=Sun, 6=Sat
     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
 
     // Block weekend punch-in unless staff is overtime-eligible
@@ -36,15 +38,28 @@ router.post('/punch-in', authStaff, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Already punched in for today' });
     }
 
+    // Work criteria: If punch in after 11:00 AM, mark as Half Day
+    // Local time check
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    let initialWorkStatus = 'Full Day';
+    
+    if (currentHour > 11 || (currentHour === 11 && currentMinute > 0)) {
+      initialWorkStatus = 'Half Day';
+    }
+
     attendance = new Attendance({
       staff: req.staff._id,
       admin: req.staff.user._id,
       date: today,
-      punchIn: new Date(),
-      status: 'incomplete'
+      punchIn: now,
+      status: 'incomplete',
+      workStatus: initialWorkStatus,
+      locationIn: lat && lng ? { lat, lng } : undefined
     });
+    
     await attendance.save();
-    res.json({ success: true, message: 'Punched in successfully', attendance });
+    res.json({ success: true, message: `Punched in successfully. Status: ${initialWorkStatus}`, attendance });
   } catch (err) {
     console.error('Punch in error:', err);
     res.status(500).json({ success: false, message: 'Failed to punch in' });
@@ -54,8 +69,10 @@ router.post('/punch-in', authStaff, async (req, res) => {
 // POST /api/attendance/punch-out
 router.post('/punch-out', authStaff, async (req, res) => {
   try {
+    const { lat, lng } = req.body;
     const today = getStartOfDay();
-    const dayOfWeek = new Date().getUTCDay();
+    const now = new Date();
+    const dayOfWeek = now.getUTCDay();
     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
 
     if (isWeekend && !req.staff.overtimeEligible) {
@@ -73,11 +90,39 @@ router.post('/punch-out', authStaff, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Already punched out for today' });
     }
 
-    attendance.punchOut = new Date();
+    attendance.punchOut = now;
+    attendance.locationOut = lat && lng ? { lat, lng } : undefined;
+    
     const durationMs = attendance.punchOut - attendance.punchIn;
     const durationHours = durationMs / (1000 * 60 * 60);
     attendance.totalHours = parseFloat(durationHours.toFixed(2));
 
+    // Refined Work Criteria Logic
+    // Absent/LOP: < 4 hours
+    // Half Day: 4 to 7.9 hours
+    // Full Day: 8.5+ hours
+    // Overtime: Full Day + extra working (max 4h)
+    
+    let finalWorkStatus = attendance.workStatus; // Start with what was set at punch-in (Full Day or Half Day)
+
+    if (attendance.totalHours < 4) {
+      finalWorkStatus = 'LOP';
+    } else if (attendance.totalHours >= 4 && attendance.totalHours < 8.0) {
+      finalWorkStatus = 'Half Day';
+    } else if (attendance.totalHours >= 8.5) {
+      // If they punched in before 11:00 AM, they stay Full Day. 
+      // If they punched in after 11:00 AM, they stay Half Day (already set at punch-in).
+      if (attendance.workStatus === 'Full Day') {
+        finalWorkStatus = 'Full Day';
+      }
+    } else {
+      // 8.0 to 8.4 range - default to Half Day or maintain Half Day
+      finalWorkStatus = 'Half Day';
+    }
+
+    attendance.workStatus = finalWorkStatus;
+
+    // Overtime Calculation: starts after 8.5h, max 4h (12.5h total cap)
     if (attendance.totalHours > 8.5) {
       let ot = attendance.totalHours - 8.5;
       attendance.overtimeHours = parseFloat(Math.min(ot, 4.0).toFixed(2));
@@ -85,13 +130,13 @@ router.post('/punch-out', authStaff, async (req, res) => {
       attendance.overtimeHours = 0;
     }
 
-    attendance.status = attendance.totalHours > 16 ? 'flagged' : 'complete';
-    if (attendance.totalHours > 16) {
-      attendance.notes = 'System: Shift duration exceeds 16 hours. Requires admin review.';
+    attendance.status = attendance.totalHours > 12.5 ? 'flagged' : 'complete';
+    if (attendance.totalHours > 12.5) {
+      attendance.notes = `System: Shift duration (${attendance.totalHours}h) exceeds the 12.5h limit (Full Day + 4h OT). Flagged for review.`;
     }
 
     await attendance.save();
-    await logActivity(req.staff.user._id, 'PUNCH_OUT', `Punched out for ${req.staff.fullName}`, { attendanceId: attendance._id });
+    await logActivity(req.staff.user._id, 'PUNCH_OUT', `Punched out for ${req.staff.fullName} (Status: ${finalWorkStatus})`, { attendanceId: attendance._id });
     res.json({ success: true, message: 'Punched out successfully', attendance });
   } catch (err) {
     console.error('Punch out error:', err);

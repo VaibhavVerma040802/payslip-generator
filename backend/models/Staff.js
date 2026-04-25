@@ -50,6 +50,14 @@ const staffSchema = new mongoose.Schema(
         default: 0,
       }, // Represents Monthly Stipend for Interns
     },
+    leaveBalance: {
+      casual: { type: Number, default: 0 },
+      sick: { type: Number, default: 0 }
+    },
+    internLeaveQuota: {
+      type: Number,
+      default: 1
+    },
     // Portal Authentication Fields
     portalPassword: {
       type: String,

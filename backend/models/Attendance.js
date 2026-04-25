@@ -38,6 +38,19 @@ const attendanceSchema = new mongoose.Schema(
       enum: ['incomplete', 'complete', 'flagged'],
       default: 'incomplete',
     },
+    workStatus: {
+      type: String,
+      enum: ['Full Day', 'Half Day', 'Absent', 'Leave', 'LOP'],
+      default: 'Full Day'
+    },
+    locationIn: {
+      lat: Number,
+      lng: Number
+    },
+    locationOut: {
+      lat: Number,
+      lng: Number
+    },
     notes: {
       type: String,
     },

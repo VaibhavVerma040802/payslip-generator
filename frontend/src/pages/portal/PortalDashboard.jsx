@@ -35,15 +35,46 @@ export default function PortalDashboard() {
     fetchActiveShift()
   }, [fetchActiveShift])
 
+  const [leaveModalOpen, setLeaveModalOpen] = useState(false)
+  const [leaveData, setLeaveData] = useState({ type: 'Casual', startDate: '', endDate: '', reason: '' })
+
   const handlePunch = async (type) => {
     setActionLoading(true)
     try {
+      // Capture Geolocation
+      let coords = null
+      if ("geolocation" in navigator) {
+        try {
+          const position = await new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 10000 })
+          })
+          coords = { lat: position.coords.latitude, lng: position.coords.longitude }
+        } catch (geoErr) {
+          console.warn('Geolocation failed:', geoErr)
+        }
+      }
+
       const endpoint = type === 'in' ? '/attendance/punch-in' : '/attendance/punch-out'
-      const res = await api.post(endpoint, {})
+      const res = await api.post(endpoint, coords || {})
       toast.success(res.data.message)
       await fetchActiveShift()
     } catch (err) {
       toast.error(err.message || `Failed to punch ${type}`)
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const handleApplyLeave = async (e) => {
+    e.preventDefault()
+    setActionLoading(true)
+    try {
+      await api.post('/leaves/apply', leaveData)
+      toast.success('Leave request submitted')
+      setLeaveModalOpen(false)
+      setLeaveData({ type: 'Casual', startDate: '', endDate: '', reason: '' })
+    } catch (err) {
+      toast.error(err.message || 'Failed to submit leave')
     } finally {
       setActionLoading(false)
     }
@@ -73,11 +104,25 @@ export default function PortalDashboard() {
 
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-      <header style={{ marginBottom: 40 }}>
-        <h1 style={{ fontSize: 32, color: 'var(--navy)', marginBottom: 8 }}>
-          Good {currentTime.getHours() < 12 ? 'Morning' : currentTime.getHours() < 17 ? 'Afternoon' : 'Evening'}
-        </h1>
-        <p style={{ color: 'var(--text-muted)', fontWeight: 500 }}>Ready to track your progress today?</p>
+      <header style={{ marginBottom: 40, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h1 style={{ fontSize: 32, color: 'var(--navy)', marginBottom: 8 }}>
+            Good {currentTime.getHours() < 12 ? 'Morning' : currentTime.getHours() < 17 ? 'Afternoon' : 'Evening'}
+          </h1>
+          <p style={{ color: 'var(--text-muted)', fontWeight: 500 }}>Ready to track your progress today?</p>
+        </div>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setLeaveModalOpen(true)}
+          style={{
+            padding: '12px 24px', borderRadius: 12, background: 'var(--navy)', color: 'white',
+            border: 'none', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
+            boxShadow: '0 4px 12px rgba(15,23,42,0.15)'
+          }}
+        >
+          <CalendarIcon size={18} /> Apply for Leave
+        </motion.button>
       </header>
 
       {/* Weekend Day-Off Banner */}
@@ -207,14 +252,95 @@ export default function PortalDashboard() {
           <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(245,158,11,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gold)', flexShrink: 0 }}>
             <AlertCircle size={24} />
           </div>
-          <div>
+          <div style={{ flex: 1 }}>
             <h4 style={{ margin: 0, color: 'var(--navy)', fontSize: 15 }}>Work Hours Policy</h4>
-            <p style={{ margin: '4px 0 0', color: 'var(--text-muted)', fontSize: 13, lineHeight: 1.5 }}>
-              Standard shift is <strong>8.5 hours</strong> starting from 10:30 AM. Overtime is tracked automatically up to 4 hours per day. Always punch out at end of shift to avoid flagged records.
-            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginTop: 12 }}>
+              <div style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                • <strong>Start Time:</strong> 10:30 AM <br/>
+                • <strong>Half Day Threshold:</strong> Punch-in after 11:00 AM <br/>
+                • <strong>Overtime:</strong> Starts after 8.5h (Max 4h)
+              </div>
+              <div style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                • <strong>Full Day:</strong> 8.5+ hours logged <br/>
+                • <strong>Half Day:</strong> 4 to 7.9 hours logged <br/>
+                • <strong>Absent/LOP:</strong> Less than 4 hours logged
+              </div>
+            </div>
           </div>
         </div>
       </motion.div>
+
+      {/* Leave Request Modal */}
+      {leaveModalOpen && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15,23,42,0.6)',
+          backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20
+        }}>
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="glass" style={{ width: '100%', maxWidth: 480, padding: 32 }}>
+            <h2 style={{ fontSize: 24, color: 'var(--navy)', marginBottom: 24 }}>Apply for Leave</h2>
+            <form onSubmit={handleApplyLeave} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 8, color: 'var(--text-muted)' }}>LEAVE TYPE</label>
+                <select
+                  required
+                  value={leaveData.type}
+                  onChange={e => setLeaveData({ ...leaveData, type: e.target.value })}
+                  style={{ width: '100%', padding: '12px 16px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', outline: 'none' }}
+                >
+                  <option value="Casual">Paid Casual Leave</option>
+                  <option value="Sick">Paid Sick Leave</option>
+                  <option value="Custom">Custom Leave</option>
+                </select>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 8, color: 'var(--text-muted)' }}>START DATE</label>
+                  <input
+                    type="date" required
+                    value={leaveData.startDate}
+                    onChange={e => setLeaveData({ ...leaveData, startDate: e.target.value })}
+                    style={{ width: '100%', padding: '12px 16px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', outline: 'none' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 8, color: 'var(--text-muted)' }}>END DATE</label>
+                  <input
+                    type="date" required
+                    value={leaveData.endDate}
+                    onChange={e => setLeaveData({ ...leaveData, endDate: e.target.value })}
+                    style={{ width: '100%', padding: '12px 16px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', outline: 'none' }}
+                  />
+                </div>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 8, color: 'var(--text-muted)' }}>REASON</label>
+                <textarea
+                  required rows="3"
+                  value={leaveData.reason}
+                  onChange={e => setLeaveData({ ...leaveData, reason: e.target.value })}
+                  placeholder="Explain your leave requirement..."
+                  style={{ width: '100%', padding: '12px 16px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', outline: 'none', resize: 'none' }}
+                />
+              </div>
+              <div style={{ display: 'flex', gap: 12, marginTop: 12 }}>
+                <button
+                  type="button"
+                  onClick={() => setLeaveModalOpen(false)}
+                  style={{ flex: 1, height: 48, borderRadius: 12, border: '1px solid var(--border)', background: 'transparent', fontWeight: 700, color: 'var(--text)', cursor: 'pointer' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit" disabled={actionLoading}
+                  style={{ flex: 2, height: 48, borderRadius: 12, border: 'none', background: 'var(--navy)', color: 'white', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                >
+                  {actionLoading ? <Loader2 size={20} className="animate-spin" /> : 'Submit Application'}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
 
       <style>{`
         @keyframes pulse {

@@ -71,6 +71,7 @@ const payslipSchema = new mongoose.Schema(
     notes: { type: String, default: '' },
     emailSent: { type: Boolean, default: false },
     emailSentAt: { type: Date },
+    isPushedToPortal: { type: Boolean, default: false },
   },
   {
     timestamps: true,

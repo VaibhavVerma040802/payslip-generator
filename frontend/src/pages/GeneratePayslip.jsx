@@ -26,6 +26,7 @@ const INITIAL = {
   basicSalary: '0', hra: '0', specialAllowance: '0', otherEarnings: '0',
   providentFund: '0', esi: '0', professionalTax: '0', tds: '0',
   loanDeduction: '0', otherDeductions: '0', notes: '',
+  automationEnabled: true,
 }
 
 function StepLabel({ num, label, active, completed }) {
@@ -181,9 +182,9 @@ export default function GeneratePayslip() {
     const special = Math.round(standardSpecial * prorationFactor);
     const gross = basic + hra + special;
 
-    const empPF = Math.round(basic * 0.12);
-    const esi = gross <= 21000 ? Math.ceil(gross * 0.0075) : 0;
-    const pt = (paidDays > 0 && gross >= 15000) ? 200 : (paidDays > 0 && gross >= 10000) ? 150 : 0; 
+    const empPF = form.automationEnabled ? Math.round(basic * 0.12) : (parseFloat(form.providentFund) || 0);
+    const esi = form.automationEnabled ? (gross <= 21000 ? Math.ceil(gross * 0.0075) : 0) : (parseFloat(form.esi) || 0);
+    const pt = form.automationEnabled ? ((paidDays > 0 && gross >= 15000) ? 200 : (paidDays > 0 && gross >= 10000) ? 150 : 0) : (parseFloat(form.professionalTax) || 0); 
     const tds = Math.round(parseFloat(form.tds) || 0);
     const loan = Math.round(parseFloat(form.loanDeduction) || 0);
 
@@ -191,7 +192,7 @@ export default function GeneratePayslip() {
     const net = Math.round(gross - deductions);
 
     return { basic, hra, special, gross, pf: empPF, esi, pt, deductions, net, lossOfPay: 0 }
-  }, [form.annualCTC, form.baseSalary, form.employmentType, form.workingDays, form.paidDays, form.tds, form.loanDeduction]);
+  }, [form.annualCTC, form.baseSalary, form.employmentType, form.workingDays, form.paidDays, form.tds, form.loanDeduction, form.automationEnabled, form.providentFund, form.esi, form.professionalTax]);
 
   useEffect(() => {
     setForm(f => ({
@@ -360,6 +361,30 @@ export default function GeneratePayslip() {
 
               {step === 3 && (
                 <motion.div key="s3" initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 12 }}>
+                  {form.employmentType === 'regular' && (
+                    <div style={{ marginBottom: 24, padding: 20, background: 'rgba(245,158,11,0.05)', borderRadius: 20, border: '1px solid rgba(245,158,11,0.2)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <h4 style={{ margin: 0, color: 'var(--navy)', fontSize: 15 }}>Statutory Automation</h4>
+                          <p style={{ margin: '4px 0 0', color: 'var(--text-muted)', fontSize: 12 }}>Auto-calculate PF, ESI, and PT based on earnings.</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setForm({...form, automationEnabled: !form.automationEnabled})}
+                          style={{
+                            width: 52, height: 28, borderRadius: 14, background: form.automationEnabled ? 'var(--emerald)' : 'var(--border)',
+                            position: 'relative', border: 'none', cursor: 'pointer', transition: 'all 0.3s'
+                          }}
+                        >
+                          <div style={{
+                            position: 'absolute', top: 4, left: form.automationEnabled ? 28 : 4,
+                            width: 20, height: 20, borderRadius: '50%', background: 'white', transition: 'all 0.3s'
+                          }} />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  
                   {form.employmentType === 'intern' ? (
                      <InputField label="Monthly Stipend (Base Salary)" required type="number" min="0" value={form.baseSalary || ''} onChange={e => setForm({...form, baseSalary: Math.max(0, parseFloat(e.target.value) || 0)})} placeholder="Stipend in INR" icon={IndianRupee} />
                   ) : (
@@ -372,6 +397,12 @@ export default function GeneratePayslip() {
                         <InputField label="TDS" required type="number" min="0" value={form.tds} onChange={e => setForm({...form, tds: Math.max(0, parseFloat(e.target.value) || 0)})} placeholder="0" />
                         <InputField label="Loan/Recovery" required type="number" min="0" value={form.loanDeduction} onChange={e => setForm({...form, loanDeduction: Math.max(0, parseFloat(e.target.value) || 0)})} placeholder="0" />
                       </div>
+                      {!form.automationEnabled && (
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginTop: 12 }}>
+                          <InputField label="Custom PF" type="number" value={form.providentFund} onChange={e => setForm({...form, providentFund: e.target.value})} />
+                          <InputField label="Custom ESI" type="number" value={form.esi} onChange={e => setForm({...form, esi: e.target.value})} />
+                        </div>
+                      )}
                     </div>
                   )}
                   <InputField label="Bank Account (Masked)" required value={form.bankAccount} onChange={e => setForm({...form, bankAccount: e.target.value})} placeholder="Account No" icon={Landmark} />

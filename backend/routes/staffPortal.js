@@ -220,12 +220,17 @@ router.get('/me', authStaff, async (req, res) => {
       id: req.staff._id,
       fullName: req.staff.fullName,
       email: req.staff.email,
+      phone: req.staff.phone,
       employeeId: req.staff.employeeId,
       designation: req.staff.designation,
       department: req.staff.department,
-      phone: req.staff.phone,
+      type: req.staff.type,
+      joiningDate: req.staff.joiningDate,
+      pfNumber: req.staff.pfNumber,
       overtimeEligible: req.staff.overtimeEligible || false,
-      mustChangePassword: req.staff.mustChangePassword || false,
+      financials: req.staff.financials,
+      salaryDetails: req.staff.salaryDetails,
+      leaveBalance: req.staff.leaveBalance,
       companyName: req.staff.user?.companyName,
       companyLogo: req.staff.user?.companyLogo,
     }
@@ -248,5 +253,41 @@ router.put('/me', authStaff, async (req, res) => {
     res.status(500).json({ success: false, message: 'Update failed' });
   }
 });
+
+// ─────────────────────────────────────────────────────────────
+// GET /api/portal/payslips — Get Staff's Pushed Payslips (Last 3 Months)
+// ─────────────────────────────────────────────────────────────
+router.get('/payslips', authStaff, async (req, res) => {
+  try {
+    const { search } = req.query;
+    
+    // Filter for last 3 months
+    const threeMonthsAgo = new Date();
+    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+
+    const filter = {
+      employeeId: req.staff.employeeId,
+      user: req.staff.user._id,
+      isPushedToPortal: true,
+      createdAt: { $gte: threeMonthsAgo }
+    };
+
+    if (search) {
+      filter.$or = [
+        { month: { $regex: search, $options: 'i' } },
+        { year: parseInt(search) || 0 }
+      ];
+    }
+
+    const payslips = await Payslip.find(filter).sort({ createdAt: -1 });
+
+    res.json({ success: true, data: payslips });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to fetch payslips' });
+  }
+});
+
+// We need to import Payslip model here if not available
+const Payslip = require('../models/Payslip');
 
 module.exports = { router, authStaff };

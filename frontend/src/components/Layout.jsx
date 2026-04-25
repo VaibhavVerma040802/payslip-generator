@@ -3,8 +3,10 @@ import { Outlet, NavLink, useLocation } from 'react-router-dom'
 import { 
   LayoutDashboard, PlusCircle, List, Menu,
   FileSpreadsheet, Settings, LogOut, User, Users,
-  Sun, Moon, Monitor, ChevronLeft, Activity, Download
+  Sun, Moon, Monitor, ChevronLeft, Activity, Download, Bell
 } from 'lucide-react'
+import api from '../api'
+import { toast } from 'react-hot-toast'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 
@@ -36,6 +38,35 @@ export default function Layout() {
   const { theme, setTheme } = useTheme()
   const location = useLocation()
   const [deferredPrompt, setDeferredPrompt] = useState(null)
+  const [notifications, setNotifications] = useState([])
+  const [notifOpen, setNotifOpen] = useState(false)
+
+  useEffect(() => {
+    if (user) {
+      fetchNotifications()
+      const interval = setInterval(fetchNotifications, 60000) // Poll every 60s
+      return () => clearInterval(interval)
+    }
+  }, [user])
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await api.get('/leaves/admin/notifications')
+      setNotifications(res.data.data)
+    } catch (err) {
+      console.error('Failed to fetch notifications')
+    }
+  }
+
+  const handleLeaveAction = async (id, status) => {
+    try {
+      await api.post('/leaves/admin/respond', { id, status })
+      toast.success(`Leave ${status.toLowerCase()}`)
+      fetchNotifications()
+    } catch (err) {
+      toast.error('Action failed')
+    }
+  }
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e) => {
@@ -272,6 +303,82 @@ export default function Layout() {
                 <Download size={16} /> <span style={{ display: isMobile ? 'none' : 'inline' }}>Install App</span>
               </button>
             )}
+
+            {/* Notification System */}
+            <div style={{ position: 'relative' }}>
+              <button 
+                onClick={() => setNotifOpen(!notifOpen)}
+                style={{ 
+                  background: 'var(--bg)', border: '1px solid var(--border)', 
+                  color: 'var(--text)', cursor: 'pointer', 
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  width: 40, height: 40, borderRadius: 12, position: 'relative'
+                }}
+                className="btn-hover"
+              >
+                <Bell size={20} />
+                {notifications.length > 0 && (
+                  <span style={{
+                    position: 'absolute', top: -4, right: -4,
+                    width: 18, height: 18, background: '#ef4444', color: 'white',
+                    borderRadius: '50%', fontSize: 10, fontWeight: 800,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    border: '2px solid var(--surface)'
+                  }}>
+                    {notifications.length}
+                  </span>
+                )}
+              </button>
+
+              {notifOpen && (
+                <div style={{
+                  position: 'absolute', top: 50, right: 0, width: 360,
+                  background: 'var(--surface)', borderRadius: 20,
+                  boxShadow: '0 20px 40px rgba(0,0,0,0.15)', border: '1px solid var(--border)',
+                  zIndex: 200, padding: 0, overflow: 'hidden'
+                }}>
+                  <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--navy)' }}>Notifications</div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--emerald)', textTransform: 'uppercase' }}>{notifications.length} New</div>
+                  </div>
+                  <div style={{ maxHeight: 400, overflowY: 'auto' }}>
+                    {notifications.length === 0 ? (
+                      <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
+                        No pending notifications
+                      </div>
+                    ) : (
+                      notifications.map(n => (
+                        <div key={n._id} style={{ padding: 20, borderBottom: '1px solid var(--border)', background: 'var(--bg-alt)' }}>
+                          <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+                            <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--navy-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', flexShrink: 0 }}>
+                              <User size={18} />
+                            </div>
+                            <div>
+                              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--navy)' }}>{n.staff?.fullName || 'Employee'}</div>
+                              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{n.message}</div>
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', gap: 8 }}>
+                            <button 
+                              onClick={() => handleLeaveAction(n.referenceId, 'Approved')}
+                              style={{ flex: 1, padding: '8px', borderRadius: 8, background: 'var(--emerald)', color: 'white', border: 'none', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+                            >
+                              Approve
+                            </button>
+                            <button 
+                              onClick={() => handleLeaveAction(n.referenceId, 'Rejected')}
+                              style={{ flex: 1, padding: '8px', borderRadius: 8, background: 'var(--bg)', color: '#ef4444', border: '1px solid #ef4444', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+                            >
+                              Deny
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Theme Control System */}
             <div style={{ 

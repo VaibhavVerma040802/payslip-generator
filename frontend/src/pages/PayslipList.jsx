@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, Filter, Eye, Download, Mail, Trash2, FileText, ChevronLeft, ChevronRight, Loader2, Copy, Plus } from 'lucide-react'
+import { Search, Filter, Eye, Download, Mail, Trash2, FileText, ChevronLeft, ChevronRight, Loader2, Copy, Plus, Share2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../api'
 
@@ -143,6 +143,19 @@ export default function PayslipList() {
     }
   }
 
+  const handlePush = async (id) => {
+    setActionLoading(a => ({ ...a, [`push_${id}`]: true }))
+    try {
+      const res = await api.post(`/payslips/${id}/push`)
+      toast.success(res.data.message)
+      fetchPayslips()
+    } catch (err) {
+      toast.error('Failed to update portal visibility')
+    } finally {
+      setActionLoading(a => ({ ...a, [`push_${id}`]: false }))
+    }
+  }
+
   const fmt = (n) => '₹' + parseFloat(n || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })
   const isFiltered = search || filterMonth || filterYear
 
@@ -239,9 +252,9 @@ export default function PayslipList() {
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 800 }}>
             <thead>
               <tr style={{ background: 'var(--navy-dark)' }}>
-                {['Employee Details', 'Period', 'Compensation', 'Tracking', 'Actions'].map((h, i) => (
+                {['Employee Details', 'Period', 'Compensation', 'Tracking', 'Portal', 'Actions'].map((h, i) => (
                   <th key={h} style={{
-                    padding: '16px 20px', textAlign: i === 4 ? 'right' : 'left',
+                    padding: '16px 20px', textAlign: i === 5 ? 'right' : 'left',
                     fontSize: 11, fontWeight: 800, color: 'var(--gold)',
                     letterSpacing: '0.1em', textTransform: 'uppercase',
                   }}>
@@ -314,10 +327,19 @@ export default function PayslipList() {
                       }
                     </td>
 
+                    {/* Portal Visibility */}
+                    <td style={{ padding: '16px 20px' }}>
+                      {p.isPushedToPortal 
+                        ? <div className="badge badge-emerald">Live</div>
+                        : <div className="badge badge-navy">Hidden</div>
+                      }
+                    </td>
+
                     {/* Professional Actions */}
                     <td style={{ padding: '16px 20px', textAlign: 'right' }}>
                       <div style={{ display: 'inline-flex', gap: 6 }}>
                         <ActionBtn icon={Eye} label="View Full Slip" onClick={() => navigate(`/payslips/${p._id}`)} color="var(--navy)" />
+                        <ActionBtn icon={Share2} label="Push to Portal" loading={actionLoading[`push_${p._id}`]} onClick={() => handlePush(p._id)} color={p.isPushedToPortal ? 'var(--emerald)' : 'var(--text-light)'} />
                         <ActionBtn icon={Copy} label="Clone Document" loading={actionLoading[`dup_${p._id}`]} onClick={() => handleDuplicate(p._id)} color="var(--gold)" />
                         <ActionBtn icon={Download} label="Export PDF" loading={actionLoading[`dl_${p._id}`]} onClick={() => handleDownload(p._id, p.employeeName, p.month, p.year)} color="var(--emerald)" />
                         <ActionBtn icon={Mail} label="Push to Email" loading={actionLoading[`em_${p._id}`]} onClick={() => handleEmail(p._id, p.employeeEmail)} color="#0284c7" />

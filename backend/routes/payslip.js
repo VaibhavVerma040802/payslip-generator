@@ -30,12 +30,20 @@ router.post('/', async (req, res) => {
       'workingDays', 'paidDays', 'year'
     ];
 
+    const { automationEnabled } = req.body;
     const payslipData = { ...req.body, user: userId };
 
     numericFields.forEach(field => {
       const val = parseFloat(payslipData[field]);
       payslipData[field] = isNaN(val) ? 0 : val;
     });
+
+    // If automation is OFF, force statutory deductions to 0
+    if (automationEnabled === false) {
+      ['providentFund', 'esi', 'tds', 'professionalTax'].forEach(f => {
+        payslipData[f] = 0;
+      });
+    }
 
     // Inherit company logo from user profile if not provided
     if (!payslipData.companyLogo && req.user.companyLogo) {
@@ -336,6 +344,26 @@ router.post('/bulk-email-month', async (req, res) => {
   } catch (err) {
     console.error('Bulk email error:', err);
     res.status(500).json({ success: false, message: 'Bulk operation failed' });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────
+// POST /api/payslips/:id/push — Push payslip to staff portal
+// ─────────────────────────────────────────────────────────────
+router.post('/:id/push', async (req, res) => {
+  try {
+    const payslip = await Payslip.findOne({ _id: req.params.id, user: req.user._id });
+    if (!payslip) return res.status(404).json({ success: false, message: 'Payslip not found' });
+
+    payslip.isPushedToPortal = !payslip.isPushedToPortal;
+    await payslip.save();
+
+    const action = payslip.isPushedToPortal ? 'Pushed to portal' : 'Removed from portal';
+    await logActivity(req.user._id, 'PAYSLIP_PUSHED', `${action}: ${payslip.employeeName} (${payslip.month} ${payslip.year})`, { payslipId: payslip._id });
+
+    res.json({ success: true, message: action, isPushed: payslip.isPushedToPortal });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Push operation failed' });
   }
 });
 
