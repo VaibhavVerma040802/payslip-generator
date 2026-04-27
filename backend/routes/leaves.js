@@ -5,6 +5,7 @@ const Notification = require('../models/Notification');
 const Staff = require('../models/Staff');
 const { authStaff } = require('./staffPortal');
 const { auth: authAdmin } = require('./auth');
+const { authCombined } = require('../utils/authMiddleware');
 const { logActivity } = require('../utils/logger');
 
 // ─────────────────────────────────────────────────────────────
@@ -61,7 +62,11 @@ router.get('/my-requests', authStaff, async (req, res) => {
 // GET /api/leaves/notifications — Staff views their notifications
 router.get('/notifications', authStaff, async (req, res) => {
   try {
-    const notifications = await Notification.find({ staff: req.staff._id, recipientType: 'staff' })
+    const notifications = await Notification.find({ 
+      staff: req.staff._id, 
+      recipientType: 'staff',
+      isArchived: false 
+    })
       .sort({ createdAt: -1 })
       .limit(20);
     res.json({ success: true, data: notifications });
@@ -77,7 +82,7 @@ router.post('/mark-as-read', authStaff, async (req, res) => {
       { staff: req.staff._id, recipientType: 'staff', isRead: false },
       { $set: { isRead: true } }
     );
-    res.json({ success: true, message: 'Notifications marked as read' });
+    res.json({ success: true, message: 'All notifications marked as read' });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Action failed' });
   }
@@ -90,12 +95,25 @@ router.post('/mark-as-read', authStaff, async (req, res) => {
 // GET /api/leaves/admin/pending — Admin views pending requests
 router.get('/admin/pending', authAdmin, async (req, res) => {
   try {
-    const requests = await LeaveRequest.find({ admin: req.user._id, status: 'Pending' })
+    const { staffId, status } = req.query;
+    let query = { admin: req.user._id };
+    
+    if (staffId) query.staff = staffId;
+    if (status) {
+      query.status = status;
+    } else if (!staffId) {
+      // If no staffId, default to only pending for the global dashboard
+      query.status = 'Pending';
+    }
+    // If staffId is provided but no status, we return ALL leaves for that staff member
+    
+    const requests = await LeaveRequest.find(query)
       .populate('staff', 'fullName employeeId leaveBalance')
       .sort({ createdAt: -1 });
     res.json({ success: true, data: requests });
   } catch (err) {
-    res.status(500).json({ success: false, message: 'Failed to fetch pending requests' });
+    console.error('Fetch pending leaves error:', err);
+    res.status(500).json({ success: false, message: 'Failed to fetch requests' });
   }
 });
 
@@ -152,12 +170,57 @@ router.post('/admin/respond', authAdmin, async (req, res) => {
 // GET /api/leaves/admin/notifications — Fetch admin notifications
 router.get('/admin/notifications', authAdmin, async (req, res) => {
   try {
-    const notifications = await Notification.find({ admin: req.user._id, isRead: false })
+    const notifications = await Notification.find({ 
+      admin: req.user._id, 
+      recipientType: 'admin',
+      isArchived: false 
+    })
       .populate('staff', 'fullName employeeId')
       .sort({ createdAt: -1 });
     res.json({ success: true, data: notifications });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Failed to fetch notifications' });
+  }
+});
+
+// PUT /api/leaves/notifications/:id/read — Mark individual notification as read
+router.put('/notifications/:id/read', authCombined, async (req, res) => {
+  try {
+    const query = { _id: req.params.id };
+    if (req.userType === 'staff') query.staff = req.staff._id;
+    else query.admin = req.user._id;
+
+    await Notification.findOneAndUpdate(query, { isRead: true });
+    res.json({ success: true, message: 'Marked as read' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Action failed' });
+  }
+});
+
+// PUT /api/leaves/notifications/:id/archive — Archive individual notification
+router.put('/notifications/:id/archive', authCombined, async (req, res) => {
+  try {
+    const query = { _id: req.params.id };
+    if (req.userType === 'staff') query.staff = req.staff._id;
+    else query.admin = req.user._id;
+
+    await Notification.findOneAndUpdate(query, { isArchived: true, isRead: true });
+    res.json({ success: true, message: 'Archived' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Action failed' });
+  }
+});
+
+// POST /api/leaves/mark-as-read — Mark all staff notifications as read
+router.post('/mark-as-read', authStaff, async (req, res) => {
+  try {
+    await Notification.updateMany(
+      { staff: req.staff._id, recipientType: 'staff', isRead: false },
+      { $set: { isRead: true } }
+    );
+    res.json({ success: true, message: 'Notifications marked as read' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Action failed' });
   }
 });
 

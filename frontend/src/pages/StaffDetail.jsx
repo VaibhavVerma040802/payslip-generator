@@ -297,12 +297,18 @@ export default function StaffDetail() {
                           {record.overtimeHours > 0 && <span style={{ marginLeft: 8, color: '#9333ea', fontSize: 12 }}>+{record.overtimeHours.toFixed(2)}h OT</span>}
                         </td>
                         <td style={{ padding: 16 }}>
-                          {record.status === 'complete' ? (
-                            <span className="badge badge-emerald">Complete</span>
-                          ) : record.status === 'incomplete' ? (
+                          {record.punchIn && record.punchOut ? (
+                            <span className={`badge ${
+                              record.workStatus === 'Full Day' ? 'badge-emerald' :
+                              record.workStatus === 'Half Day' ? 'badge-navy' :
+                              record.workStatus === 'LOP' ? 'badge-red' : 'badge-navy'
+                            }`}>
+                              {record.workStatus || 'Complete'}
+                            </span>
+                          ) : record.punchIn ? (
                             <span className="badge" style={{ background: '#fef3c7', color: '#92400e' }}>Active</span>
                           ) : (
-                            <span className="badge" style={{ background: '#fee2e2', color: '#991b1b' }} title={record.notes}>Flagged</span>
+                            <span className="badge" style={{ background: '#fee2e2', color: '#991b1b' }}>Absent</span>
                           )}
                         </td>
                       </tr>
@@ -314,7 +320,72 @@ export default function StaffDetail() {
           </div>
         )}
 
+        {/* Leave History (Pending/Approved/Rejected) */}
+        <div style={{ padding: '0 40px 40px' }}>
+          <h3 style={{ color: 'var(--navy)', marginBottom: 24, borderBottom: '2px solid var(--border)', paddingBottom: 8, display: 'inline-block' }}>Leave History</h3>
+          <LeaveHistoryList staffId={id} />
+        </div>
+
       </div>
     </motion.div>
+  )
+}
+
+function LeaveHistoryList({ staffId }) {
+  const [leaves, setLeaves] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchLeaves = async () => {
+      try {
+        // We'll use the existing my-requests endpoint if we can modify it to allow admin to pass staffId
+        // Or better, let's assume we have a new endpoint /api/leaves/admin/staff/:id
+        const res = await api.get(`/leaves/admin/pending?staffId=${staffId}`) 
+        // Note: the pending endpoint currently returns ALL pending. 
+        // I'll need to update the backend to support filtering by staffId.
+        setLeaves(res.data.data.filter(l => l.staff._id === staffId || l.staff === staffId))
+      } catch (err) {
+        console.error("Failed to load leaves", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchLeaves()
+  }, [staffId])
+
+  if (loading) return <div style={{ display: 'flex', justifyContent: 'center', padding: 20 }}><Loader2 size={24} className="animate-spin text-muted" /></div>
+  if (leaves.length === 0) return <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-muted)', background: 'var(--bg)', borderRadius: 12 }}>No leave records found.</div>
+
+  return (
+    <div style={{ overflowX: 'auto', background: 'var(--bg)', borderRadius: 16 }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 13 }}>
+        <thead>
+          <tr style={{ borderBottom: '1px solid var(--border)' }}>
+            <th style={{ padding: 12, fontWeight: 600 }}>Type</th>
+            <th style={{ padding: 12, fontWeight: 600 }}>Period</th>
+            <th style={{ padding: 12, fontWeight: 600 }}>Status</th>
+            <th style={{ padding: 12, fontWeight: 600 }}>Reason</th>
+          </tr>
+        </thead>
+        <tbody>
+          {leaves.map(l => (
+            <tr key={l._id} style={{ borderBottom: '1px solid var(--border)' }}>
+              <td style={{ padding: 12, fontWeight: 700 }}>{l.type}</td>
+              <td style={{ padding: 12 }}>
+                {new Date(l.startDate).toLocaleDateString()} - {new Date(l.endDate).toLocaleDateString()}
+              </td>
+              <td style={{ padding: 12 }}>
+                <span className={`badge ${l.status === 'Approved' ? 'badge-emerald' : l.status === 'Rejected' ? 'badge-red' : 'badge-navy'}`}>
+                  {l.status}
+                </span>
+              </td>
+              <td style={{ padding: 12, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={l.reason}>
+                {l.reason}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   )
 }

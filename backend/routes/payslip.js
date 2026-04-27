@@ -3,13 +3,13 @@ const router = express.Router();
 const Payslip = require('../models/Payslip');
 const { generatePayslipPDF } = require('../utils/pdfGenerator');
 const { sendPayslipEmail } = require('../utils/emailService');
-const { auth } = require('./auth');
+const { authCombined } = require('../utils/authMiddleware');
 const Staff = require('../models/Staff');
 const Attendance = require('../models/Attendance');
 const { logActivity } = require('../utils/logger');
 
 // Apply auth middleware to all routes
-router.use(auth);
+router.use(authCombined);
 
 // ─────────────────────────────────────────────────────────────
 // POST /api/payslips — Create a new payslip
@@ -246,9 +246,21 @@ router.delete('/:id', async (req, res) => {
 // ─────────────────────────────────────────────────────────────
 router.get('/:id/download', async (req, res) => {
   try {
-    const payslip = await Payslip.findOne({ _id: req.params.id, user: req.user._id });
+    let payslip;
+    if (req.userType === 'staff') {
+      // Staff can only download their own pushed payslip
+      payslip = await Payslip.findOne({ 
+        _id: req.params.id, 
+        employeeId: req.staff.employeeId,
+        isPushedToPortal: true 
+      });
+    } else {
+      // Admin can download any payslip belonging to their company
+      payslip = await Payslip.findOne({ _id: req.params.id, user: req.user._id });
+    }
+
     if (!payslip) {
-      return res.status(404).json({ success: false, message: 'Payslip not found' });
+      return res.status(404).json({ success: false, message: 'Payslip not found or access denied' });
     }
     generatePayslipPDF(payslip, res);
   } catch (err) {

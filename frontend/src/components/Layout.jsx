@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Outlet, NavLink, useLocation } from 'react-router-dom'
+import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { 
   LayoutDashboard, PlusCircle, List, Menu,
   FileSpreadsheet, Settings, LogOut, User, Users,
@@ -38,6 +38,7 @@ export default function Layout() {
   const { user, logout } = useAuth()
   const { theme, setTheme } = useTheme()
   const location = useLocation()
+  const navigate = useNavigate()
   const [deferredPrompt, setDeferredPrompt] = useState(null)
   const [notifications, setNotifications] = useState([])
   const [notifOpen, setNotifOpen] = useState(false)
@@ -56,6 +57,35 @@ export default function Layout() {
       setNotifications(res.data.data)
     } catch (err) {
       console.error('Failed to fetch notifications')
+    }
+  }
+
+  const markAsRead = async (id) => {
+    try {
+      await api.put(`/leaves/notifications/${id}/read`)
+      fetchNotifications()
+    } catch (err) {
+      console.error('Failed to mark as read')
+    }
+  }
+
+  const archiveNotification = async (id) => {
+    try {
+      await api.put(`/leaves/notifications/${id}/archive`)
+      fetchNotifications()
+      toast.success('Notification archived')
+    } catch (err) {
+      toast.error('Failed to archive')
+    }
+  }
+
+  const markAllAsRead = async () => {
+    try {
+      await api.post('/leaves/admin/mark-as-read')
+      fetchNotifications()
+      toast.success('All marked as read')
+    } catch (err) {
+      toast.error('Action failed')
     }
   }
 
@@ -308,12 +338,7 @@ export default function Layout() {
             {/* Notification System */}
             <div style={{ position: 'relative' }}>
               <button 
-                onClick={() => {
-                  if (!notifOpen && notifications.length > 0) {
-                    api.post('/leaves/admin/mark-as-read').then(() => fetchNotifications()).catch(console.error);
-                  }
-                  setNotifOpen(!notifOpen);
-                }}
+                onClick={() => setNotifOpen(!notifOpen)}
                 style={{ 
                   background: 'var(--bg)', border: '1px solid var(--border)', 
                   color: 'var(--text)', cursor: 'pointer', 
@@ -345,7 +370,12 @@ export default function Layout() {
                 }}>
                   <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--navy)' }}>Notifications</div>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--emerald)', textTransform: 'uppercase' }}>{notifications.length} New</div>
+                    <button 
+                      onClick={markAllAsRead}
+                      style={{ fontSize: 11, fontWeight: 700, color: 'var(--emerald)', textTransform: 'uppercase', background: 'none', border: 'none', cursor: 'pointer' }}
+                    >
+                      Mark all as read
+                    </button>
                   </div>
                   <div style={{ maxHeight: 400, overflowY: 'auto' }}>
                     {notifications.length === 0 ? (
@@ -354,14 +384,22 @@ export default function Layout() {
                       </div>
                     ) : (
                       notifications.map(n => (
-                        <div key={n._id} style={{ padding: 20, borderBottom: '1px solid var(--border)', background: 'var(--bg-alt)' }}>
-                          <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+                        <div key={n._id} style={{ padding: 20, borderBottom: '1px solid var(--border)', background: n.isRead ? 'var(--surface)' : 'var(--bg-alt)', opacity: n.isRead ? 0.7 : 1 }}>
+                          <div 
+                            onClick={() => {
+                              markAsRead(n._id)
+                              navigate('/leave-requests')
+                              setNotifOpen(false)
+                            }}
+                            style={{ display: 'flex', gap: 12, marginBottom: 16, cursor: 'pointer' }}
+                          >
                             <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--navy-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', flexShrink: 0 }}>
                               <User size={18} />
                             </div>
                             <div>
                               <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--navy)' }}>{n.staff?.fullName || 'Employee'}</div>
                               <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{n.message}</div>
+                              <div style={{ fontSize: 10, color: 'var(--text-light)', marginTop: 4 }}>{new Date(n.createdAt).toLocaleString()}</div>
                             </div>
                           </div>
                           <div style={{ display: 'flex', gap: 8 }}>
@@ -376,6 +414,12 @@ export default function Layout() {
                               style={{ flex: 1, padding: '8px', borderRadius: 8, background: 'var(--bg)', color: '#ef4444', border: '1px solid #ef4444', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
                             >
                               Deny
+                            </button>
+                            <button 
+                              onClick={() => archiveNotification(n._id)}
+                              style={{ padding: '8px 12px', borderRadius: 8, background: 'var(--bg)', color: 'var(--text-muted)', border: '1px solid var(--border)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+                            >
+                              Archive
                             </button>
                           </div>
                         </div>

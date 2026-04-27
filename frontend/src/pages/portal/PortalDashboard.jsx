@@ -180,12 +180,17 @@ export default function PortalDashboard() {
             <div>
               <h3 style={{ margin: 0, color: 'var(--navy)', fontSize: 18 }}>Shift Status</h3>
               <p style={{ margin: '4px 0 0', color: 'var(--text-muted)', fontSize: 14 }}>
-                {isPunchedIn ? 'Currently PUNCHED IN' : 'Currently PUNCHED OUT'}
+                {isPunchedIn ? 'Currently PUNCHED IN' : (activeShift?.workStatus ? `Today: ${activeShift.workStatus}` : 'Currently PUNCHED OUT')}
               </p>
             </div>
             {/* Status badge — green Active when punched in, navy Off-Duty otherwise */}
             <div
-              className={`badge ${isPunchedIn ? 'badge-emerald' : 'badge-navy'}`}
+              className={`badge ${
+                isPunchedIn ? 'badge-emerald' : 
+                activeShift?.workStatus === 'Full Day' ? 'badge-emerald' :
+                activeShift?.workStatus === 'Half Day' ? 'badge-navy' :
+                activeShift?.workStatus === 'LOP' ? 'badge-red' : 'badge-navy'
+              }`}
               style={{
                 display: 'flex', alignItems: 'center', gap: 6,
                 background: isPunchedIn ? 'var(--emerald)' : undefined,
@@ -200,7 +205,7 @@ export default function PortalDashboard() {
                   animation: 'pulse 1.5s infinite'
                 }} />
               )}
-              {isPunchedIn ? 'ACTIVE' : 'OFF-DUTY'}
+              {isPunchedIn ? 'ACTIVE' : (activeShift?.workStatus ? activeShift.workStatus.toUpperCase() : 'OFF-DUTY')}
             </div>
           </div>
 

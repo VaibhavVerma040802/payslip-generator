@@ -22,8 +22,6 @@ export default function LeaveRequests() {
       setLoading(true)
       const res = await api.get('/leaves/admin/pending')
       setRequests(res.data.data)
-      // Also mark notifications as read when viewing this page
-      api.post('/leaves/admin/mark-as-read').catch(console.error);
     } catch (err) {
       toast.error('Failed to fetch requests')
     } finally {

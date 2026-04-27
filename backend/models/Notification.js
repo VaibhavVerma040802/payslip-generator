@@ -34,6 +34,10 @@ const notificationSchema = new mongoose.Schema(
     isRead: {
       type: Boolean,
       default: false
+    },
+    isArchived: {
+      type: Boolean,
+      default: false
     }
   },
   { timestamps: true }

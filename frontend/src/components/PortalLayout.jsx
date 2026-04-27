@@ -38,6 +38,7 @@ export default function PortalLayout() {
   const [notifications, setNotifications] = useState([])
   const [showNotif, setShowNotif] = useState(false)
   const [notifLoading, setNotifLoading] = useState(false)
+  const [deferredPrompt, setDeferredPrompt] = useState(null)
 
   useEffect(() => {
     setSidebarOpen(!window.matchMedia('(max-width: 1024px)').matches)
@@ -61,9 +62,65 @@ export default function PortalLayout() {
     }
   }
 
+  const markAsRead = async (id) => {
+    try {
+      await api.put(`/leaves/notifications/${id}/read`)
+      fetchNotifications()
+    } catch (err) {
+      console.error('Failed to mark as read')
+    }
+  }
+
+  const markAllAsRead = async () => {
+    try {
+      await api.post('/leaves/mark-as-read')
+      fetchNotifications()
+    } catch (err) {
+      console.error('Failed to mark all as read')
+    }
+  }
+
   useEffect(() => {
     if (staffUser) fetchNotifications()
   }, [staffUser])
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault()
+      window.deferredPrompt = e
+      setDeferredPrompt(e)
+    }
+
+    const handleAppInstalled = () => {
+      window.deferredPrompt = null
+      setDeferredPrompt(null)
+    }
+
+    if (window.deferredPrompt) {
+      setDeferredPrompt(window.deferredPrompt)
+    }
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+    window.addEventListener('appinstalled', handleAppInstalled)
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+      window.removeEventListener('appinstalled', handleAppInstalled)
+    }
+  }, [])
+
+  const handleInstallClick = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt()
+      const { outcome } = await deferredPrompt.userChoice
+      if (outcome === 'accepted') {
+        setDeferredPrompt(null)
+      }
+    } else {
+      import('react-hot-toast').then(mod => {
+        mod.default('To install, click the Install icon in your browser menu or "Add to Home Screen" on your device.', { duration: 5000, icon: '💡' });
+      });
+    }
+  }
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg)', color: 'var(--text)', transition: 'all 0.3s' }}>
@@ -235,13 +292,11 @@ export default function PortalLayout() {
             </div>
           </div>
 
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             {/* Notification Bell */}
             <div style={{ position: 'relative' }}>
               <button 
                 onClick={() => {
-                  if (!showNotif && notifications.length > 0) {
-                    api.post('/leaves/mark-as-read').then(() => fetchNotifications()).catch(console.error);
-                  }
                   setShowNotif(!showNotif);
                   if(!showNotif) fetchNotifications();
                 }}
@@ -279,7 +334,12 @@ export default function PortalLayout() {
                     >
                       <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg)' }}>
                         <h4 style={{ margin: 0, fontSize: 14, color: 'var(--navy)', fontWeight: 800 }}>Notifications</h4>
-                        <button onClick={() => setShowNotif(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><X size={16} /></button>
+                        <button 
+                          onClick={markAllAsRead}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--emerald)', fontSize: 11, fontWeight: 700 }}
+                        >
+                          Mark all read
+                        </button>
                       </div>
                       <div style={{ maxHeight: 360, overflowY: 'auto' }}>
                         {notifLoading ? (
@@ -288,9 +348,19 @@ export default function PortalLayout() {
                           <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>No new notifications</div>
                         ) : (
                           notifications.map((n) => (
-                            <div key={n._id} style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', transition: 'all 0.2s' }} className="btn-hover">
+                            <div key={n._id} style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', background: n.isRead ? 'var(--surface)' : 'var(--bg-alt)', opacity: n.isRead ? 0.7 : 1 }}>
                               <div style={{ fontSize: 13, color: 'var(--text)', lineHeight: 1.5, marginBottom: 6 }}>{n.message}</div>
-                              <div style={{ fontSize: 11, color: 'var(--text-light)', fontWeight: 600 }}>{new Date(n.createdAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</div>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div style={{ fontSize: 11, color: 'var(--text-light)', fontWeight: 600 }}>{new Date(n.createdAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</div>
+                                {!n.isRead && (
+                                  <button 
+                                    onClick={() => markAsRead(n._id)}
+                                    style={{ background: 'none', border: 'none', color: 'var(--emerald)', fontSize: 10, fontWeight: 700, cursor: 'pointer' }}
+                                  >
+                                    Mark as read
+                                  </button>
+                                )}
+                              </div>
                             </div>
                           ))
                         )}
@@ -302,8 +372,24 @@ export default function PortalLayout() {
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-muted)', display: isMobile ? 'none' : 'block' }}>
-              {staffUser?.companyName}
+              {deferredPrompt && (
+                <button
+                  onClick={handleInstallClick}
+                  style={{
+                    background: 'var(--navy)', color: 'white', border: 'none',
+                    display: 'flex', alignItems: 'center', gap: 8,
+                    padding: '8px 16px', borderRadius: 12, fontSize: 13, fontWeight: 700,
+                    cursor: 'pointer', boxShadow: '0 4px 12px rgba(15,23,42,0.15)',
+                    transition: 'all 0.2s'
+                  }}
+                  className="btn-hover"
+                >
+                  Install App
+                </button>
+              )}
+              <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-muted)', display: isMobile ? 'none' : 'block' }}>
+                {staffUser?.companyName}
+              </div>
             </div>
 
             {/* Theme Control System */}

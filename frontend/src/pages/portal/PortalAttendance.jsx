@@ -114,8 +114,12 @@ export default function PortalAttendance() {
                     <td><span style={{ fontWeight: 600 }}>{row.totalHours.toFixed(2)}h</span></td>
                     <td>{row.overtimeHours > 0 ? <span style={{ color: 'var(--emerald)', fontWeight: 700 }}>+{row.overtimeHours.toFixed(2)}h</span> : '--'}</td>
                     <td>
-                      <div className={`badge ${row.status === 'flagged' ? 'badge-red' : 'badge-emerald'}`}>
-                        {row.status.toUpperCase()}
+                      <div className={`badge ${
+                        row.workStatus === 'Full Day' ? 'badge-emerald' : 
+                        row.workStatus === 'Half Day' ? 'badge-navy' :
+                        row.workStatus === 'LOP' ? 'badge-red' : 'badge-navy'
+                      }`}>
+                        {(row.workStatus || row.status).toUpperCase()}
                       </div>
                     </td>
                   </tr>
