@@ -176,10 +176,6 @@ export default function PayslipList() {
           <Plus size={18} strokeWidth={3} />
           Create New
         </button>
-        >
-          <Plus size={18} strokeWidth={3} />
-          Create New
-        </button>
       </div>
 
       {/* Filter Management Bar */}
