@@ -92,7 +92,7 @@ export default function AuditLogs() {
     <div style={{ padding: 'clamp(24px, 5vw, 48px)', maxWidth: 1200, margin: '0 auto' }}>
       <header className="fade-in" style={{ marginBottom: 40, display: 'flex', alignItems: 'center', gap: 16 }}>
         <div style={{
-          width: 48, height: 48, borderRadius: 6, background: '#58833b',
+          width: 48, height: 48, borderRadius: 6, background: 'var(--primary)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff'
         }}>
           <Activity size={24} />
@@ -111,7 +111,7 @@ export default function AuditLogs() {
           background: 'var(--bg)'
         }}>
           <div>
-            <div style={{ fontWeight: 800, fontSize: 17, color: 'var(--primary)' }}>Comprehensive Activity Timeline</div>
+            <div style={{ fontWeight: 700, fontSize: 17, color: 'var(--primary)' }}>Comprehensive Activity Timeline</div>
             <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>Tracking every workspace action and system event</div>
           </div>
         </div>

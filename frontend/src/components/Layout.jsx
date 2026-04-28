@@ -9,6 +9,8 @@ import api from '../api'
 import { toast } from 'react-hot-toast'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
+import PageTransition from './PageTransition'
+import { AnimatePresence } from 'framer-motion'
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
@@ -457,9 +459,12 @@ export default function Layout() {
           </div>
         </header>
 
-        {/* Global Body */}
-        <div style={{ flex: 1, position: 'relative' }}>
-          <Outlet />
+        <div style={{ flex: 1, position: 'relative', overflowX: 'hidden' }}>
+          <AnimatePresence mode="wait">
+            <PageTransition key={location.pathname}>
+              <Outlet />
+            </PageTransition>
+          </AnimatePresence>
         </div>
       </main>
     </div>

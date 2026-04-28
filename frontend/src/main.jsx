@@ -23,7 +23,6 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         toastOptions={{
           duration: 3500,
           style: {
-            fontFamily: 'DM Sans, sans-serif',
             fontSize: '13.5px',
             borderRadius: '10px',
             boxShadow: '0 8px 24px rgba(0,0,0,0.12)',

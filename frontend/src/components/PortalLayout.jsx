@@ -8,6 +8,7 @@ import { useStaffPortal } from '../context/StaffPortalContext'
 import { useTheme } from '../context/ThemeContext'
 import { motion, AnimatePresence } from 'framer-motion'
 import api from '../api'
+import PageTransition from './PageTransition'
 
 const navItems = [
   { to: '/portal/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -420,8 +421,12 @@ export default function PortalLayout() {
         </header>
 
         {/* Global Body */}
-        <div style={{ flex: 1, position: 'relative', padding: 'clamp(16px, 4vw, 32px)' }}>
-          <Outlet />
+        <div style={{ flex: 1, position: 'relative', padding: 'clamp(16px, 4vw, 32px)', overflowX: 'hidden' }}>
+          <AnimatePresence mode="wait">
+            <PageTransition key={location.pathname}>
+              <Outlet />
+            </PageTransition>
+          </AnimatePresence>
         </div>
       </main>
     </div>

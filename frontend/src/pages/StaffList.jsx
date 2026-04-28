@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Plus, Search, Briefcase, ChevronRight, X, Loader2, User, Mail, Phone, Key, Ban, Edit, Info, Clock } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../api'
+import { useTheme } from '../context/ThemeContext'
 
 function InputField({ label, name, value, onChange, type = 'text', placeholder, required }) {
   return (
@@ -35,6 +36,7 @@ export default function StaffList() {
   const [submitting, setSubmitting] = useState(false)
   const [actionLoading, setActionLoading] = useState(null) // ID of staff being modified
   const navigate = useNavigate()
+  const { theme } = useTheme()
 
   const [formData, setFormData] = useState({
     fullName: '', employeeId: '', email: '', phone: '', designation: '', department: '',
@@ -165,9 +167,9 @@ export default function StaffList() {
   }
 
   const filteredStaff = staff.filter(s => {
-    const matchesSearch = s.fullName.toLowerCase().includes(search.toLowerCase()) || 
-                          s.email.toLowerCase().includes(search.toLowerCase()) ||
-                          s.designation?.toLowerCase().includes(search.toLowerCase())
+    const matchesSearch = (s.fullName?.toLowerCase() || '').includes(search.toLowerCase()) || 
+                          (s.email?.toLowerCase() || '').includes(search.toLowerCase()) ||
+                          (s.designation?.toLowerCase() || '').includes(search.toLowerCase())
     const matchesType = filterType === 'All' || s.type === filterType
     return matchesSearch && matchesType
   })
@@ -216,7 +218,11 @@ export default function StaffList() {
       </div>
 
       {loading ? (
-        <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}><Loader2 size={32} className="animate-spin text-muted" /></div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 20 }}>
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="card skeleton" style={{ height: 240 }} />
+          ))}
+        </div>
       ) : filteredStaff.length === 0 ? (
         <div style={{ textAlign: 'center', padding: 60, background: 'var(--surface)', borderRadius: 12, border: '1px dashed var(--border)' }}>
           <Briefcase size={48} color="var(--text-light)" style={{ marginBottom: 16 }} />
