@@ -1,37 +1,32 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { FileText, Users, IndianRupee, LayoutDashboard, Calendar, AlertTriangle, PieChart, Send, Download, LogOut, UserPlus, Zap, CheckCircle2, Loader2, FileSpreadsheet, UserCheck, Briefcase, ChevronRight, Activity } from 'lucide-react'
+import { FileText, Users, IndianRupee, LayoutDashboard, Calendar, AlertTriangle, PieChart, Send, Download, LogOut, UserPlus, Zap, CheckCircle2, Loader2, FileSpreadsheet, UserCheck, Briefcase } from 'lucide-react'
 import { Plus } from 'lucide-react'
 import api from '../api'
 import { useAuth } from '../context/AuthContext'
 import toast from 'react-hot-toast'
 
-const StatCard = React.memo(({ icon: Icon, label, value, sub, delay = 0 }) => {
+const StatCard = React.memo(({ icon: Icon, label, value, sub, color = 'var(--primary)', delay = 0 }) => {
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: delay / 1000 }}
-      className="card glass btn-hover" 
-      style={{
-        display: 'flex', alignItems: 'center', gap: 20, padding: 24, borderRadius: 20
-      }}
-    >
+    <div className="fade-up card" style={{
+      animationDelay: `${delay}ms`,
+      display: 'flex', alignItems: 'center', gap: 20,
+    }}>
       <div style={{
-        width: 60, height: 60, borderRadius: 14,
+        width: 54, height: 54, borderRadius: 6,
         background: 'var(--bg)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        flexShrink: 0, border: '1px solid var(--border)', color: 'var(--primary)'
+        flexShrink: 0, border: '1px solid var(--border)'
       }}>
-        <Icon size={28} />
+        <Icon size={24} color="var(--primary)" />
       </div>
       <div>
-        <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>{label}</div>
-        <div style={{ fontSize: 32, fontWeight: 900, color: 'var(--primary)', lineHeight: 1, letterSpacing: '-0.02em' }}>{value}</div>
-        {sub && <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6, fontWeight: 600 }}>{sub}</div>}
+        <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 2 }}>{label}</div>
+        <div style={{ fontSize: 28, fontWeight: 600, color: 'var(--primary)', lineHeight: 1 }}>{value}</div>
+        {sub && <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4, fontWeight: 500 }}>{sub}</div>}
       </div>
-    </motion.div>
+    </div>
   )
 });
 
@@ -113,28 +108,27 @@ export default function Dashboard() {
   const fmt = (n) => n?.toLocaleString('en-IN') ?? '—'
   const fmtCurrency = (n) => n ? '₹' + parseFloat(n).toLocaleString('en-IN', { maximumFractionDigits: 0 }) : '₹0'
 
-  const QuickAction = ({ icon: Icon, label, desc, onClick, id }) => (
+  const QuickAction = ({ icon: Icon, label, desc, onClick, color = 'var(--primary)', id }) => (
     <motion.button
       whileHover={{ y: -4, scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
       disabled={isProcessing !== null}
-      className="card glass btn-hover"
+      className="card"
       style={{
-        padding: 24, textAlign: 'left', display: 'flex', gap: 20, alignItems: 'center',
-        cursor: 'pointer', transition: 'all 0.2s', width: '100%', outline: 'none', border: '1px solid var(--border)',
-        borderRadius: 20
+        padding: 24, textAlign: 'left', display: 'flex', gap: 16, alignItems: 'center',
+        cursor: 'pointer', transition: 'all 0.2s', width: '100%', outline: 'none'
       }}
     >
       <div style={{
-        width: 52, height: 52, borderRadius: 14, background: 'var(--bg)',
+        width: 48, height: 48, borderRadius: 6, background: 'var(--bg)',
         display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', flexShrink: 0
       }}>
         {isProcessing === id ? <Loader2 size={24} className="animate-spin" /> : <Icon size={24} />}
       </div>
       <div>
-        <div style={{ fontWeight: 800, color: 'var(--primary)', fontSize: 16, marginBottom: 4, letterSpacing: '-0.01em' }}>{label}</div>
-        <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>{desc}</div>
+        <div style={{ fontWeight: 600, color: 'var(--primary)', fontSize: 15, marginBottom: 2 }}>{label}</div>
+        <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>{desc}</div>
       </div>
     </motion.button>
   )
@@ -143,112 +137,101 @@ export default function Dashboard() {
     <div style={{ padding: 'clamp(24px, 5vw, 48px)', maxWidth: 1200, margin: '0 auto' }}>
       
       {/* Header Section */}
-      <div className="fade-in" style={{ marginBottom: 48, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap' }}>
+      <div className="fade-in" style={{ marginBottom: 40, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap' }}>
         <div>
-          <div style={{ fontSize: 11, color: 'var(--primary)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-            <Activity size={16} />
-            System Status: Operational
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <Calendar size={14} color="var(--primary)" />
+            {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
           </div>
-          <h1 style={{ color: 'var(--primary)', marginBottom: 8, fontSize: 'clamp(28px, 5vw, 40px)', letterSpacing: '-0.03em' }}>
-            {user?.companyName ? `Welcome back, ${user.companyName.split(' ')[0]}` : 'Workspace Dashboard'}
+          <h1 style={{ color: 'var(--primary)', marginBottom: 8, letterSpacing: '-0.02em' }}>
+            {user?.companyName ? `Hello, ${user.companyName.split(' ')[0]}` : 'Dashboard'}
           </h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: 16, fontWeight: 600 }}>
-            You've generated <strong>{fmt(stats?.totalPayslips)} statutory documents</strong> for your workforce.
+          <p style={{ color: 'var(--text-muted)', fontSize: 16, fontWeight: 500 }}>
+            Managed <strong>{fmt(stats?.totalPayslips)} slips</strong> in this workspace.
           </p>
         </div>
         <button
           onClick={() => navigate('/generate')}
           className="btn-primary"
-          style={{ height: 56, padding: '0 32px', borderRadius: 16, fontSize: 16 }}
         >
-          <Plus size={20} strokeWidth={3} />
-          Create New Payslip
+          <Plus size={18} strokeWidth={3} />
+          Generate New Slip
         </button>
       </div>
 
-      {/* Stats Grid */}
+      {/* Responsive Stats Grid */}
       <div style={{ 
         display: 'grid', 
         gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', 
         gap: 24, 
-        marginBottom: 56 
+        marginBottom: 48 
       }}>
-        <StatCard icon={Users} label="Total Workforce" value={loading ? '—' : (stats?.totalEmployees || 0)} sub="Active Employees & Interns" delay={0} />
-        <StatCard icon={PieChart} label="Portal Adoption" value={loading ? '—' : (stats?.activePortals || 0)} sub="Provisioned Staff Accounts" delay={100} />
-        <StatCard icon={AlertTriangle} label="Attendance Flags" value={loading ? '—' : (stats?.attendanceFlags || 0)} sub="Requires Administrator Action" delay={200} />
-        <StatCard icon={IndianRupee} label="Total Disbursement" value={loading ? '—' : fmtCurrency(stats?.totalPayroll)} sub="Lifetime Salary & Stipends" delay={300} />
+        <StatCard icon={Users} label="Total Employees" value={loading ? '—' : (stats?.totalEmployees || 0)} sub="Workforce Strength" color="var(--primary)" delay={0} />
+        <StatCard icon={PieChart} label="Active Portals" value={loading ? '—' : (stats?.activePortals || 0)} sub="Staff Portal Access" color="var(--primary)" delay={100} />
+        <StatCard icon={AlertTriangle} label="Attendance Flags" value={loading ? '—' : (stats?.attendanceFlags || 0)} sub="Action Required" color="var(--primary)" delay={200} />
+        <StatCard icon={IndianRupee} label="Total Salary Disbursed" value={loading ? '—' : fmtCurrency(stats?.totalPayroll)} sub="Lifetime Cumulative" color="var(--primary)" delay={300} />
       </div>
 
       {/* Quick Actions Terminal */}
-      <div className="fade-up" style={{ marginBottom: 56 }}>
+      <div className="fade-up" style={{ marginBottom: 48 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-          <Zap size={24} color="var(--primary)" />
-          <h2 style={{ margin: 0, fontSize: 24, color: 'var(--primary)', fontWeight: 900, letterSpacing: '-0.02em' }}>Quick Actions Terminal</h2>
+          <Zap size={20} color="var(--primary)" />
+          <h2 style={{ margin: 0, fontSize: 22, color: 'var(--primary)', fontWeight: 800 }}>Quick Actions Terminal</h2>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24 }}>
-          <QuickAction id="email" icon={Send} label="Bulk Email Dispatch" desc="Email unsent slips for the current month" onClick={handleBulkEmail} />
-          <QuickAction id="export" icon={Download} label="Export Attendance" desc="Download statutory attendance records (CSV)" onClick={handleExportAttendance} />
-          <QuickAction id="punch" icon={LogOut} label="Emergency Punch-Out" desc="Force close all active shifts from past days" onClick={handleForcePunchOut} />
-          <QuickAction id="staff" icon={UserPlus} label="Staff Provisioning" desc="Onboard a new member to the workspace" onClick={() => navigate('/staff')} />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20 }}>
+          <QuickAction id="email" icon={Send} label="Bulk Email Slips" desc="Send all unsent slips for this month" color="var(--primary)" onClick={handleBulkEmail} />
+          <QuickAction id="export" icon={Download} label="Export Attendance" desc="Download current month's CSV" color="var(--primary)" onClick={handleExportAttendance} />
+          <QuickAction id="punch" icon={LogOut} label="Force Punch-Out" desc="Close stale shifts from previous days" color="var(--primary)" onClick={handleForcePunchOut} />
+          <QuickAction id="staff" icon={UserPlus} label="Add New Staff" desc="Invite a new employee to portal" color="var(--primary)" onClick={() => navigate('/staff')} />
         </div>
       </div>
 
-      {/* Pending Actions */}
+      {/* Pending Actions Section */}
       {!loading && pendingActions.length > 0 && (
         <div className="fade-up" style={{ marginBottom: 40 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 24 }}>
-            <div style={{ width: 48, height: 48, borderRadius: 14, background: 'rgba(239, 68, 68, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444' }}>
-              <AlertTriangle size={24} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+            <div style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', border: '1px solid var(--border)' }}>
+              <AlertTriangle size={20} />
             </div>
             <div>
-              <h2 style={{ margin: 0, fontSize: 22, color: 'var(--primary)', fontWeight: 900, letterSpacing: '-0.01em' }}>Action Required: Attendance</h2>
-              <p style={{ margin: '2px 0 0', fontSize: 14, color: 'var(--text-muted)', fontWeight: 500 }}>Review and resolve flagged shifts to ensure payroll accuracy.</p>
+              <h2 style={{ margin: 0, fontSize: 20, color: 'var(--primary)' }}>Attendance Actions Required</h2>
+              <p style={{ margin: 0, fontSize: 13, color: 'var(--text-muted)' }}>Review and correct flagged or incomplete attendance records.</p>
             </div>
           </div>
 
-          <div className="card glass" style={{ padding: 0, overflow: 'hidden', borderRadius: 24 }}>
+          <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
             {pendingActions.map((action, idx) => (
               <div key={action._id} style={{ 
-                padding: '24px 32px', 
+                padding: '20px 24px', 
                 borderBottom: idx === pendingActions.length - 1 ? 'none' : '1px solid var(--border)',
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap',
-                background: idx % 2 === 0 ? 'transparent' : 'rgba(88, 131, 59, 0.02)',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap',
                 transition: 'background 0.2s'
-              }} className="btn-hover">
-                <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
-                   <div style={{ 
-                     width: 52, height: 52, borderRadius: 14, 
-                     background: 'var(--primary)', color: 'white',
-                     display: 'flex', alignItems: 'center', justifyContent: 'center', 
-                     fontSize: 20, fontWeight: 900 
-                   }}>
-                     {(action.staff?.fullName || '?').charAt(0).toUpperCase()}
+              }} >
+                <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+                   <div style={{ width: 44, height: 44, borderRadius: 6, background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', fontWeight: 600 }}>
+                     {action.staff?.fullName?.charAt(0).toUpperCase()}
                    </div>
                    <div>
-                     <div style={{ fontWeight: 800, color: 'var(--text)', fontSize: 17 }}>{action.staff?.fullName || 'Unnamed Staff'}</div>
-                     <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
-                       <span style={{ color: 'var(--primary)', fontWeight: 800 }}>{action.staff?.employeeId || 'NO-ID'}</span>
-                       <span>•</span>
-                       <span>{new Date(action.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                     </div>
+                     <div style={{ fontWeight: 700, color: 'var(--primary)' }}>{action.staff?.fullName}</div>
+                     <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{action.staff?.employeeId} · {new Date(action.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</div>
                    </div>
                 </div>
                 
-                <div style={{ display: 'flex', gap: 32, alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
                   <div style={{ textAlign: 'right' }}>
-                    <div className="badge badge-red" style={{ fontSize: 11, fontWeight: 800, padding: '4px 12px' }}>
-                      {action.status === 'flagged' ? 'Over 16h Logged' : 'Missing Punch-Out'}
+                    <div className="badge badge-emerald" style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase' }}>
+                      {action.status === 'flagged' ? 'Over 16h' : 'Missing Out'}
                     </div>
-                    <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6, fontWeight: 600 }}>
-                      Logged In: {new Date(action.punchIn).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                    <div style={{ fontSize: 11, color: 'var(--text-light)', marginTop: 4 }}>
+                      In: {new Date(action.punchIn).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
                     </div>
                   </div>
                   <button 
                     onClick={() => navigate(`/staff/${action.staff?._id}`)}
-                    className="btn-primary"
-                    style={{ padding: '10px 24px', fontSize: 14, borderRadius: 12 }}
+                    className="btn-secondary"
+                    style={{ padding: '8px 16px', fontSize: 13 }}
                   >
-                    Resolve Now <ChevronRight size={16} />
+                    Resolve
                   </button>
                 </div>
               </div>

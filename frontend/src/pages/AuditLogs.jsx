@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Building2, ChevronRight, Activity, UserPlus, UserMinus, UserCheck, Key, Ban, FileText, Send, Download, LogOut, Clock, AlertTriangle, Zap, CheckCircle2, UserCog, History } from 'lucide-react'
+import { Building2, ChevronRight, Activity, UserPlus, UserMinus, UserCheck, Key, Ban, FileText, Send, Download, LogOut, Clock, AlertTriangle, Zap, CheckCircle2, UserCog } from 'lucide-react'
 import api from '../api'
 import { formatDistanceToNow } from 'date-fns'
 
@@ -54,9 +54,9 @@ const RecentRow = React.memo(({ log, navigate }) => {
           <Icon size={20} />
         </div>
         <div>
-          <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--text)', marginBottom: 2 }}>{log.details}</div>
+          <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--primary)', marginBottom: 2 }}>{log.details}</div>
           <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
-             <span style={{ color: 'var(--primary)', fontWeight: 800, textTransform: 'uppercase', fontSize: 10 }}>{config.label}</span>
+             <span style={{ color: config.color, fontWeight: 800, textTransform: 'uppercase', fontSize: 10 }}>{config.label}</span>
              <span>•</span>
              {formatDistanceToNow(new Date(log.createdAt), { addSuffix: true })}
           </div>
@@ -92,31 +92,27 @@ export default function AuditLogs() {
     <div style={{ padding: 'clamp(24px, 5vw, 48px)', maxWidth: 1200, margin: '0 auto' }}>
       <header className="fade-in" style={{ marginBottom: 40, display: 'flex', alignItems: 'center', gap: 16 }}>
         <div style={{
-          width: 56, height: 56, borderRadius: 14, background: 'var(--primary)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff',
-          boxShadow: '0 8px 16px rgba(88, 131, 59, 0.2)'
+          width: 48, height: 48, borderRadius: 6, background: 'var(--primary)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff'
         }}>
-          <History size={28} />
+          <Activity size={24} />
         </div>
         <div>
-          <h1 style={{ margin: 0, color: 'var(--primary)', fontSize: 'clamp(24px, 4vw, 32px)' }}>Audit Logs</h1>
-          <p style={{ color: 'var(--text-muted)', fontWeight: 500, fontSize: 15 }}>A complete history of workspace actions and system events.</p>
+          <h1 style={{ margin: 0, color: 'var(--primary)', fontSize: 32, letterSpacing: '-0.02em' }}>Audit Logs</h1>
+          <p style={{ color: 'var(--text-muted)', fontWeight: 500, fontSize: 15 }}>Recent workspace activities and generated slips.</p>
         </div>
       </header>
 
-      <div className="fade-in glass" style={{ animationDelay: '100ms', overflow: 'hidden', borderRadius: 20 }}>
+      <div className="fade-in glass" style={{ animationDelay: '100ms', overflow: 'hidden' }}>
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '24px 32px',
           borderBottom: '1px solid var(--border)',
-          background: 'rgba(88, 131, 59, 0.03)'
+          background: 'var(--bg)'
         }}>
           <div>
-            <div style={{ fontWeight: 800, fontSize: 18, color: 'var(--primary)', letterSpacing: '-0.01em' }}>Activity Timeline</div>
-            <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>Tracking every statutory action in real-time</div>
-          </div>
-          <div style={{ padding: '6px 14px', background: 'var(--bg)', borderRadius: 10, fontSize: 11, fontWeight: 800, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Live Feed
+            <div style={{ fontWeight: 700, fontSize: 17, color: 'var(--primary)' }}>Comprehensive Activity Timeline</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>Tracking every workspace action and system event</div>
           </div>
         </div>
 
@@ -128,13 +124,17 @@ export default function AuditLogs() {
           ) : recent.length === 0 ? (
             <div style={{ padding: 60, textAlign: 'center' }}>
               <Building2 size={48} color="var(--border)" style={{ margin: '0 auto 20px' }} />
-              <div style={{ color: 'var(--primary)', fontSize: 18, fontWeight: 700, marginBottom: 8 }}>No activity yet</div>
-              <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 24 }}>System events and generated slips will appear here.</p>
+              <div style={{ color: 'var(--primary)', fontSize: 18, fontWeight: 700, marginBottom: 8 }}>No recent activity</div>
+              <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 24 }}>Start by generating your first statutory compliance document.</p>
               <button
                 onClick={() => navigate('/generate')}
-                className="btn-primary"
+                style={{
+                  background: 'var(--primary)', color: 'white',
+                  border: 'none', borderRadius: 12, padding: '12px 24px',
+                  fontWeight: 700, fontSize: 14, cursor: 'pointer',
+                }}
               >
-                Start Generating Slips
+                Create First Slip
               </button>
             </div>
           ) : (
