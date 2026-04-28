@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link, useNavigate } from 'react-router-dom'
-import { Plus, Search, Briefcase, ChevronRight, X, Loader2, User, Mail, Phone, Key, Ban, Edit, Info, Clock, UserGroup } from 'lucide-react'
+import { Plus, Search, Briefcase, ChevronRight, X, Loader2, User, Mail, Phone, Key, Ban, Edit, Info, Clock, Users } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../api'
 import { useTheme } from '../context/ThemeContext'
@@ -283,7 +283,7 @@ export default function StaffList() {
                   <Mail size={16} color="var(--primary)" /> {person.email || 'No email'}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--text-muted)', fontSize: 14, fontWeight: 500 }}>
-                  <UserGroup size={16} color="var(--primary)" /> {person.department || 'General Department'}
+                  <Users size={16} color="var(--primary)" /> {person.department || 'General Department'}
                 </div>
               </div>
 
