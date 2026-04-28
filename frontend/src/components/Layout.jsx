@@ -3,7 +3,7 @@ import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { 
   LayoutDashboard, PlusCircle, List, Menu,
   FileSpreadsheet, Settings, LogOut, User, Users,
-  Sun, Moon, Monitor, ChevronLeft, Activity, Download, Bell
+  Sun, Moon, Monitor, ChevronLeft, Activity, Download, Bell, CalendarDays
 } from 'lucide-react'
 import api from '../api'
 import { toast } from 'react-hot-toast'
