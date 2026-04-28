@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Mail, Phone, Briefcase, Calendar, Landmark, CreditCard, Trash2, Code, FileText, Loader2, IndianRupee, Key, Ban, Shield, FileDigit } from 'lucide-react'
+import { ArrowLeft, Mail, Phone, Briefcase, Calendar, Landmark, CreditCard, Trash2, Code, FileText, Loader2, IndianRupee, Key, Ban, Shield, FileDigit, Edit, X, Plus } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../api'
 
@@ -13,6 +13,26 @@ function DetailRow({ icon: Icon, label, value }) {
         <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 4 }}>{label}</div>
         <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>{value || '—'}</div>
       </div>
+    </div>
+  )
+}
+
+function InputField({ label, name, value, onChange, type = 'text', placeholder, required }) {
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <label className="label">
+        {label}{required && <span style={{ color: 'var(--primary)' }}>*</span>}
+      </label>
+      <input
+        type={type}
+        name={name}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        required={required}
+        className="input-field"
+        style={{ width: '100%' }}
+      />
     </div>
   )
 }
@@ -29,13 +49,40 @@ export default function StaffDetail() {
   const [revoking, setRevoking] = useState(false)
   const [tempPassword, setTempPassword] = useState('')
   const [savingOT, setSavingOT] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [formData, setFormData] = useState({
+    fullName: '', employeeId: '', email: '', phone: '', designation: '', department: '',
+    type: 'Employee', joiningDate: '', panNumber: '', pfNumber: '', bankName: '',
+    accountNumber: '', ifscCode: '', annualCTC: '', baseSalary: ''
+  })
 
   useEffect(() => {
     const fetchDetail = async () => {
       try {
         const res = await api.get(`/staff/${id}`)
-        setStaff(res.data.data)
+        const data = res.data.data
+        setStaff(data)
         
+        // Pre-fill form
+        setFormData({
+          fullName: data.fullName,
+          employeeId: data.employeeId,
+          email: data.email,
+          phone: data.phone || '',
+          designation: data.designation || '',
+          department: data.department || '',
+          type: data.type || 'Employee',
+          joiningDate: data.joiningDate ? data.joiningDate.split('T')[0] : '',
+          panNumber: data.financials?.panNumber || '',
+          pfNumber: data.pfNumber || '',
+          bankName: data.financials?.bankName || '',
+          accountNumber: data.financials?.accountNumber || '',
+          ifscCode: data.financials?.ifscCode || '',
+          annualCTC: data.salaryDetails?.annualCTC || '',
+          baseSalary: data.salaryDetails?.baseSalary || ''
+        })
+
         // Fetch attendance for admin
         try {
           const attRes = await api.get(`/attendance/admin/staff/${id}`)
@@ -115,6 +162,38 @@ export default function StaffDetail() {
     }
   }
 
+  const handleInputChange = (e) => {
+    const { name, value } = e.target
+    setFormData(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault()
+    setSubmitting(true)
+    try {
+      const payload = {
+        ...formData,
+        financials: {
+          panNumber: formData.panNumber, bankName: formData.bankName,
+          accountNumber: formData.accountNumber, ifscCode: formData.ifscCode
+        },
+        salaryDetails: {
+          annualCTC: parseFloat(formData.annualCTC) || 0,
+          baseSalary: parseFloat(formData.baseSalary) || 0
+        }
+      }
+      
+      const res = await api.put(`/staff/${id}`, payload)
+      setStaff(res.data.data)
+      toast.success('Staff details updated')
+      setShowEditModal(false)
+    } catch (err) {
+      toast.error(err.message || 'Update failed')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', padding: 100 }}><Loader2 size={40} className="animate-spin text-muted" /></div>
   if (!staff) return null
 
@@ -156,6 +235,10 @@ export default function StaffDetail() {
                 Revoke Access
               </button>
             )}
+            <button onClick={() => setShowEditModal(true)} style={{ padding: '10px 20px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--primary)', fontWeight: 600, cursor: 'pointer', display: 'flex', gap: 8, alignItems: 'center' }}>
+              <Edit size={16} />
+              Edit Details
+            </button>
             <button onClick={handleDelete} disabled={deleting} style={{ padding: '10px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--primary)', fontWeight: 600, cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
               {deleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={18} />}
             </button>
@@ -327,6 +410,84 @@ export default function StaffDetail() {
         </div>
 
       </div>
+      {/* Edit Staff Modal */}
+      <AnimatePresence>
+        {showEditModal && (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'absolute', inset: 0, background: 'rgba(26, 26, 26, 0.6)', backdropFilter: 'blur(4px)' }} onClick={() => setShowEditModal(false)} />
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+              style={{ background: 'var(--surface)', borderRadius: 12, width: '100%', maxWidth: 700, maxHeight: '90vh', display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 1, overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}
+            >
+              <div style={{ padding: '24px 32px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h2 style={{ margin: 0, color: 'var(--primary)' }}>Edit Staff Profile</h2>
+                <button onClick={() => setShowEditModal(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-light)' }}><X size={24} /></button>
+              </div>
+              
+              <div style={{ padding: 32, overflowY: 'auto', flex: 1 }}>
+                <form id="editStaffForm" onSubmit={handleEditSubmit}>
+                  <div style={{ display: 'flex', gap: 10, marginBottom: 24, background: 'var(--bg)', padding: 6, borderRadius: 12 }}>
+                    {['Employee', 'Intern'].map(type => (
+                      <button 
+                        key={type} type="button" onClick={() => setFormData({ ...formData, type })}
+                        style={{ 
+                          flex: 1, padding: '10px', borderRadius: 12, border: 'none', fontWeight: 700,
+                          background: formData.type === type ? 'var(--primary)' : 'transparent',
+                          color: formData.type === type ? '#ffffff' : 'var(--text-muted)',
+                          boxShadow: formData.type === type ? 'var(--shadow-sm)' : 'none', cursor: 'pointer'
+                        }}
+                      >{type}</button>
+                    ))}
+                  </div>
+
+                  <h4 style={{ color: 'var(--primary)', marginBottom: 16 }}>Professional Details</h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                    <InputField label="Full Name" name="fullName" value={formData.fullName} onChange={handleInputChange} required />
+                    <InputField label="Employee ID / Code" name="employeeId" value={formData.employeeId} onChange={handleInputChange} required />
+                    <InputField label="Email Address" type="email" name="email" value={formData.email} onChange={handleInputChange} required />
+                    <InputField label="Phone Number" name="phone" value={formData.phone} onChange={handleInputChange} required />
+                    <InputField label="Joining Date" type="date" name="joiningDate" value={formData.joiningDate} onChange={handleInputChange} required />
+                    <InputField label="Designation" name="designation" value={formData.designation} onChange={handleInputChange} required />
+                    <InputField label="Department" name="department" value={formData.department} onChange={handleInputChange} required />
+                    <InputField label="PF Number" name="pfNumber" value={formData.pfNumber} onChange={handleInputChange} placeholder="XX/XXX/0000000" />
+                  </div>
+
+                  <h4 style={{ color: 'var(--primary)', marginTop: 24, marginBottom: 16 }}>Financial Information</h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                    <InputField label="PAN Number" name="panNumber" value={formData.panNumber} onChange={handleInputChange} required />
+                    <InputField label="Bank Name" name="bankName" value={formData.bankName} onChange={handleInputChange} required />
+                    <InputField label="Account Number" name="accountNumber" value={formData.accountNumber} onChange={handleInputChange} required />
+                    <InputField label="IFSC Code" name="ifscCode" value={formData.ifscCode} onChange={handleInputChange} required />
+                  </div>
+
+                  <h4 style={{ color: 'var(--primary)', marginTop: 24, marginBottom: 16 }}>Salary Structure</h4>
+                  {formData.type === 'Employee' ? (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 16 }}>
+                      <InputField label="Annual CTC (in ₹)" type="number" name="annualCTC" value={formData.annualCTC} onChange={handleInputChange} required />
+                    </div>
+                  ) : (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 16 }}>
+                      <InputField label="Monthly Stipend (Base Salary)" type="number" name="baseSalary" value={formData.baseSalary} onChange={handleInputChange} required />
+                    </div>
+                  )}
+                </form>
+              </div>
+
+              <div style={{ padding: '24px 32px', borderTop: '1px solid var(--border)', background: 'var(--bg)', display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+                <button type="button" onClick={() => setShowEditModal(false)} style={{ padding: '12px 24px', borderRadius: 12, border: '2px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+                <button type="submit" form="editStaffForm" disabled={submitting} style={{ padding: '12px 24px', borderRadius: 12, border: 'none', background: 'var(--primary)', color: '#ffffff', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  {submitting ? <Loader2 size={18} className="animate-spin" /> : 'Save Changes'}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <style>{`
+        .badge-navy { background: rgba(30, 64, 175, 0.1); color: #1e40af; border: 1px solid rgba(30, 64, 175, 0.2); }
+        .badge-emerald { background: rgba(63, 98, 18, 0.1); color: #3f6212; border: 1px solid rgba(63, 98, 18, 0.2); }
+      `}</style>
     </motion.div>
   )
 }

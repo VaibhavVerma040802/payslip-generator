@@ -285,10 +285,13 @@ export default function StaffList() {
                     </div>
                   </td>
 
+                  {/* Role / Dept */}
                   <td style={{ padding: '12px' }}>
-                    <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text)' }}>{person.designation || 'No Designation'}</div>
+                    <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text)', marginBottom: 2 }}>{person.designation || 'No Designation'}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500 }}>{person.department || 'N/A'}</div>
                   </td>
 
+                  {/* Type Badge */}
                   <td style={{ padding: '12px' }}>
                     <span style={{ 
                       padding: '4px 12px', borderRadius: 100, fontSize: 11, fontWeight: 700,
@@ -300,6 +303,7 @@ export default function StaffList() {
                     </span>
                   </td>
 
+                  {/* Compensation */}
                   <td style={{ padding: '12px' }}>
                     <div>
                       <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', marginBottom: 2 }}>
@@ -311,6 +315,7 @@ export default function StaffList() {
                     </div>
                   </td>
 
+                  {/* OT Status */}
                   <td style={{ padding: '12px' }}>
                     <span style={{ 
                       padding: '4px 12px', borderRadius: 100, fontSize: 11, fontWeight: 700,
@@ -322,42 +327,56 @@ export default function StaffList() {
                     </span>
                   </td>
 
+                  {/* Actions */}
                   <td style={{ padding: '12px', textAlign: 'right', borderTopRightRadius: 12, borderBottomRightRadius: 12 }}>
-                    <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
+                    <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', alignItems: 'center' }}>
                       <button 
                         onClick={(e) => handleToggleAccess(e, person)}
                         title={person.isPortalEnabled ? "Revoke Access" : "Give Access"}
-                        style={{ padding: 8, borderRadius: 8, border: 'none', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer' }}
+                        className="btn-action-glass"
+                        style={{ width: 40, height: 40 }}
                       >
                         {actionLoading === person._id ? <Loader2 size={16} className="animate-spin" /> : <Key size={16} />}
                       </button>
                       <button 
                         onClick={(e) => handleToggleOvertime(e, person)}
                         title={person.overtimeEligible ? "Disable OT" : "Enable OT"}
-                        style={{ padding: 8, borderRadius: 8, border: 'none', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer' }}
+                        className="btn-action-glass"
+                        style={{ width: 40, height: 40 }}
                       >
                         {actionLoading === person._id + '_ot' ? <Loader2 size={16} className="animate-spin" /> : <Zap size={16} color={person.overtimeEligible ? 'var(--primary)' : 'inherit'} />}
                       </button>
                       <button 
                         onClick={(e) => { e.stopPropagation(); navigate(`/generate?staffId=${person._id}`); }}
                         title="Generate Payslip"
-                        style={{ padding: 8, borderRadius: 8, border: 'none', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer' }}
+                        className="btn-action-glass"
+                        style={{ width: 40, height: 40 }}
                       >
                         <FilePlus size={16} />
                       </button>
                       <button 
                         onClick={(e) => { e.stopPropagation(); navigate(`/staff/${person._id}`); }}
                         title="View Details"
-                        style={{ padding: 8, borderRadius: 8, border: 'none', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer' }}
+                        style={{ 
+                          padding: '10px 24px', 
+                          background: 'var(--primary)', 
+                          color: '#ffffff',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 8,
+                          fontSize: 14,
+                          fontWeight: 700,
+                          borderRadius: 12,
+                          border: 'none',
+                          cursor: 'pointer',
+                          boxShadow: '0 4px 12px rgba(88, 131, 59, 0.2)',
+                          transition: 'all 0.2s'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                        onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                       >
-                        <Eye size={16} />
-                      </button>
-                      <button 
-                        onClick={(e) => handleEdit(e, person)}
-                        title="Edit Details"
-                        style={{ padding: 8, borderRadius: 8, border: 'none', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer' }}
-                      >
-                        <Edit size={16} />
+                        <Eye size={18} />
+                        View Details
                       </button>
                     </div>
                   </td>
