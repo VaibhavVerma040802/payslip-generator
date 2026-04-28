@@ -115,10 +115,17 @@ export default function PortalAttendance() {
                     <td>{row.overtimeHours > 0 ? <span style={{ color: 'var(--emerald)', fontWeight: 700 }}>+{row.overtimeHours.toFixed(2)}h</span> : '--'}</td>
                     <td>
                       <div className={`badge ${
+                        row.workStatus === 'Active' ? 'badge-emerald' :
                         row.workStatus === 'Full Day' ? 'badge-emerald' : 
                         row.workStatus === 'Half Day' ? 'badge-navy' :
                         row.workStatus === 'LOP' ? 'badge-red' : 'badge-navy'
-                      }`}>
+                      }`} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        {row.workStatus === 'Active' && (
+                          <span style={{ 
+                            width: 6, height: 6, borderRadius: '50%', background: 'white',
+                            animation: 'pulse 1.5s infinite'
+                          }} />
+                        )}
                         {(row.workStatus || row.status).toUpperCase()}
                       </div>
                     </td>
@@ -131,4 +138,17 @@ export default function PortalAttendance() {
       </motion.div>
     </div>
   )
+}
+
+const pulseStyle = `
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(1.3); }
+  }
+`
+
+if (typeof document !== 'undefined') {
+  const style = document.createElement('style')
+  style.textContent = pulseStyle
+  document.head.appendChild(style)
 }

@@ -193,7 +193,15 @@ router.get('/history', authStaff, async (req, res) => {
       filter.date = { $gte: limitDate };
     }
 
-    const history = await Attendance.find(filter).sort({ date: -1 });
+    const history = await Attendance.find(filter).sort({ date: -1 }).lean();
+
+    // Map history to handle real-time "ACTIVE" status
+    const mappedHistory = history.map(record => {
+      if (!record.punchOut) {
+        return { ...record, workStatus: 'Active' };
+      }
+      return record;
+    });
 
     // Calculate summary stats for this period
     const presentDays = history.filter(r => r.status === 'complete' || r.totalHours > 0).length;
@@ -204,7 +212,7 @@ router.get('/history', authStaff, async (req, res) => {
 
     res.json({
       success: true,
-      history,
+      history: mappedHistory,
       summary: { presentDays, totalHours: parseFloat(totalHours.toFixed(2)), avgHours: parseFloat(avgHours.toFixed(2)), totalOT: parseFloat(totalOT.toFixed(2)), flaggedCount }
     });
   } catch (err) {

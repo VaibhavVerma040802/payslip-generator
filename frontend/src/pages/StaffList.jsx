@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link, useNavigate } from 'react-router-dom'
-import { Plus, Search, Briefcase, ChevronRight, X, Loader2, User, Mail, Phone, Key, Ban, Edit, Info, Clock } from 'lucide-react'
+import { Plus, Search, Briefcase, ChevronRight, X, Loader2, User, Mail, Phone, Key, Ban, Edit, Info, Clock, FileText, Eye } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../api'
 import { useTheme } from '../context/ThemeContext'
@@ -181,47 +181,50 @@ export default function StaffList() {
           <h1 style={{ color: 'var(--primary)', marginBottom: 8, fontSize: 28, letterSpacing: '-0.02em' }}>Staff Management</h1>
           <p style={{ color: 'var(--text-muted)', fontWeight: 500 }}>Manage your regular employees and interns.</p>
         </div>
-        <button 
-          onClick={() => setShowModal(true)}
-          className="btn-primary"
-        >
-          <Plus size={18} strokeWidth={2.5} /> Add New Staff
-        </button>
+        <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+          <div style={{ display: 'flex', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 100, padding: 4, height: 48, alignItems: 'center' }}>
+            {['All', 'Employee', 'Intern'].map(type => (
+              <button
+                key={type}
+                onClick={() => setFilterType(type)}
+                style={{
+                  padding: '8px 24px', border: 'none', borderRadius: 100, fontSize: 14, fontWeight: 700,
+                  background: filterType === type ? 'var(--primary)' : 'transparent',
+                  color: filterType === type ? '#ffffff' : 'var(--text-muted)',
+                  cursor: 'pointer', transition: 'all 0.2s',
+                  height: '100%'
+                }}
+              >
+                {type}
+              </button>
+            ))}
+          </div>
+          <button 
+            onClick={() => setShowModal(true)}
+            className="btn-primary"
+            style={{ height: 48, padding: '0 24px', borderRadius: 6 }}
+          >
+            <Plus size={20} strokeWidth={2.5} /> Add new staff
+          </button>
+        </div>
       </header>
 
-      <div style={{ display: 'flex', gap: 16, marginBottom: 32, flexWrap: 'wrap' }}>
-        <div style={{ flex: '1 1 300px', position: 'relative' }}>
-          <Search size={18} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-light)' }} />
-          <input 
-            type="text" placeholder="Search staff members..." 
-            value={search} onChange={e => setSearch(e.target.value)}
-            className="input-field"
-            style={{ width: '100%', paddingLeft: 44 }}
-          />
-        </div>
-        <div style={{ display: 'flex', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 6, padding: 4 }}>
-          {['All', 'Employee', 'Intern'].map(type => (
-            <button
-              key={type}
-              onClick={() => setFilterType(type)}
-              style={{
-                padding: '8px 16px', border: 'none', borderRadius: 6, fontSize: 14, fontWeight: 600,
-                background: filterType === type ? 'var(--primary)' : 'transparent',
-                color: filterType === type ? (theme === 'dark' ? 'var(--bda-dark)' : '#ffffff') : 'var(--text-muted)',
-                cursor: 'pointer', transition: 'all 0.2s'
-              }}
-            >
-              {type}
-            </button>
-          ))}
-        </div>
+      <div style={{ position: 'relative', marginBottom: 32 }}>
+        <Search size={20} style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-light)' }} />
+        <input 
+          type="text" placeholder="Search staff members..." 
+          value={search} onChange={e => setSearch(e.target.value)}
+          style={{ 
+            width: '100%', border: 'none', background: 'transparent', 
+            padding: '12px 0 12px 32px', fontSize: 16, color: 'var(--text)', 
+            outline: 'none', borderBottom: '1px solid var(--border)' 
+          }}
+        />
       </div>
 
       {loading ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 20 }}>
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="card skeleton" style={{ height: 240 }} />
-          ))}
+        <div style={{ padding: 40, textAlign: 'center' }}>
+          <Loader2 size={40} className="animate-spin text-muted" style={{ margin: '0 auto' }} />
         </div>
       ) : filteredStaff.length === 0 ? (
         <div style={{ textAlign: 'center', padding: 60, background: 'var(--surface)', borderRadius: 12, border: '1px dashed var(--border)' }}>
@@ -230,129 +233,144 @@ export default function StaffList() {
           <p style={{ color: 'var(--text-muted)' }}>Try adjusting your search criteria or add a new staff member.</p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 20 }}>
-          {filteredStaff.map((person, i) => (
-            <motion.div
-              key={person._id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-              onClick={() => navigate(`/staff/${person._id}`)}
-              className="card"
-              style={{
-                cursor: 'pointer', transition: 'all 0.3s',
-                position: 'relative', overflow: 'hidden'
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
-                <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                  <div style={{ width: 48, height: 48, borderRadius: 6, background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff', fontSize: 20, fontWeight: 800 }}>
-                    {person.fullName.charAt(0).toUpperCase()}
-                  </div>
-                  <div>
-                    <h3 style={{ margin: 0, fontSize: 16, color: 'var(--primary)', fontWeight: 800 }}>{person.fullName}</h3>
-                    <div style={{ fontSize: 12, color: 'var(--primary)', fontWeight: 800 }}>{person.employeeId}</div>
-                  </div>
-                </div>
-                <button 
-                   onClick={(e) => handleEdit(e, person)}
-                   style={{ padding: 8, borderRadius: 10, border: 'none', background: 'var(--bg)', color: 'var(--text-muted)', cursor: 'pointer' }}
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 16px' }}>
+            <thead>
+              <tr style={{ textAlign: 'left' }}>
+                <th style={{ padding: '0 12px', fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Employee</th>
+                <th style={{ padding: '0 12px', fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Role / Dept</th>
+                <th style={{ padding: '0 12px', fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Type</th>
+                <th style={{ padding: '0 12px', fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Compensation</th>
+                <th style={{ padding: '0 12px', fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>OT</th>
+                <th style={{ padding: '0 12px', fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredStaff.map((person, i) => (
+                <motion.tr
+                  key={person._id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.03 }}
+                  style={{ 
+                    background: 'var(--surface)',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
+                    cursor: 'pointer'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.05)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.02)';
+                  }}
+                  onClick={() => navigate(`/staff/${person._id}`)}
                 >
-                  <Edit size={16} />
-                </button>
-              </div>
+                  {/* Employee Info */}
+                  <td style={{ padding: '12px', borderTopLeftRadius: 12, borderBottomLeftRadius: 12 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                      <div style={{ 
+                        width: 48, height: 48, borderRadius: 12, 
+                        background: person.type === 'Intern' ? '#1e40af' : '#3f6212', 
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                        color: '#ffffff', fontSize: 16, fontWeight: 700, flexShrink: 0,
+                        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'
+                      }}>
+                        {person.fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--text)' }}>{person.fullName}</div>
+                        <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{person.employeeId} · {person.department || 'N/A'}</div>
+                      </div>
+                    </div>
+                  </td>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-muted)', fontSize: 13 }}>
-                  <Briefcase size={14} /> {person.designation || 'No designation'}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-muted)', fontSize: 13 }}>
-                  <Mail size={14} /> {person.email}
-                </div>
-                {person.phone && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-muted)', fontSize: 13 }}>
-                    <Phone size={14} /> {person.phone}
-                  </div>
-                )}
-              </div>
+                  {/* Role */}
+                  <td style={{ padding: '12px' }}>
+                    <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text)' }}>{person.designation || 'No Designation'}</div>
+                  </td>
 
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
-                <span className={`badge ${person.type === 'Employee' ? 'badge-navy' : 'badge-emerald'}`}>{person.type}</span>
-                <span className="badge" style={{ background: 'var(--bg)', color: 'var(--text-muted)' }}>{person.department || 'General'}</span>
-                {person.isPortalEnabled ? (
-                  <span className="badge badge-emerald">Portal Active</span>
-                ) : (
-                  <span className="badge" style={{ background: 'var(--bg)', color: 'var(--text)' }}>Portal Disabled</span>
-                )}
-                {person.overtimeEligible && (
-                  <span className="badge" style={{ background: 'var(--bg)', color: 'var(--primary)' }}>Overtime Enabled</span>
-                )}
-              </div>
+                  {/* Type Badge */}
+                  <td style={{ padding: '12px' }}>
+                    <span style={{ 
+                      padding: '4px 12px', borderRadius: 100, fontSize: 11, fontWeight: 700,
+                      background: person.type === 'Intern' ? 'rgba(30, 64, 175, 0.1)' : 'rgba(63, 98, 18, 0.1)',
+                      color: person.type === 'Intern' ? '#1e40af' : '#3f6212',
+                      border: `1px solid ${person.type === 'Intern' ? 'rgba(30, 64, 175, 0.2)' : 'rgba(63, 98, 18, 0.2)'}`
+                    }}>
+                      {person.type}
+                    </span>
+                  </td>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
-                <div style={{ display: 'flex', gap: 10 }}>
-                  <button 
-                    onClick={(e) => handleToggleAccess(e, person)}
-                    disabled={actionLoading === person._id}
-                    style={{
-                      flex: 1, padding: '8px 12px', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                      background: person.isPortalEnabled ? 'var(--bg)' : 'var(--primary)',
-                      color: person.isPortalEnabled ? 'var(--primary)' : '#ffffff',
-                      border: person.isPortalEnabled ? '1px solid var(--primary)' : 'none'
-                    }}
-                  >
-                    {actionLoading === person._id ? (
-                      <Loader2 size={14} className="animate-spin" />
-                    ) : person.isPortalEnabled ? (
-                      <><Ban size={14} /> Revoke Access</>
-                    ) : (
-                      <><Key size={14} /> Grant Access</>
-                    )}
-                  </button>
-                  <button 
-                    onClick={(e) => handleToggleOvertime(e, person)}
-                    disabled={actionLoading === person._id + '_ot'}
-                    style={{
-                      flex: 1, padding: '8px 12px', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                      background: 'var(--bg)',
-                      color: 'var(--primary)',
-                      border: '1px solid var(--primary)'
-                    }}
-                  >
-                    {actionLoading === person._id + '_ot' ? (
-                      <Loader2 size={14} className="animate-spin" />
-                    ) : (
-                      <><Clock size={14} /> {person.overtimeEligible ? 'Disable OT' : 'Enable OT'}</>
-                    )}
-                  </button>
-                </div>
-                
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ textAlign: 'left' }}>
-                     <div style={{ fontSize: 11, color: 'var(--text-light)', fontWeight: 600, textTransform: 'uppercase' }}>
-                       {person.type === 'Employee' ? 'Annual CTC' : 'Stipend'}
-                     </div>
-                     <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--primary)' }}>
-                       ₹{person.type === 'Employee' ? (person.salaryDetails?.annualCTC?.toLocaleString() || 0) : (person.salaryDetails?.baseSalary?.toLocaleString() || 0)}
-                     </div>
-                  </div>
-                  <button 
-                    onClick={() => navigate(`/staff/${person._id}`)}
-                    style={{
-                      background: 'var(--primary)', color: '#ffffff', border: 'none', borderRadius: 10,
-                      padding: '8px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer',
-                      display: 'flex', alignItems: 'center', gap: 6
-                    }}
-                  >
-                    <Info size={14} /> View Details
-                  </button>
-                  <ChevronRight size={18} color="var(--text-light)" />
-                </div>
-              </div>
-            </motion.div>
-          ))}
+                  {/* Compensation */}
+                  <td style={{ padding: '12px' }}>
+                    <div>
+                      <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', marginBottom: 2 }}>
+                        {person.type === 'Employee' ? 'Annual CTC' : 'Monthly Stipend'}
+                      </div>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--primary)' }}>
+                        ₹{person.type === 'Employee' ? (person.salaryDetails?.annualCTC?.toLocaleString() || 0) : (person.salaryDetails?.baseSalary?.toLocaleString() || 0)}
+                      </div>
+                    </div>
+                  </td>
+
+                  {/* OT Status */}
+                  <td style={{ padding: '12px' }}>
+                    <span style={{ 
+                      padding: '4px 12px', borderRadius: 100, fontSize: 11, fontWeight: 700,
+                      background: person.overtimeEligible ? 'rgba(63, 98, 18, 0.1)' : 'rgba(0,0,0,0.05)',
+                      color: person.overtimeEligible ? '#3f6212' : 'var(--text-muted)',
+                      border: `1px solid ${person.overtimeEligible ? 'rgba(63, 98, 18, 0.2)' : 'rgba(0,0,0,0.1)'}`
+                    }}>
+                      {person.overtimeEligible ? 'Enabled' : 'Disabled'}
+                    </span>
+                  </td>
+
+                  {/* Actions */}
+                  <td style={{ padding: '12px', textAlign: 'right', borderTopRightRadius: 12, borderBottomRightRadius: 12 }}>
+                    <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
+                      <button 
+                        onClick={(e) => handleToggleAccess(e, person)}
+                        title={person.isPortalEnabled ? "Revoke Access" : "Grant Access"}
+                        style={{ padding: 8, borderRadius: 8, border: 'none', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer' }}
+                      >
+                        {actionLoading === person._id ? <Loader2 size={16} className="animate-spin" /> : <Key size={16} />}
+                      </button>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); navigate(`/staff/${person._id}/attendance`); }}
+                        title="View Attendance"
+                        style={{ padding: 8, borderRadius: 8, border: 'none', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer' }}
+                      >
+                        <Clock size={16} />
+                      </button>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); navigate(`/staff/${person._id}/payslips`); }}
+                        title="View Payslips"
+                        style={{ padding: 8, borderRadius: 8, border: 'none', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer' }}
+                      >
+                        <FileText size={16} />
+                      </button>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); navigate(`/staff/${person._id}`); }}
+                        title="View Details"
+                        style={{ padding: 8, borderRadius: 8, border: 'none', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer' }}
+                      >
+                        <Eye size={16} />
+                      </button>
+                      <button 
+                        onClick={(e) => handleEdit(e, person)}
+                        title="Edit Staff"
+                        style={{ padding: 8, borderRadius: 8, border: 'none', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer' }}
+                      >
+                        <Edit size={16} />
+                      </button>
+                    </div>
+                  </td>
+                </motion.tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 

@@ -141,6 +141,7 @@ h3 { font-size: 18px; line-height: 1.4; margin-bottom: 0.5rem; }
 /* Breakpoints & Layout Systems */
 :root {
   --sidebar-w: 260px;
+  --sidebar-mini-w: 84px;
   --header-h: 70px;
   --container-max: 1200px;
   --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);

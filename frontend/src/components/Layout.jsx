@@ -164,16 +164,17 @@ export default function Layout() {
 
       {/* Sidebar */}
       <aside style={{
-        width: 'var(--sidebar-w)',
+        width: isMobile ? 'var(--sidebar-w)' : (sidebarOpen ? 'var(--sidebar-w)' : 'var(--sidebar-mini-w)'),
         background: 'var(--primary)',
         display: 'flex',
         flexDirection: 'column',
         position: 'fixed',
         top: 0, left: 0, bottom: 0,
         zIndex: 120,
-        transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
-        transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+        transform: (isMobile && !sidebarOpen) ? 'translateX(-100%)' : 'translateX(0)',
+        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
         borderRight: '1px solid rgba(255,255,255,0.1)',
+        overflow: 'hidden'
       }}>
         {/* Brand Header */}
         <div style={{
@@ -181,7 +182,7 @@ export default function Layout() {
           padding: '0 24px',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between',
+          justifyContent: sidebarOpen ? 'space-between' : 'center',
           borderBottom: '1px solid rgba(255,255,255,0.05)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -189,17 +190,37 @@ export default function Layout() {
               width: 38, height: 38, borderRadius: 6,
               background: 'var(--white)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0
             }}>
               <FileSpreadsheet size={20} color="var(--primary)" strokeWidth={2.5} />
             </div>
-            <div>
-              <div style={{
-                fontFamily: 'var(--font-display)',
-                fontSize: 19, fontWeight: 800,
-                color: 'white', letterSpacing: '-0.02em'
-              }}>PaySlip<span style={{ color: 'var(--bg)' }}>Pro</span></div>
-            </div>
+            {sidebarOpen && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                <div style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: 19, fontWeight: 800,
+                  color: 'white', letterSpacing: '-0.02em',
+                  whiteSpace: 'nowrap'
+                }}>PaySlip<span style={{ color: 'var(--bg)' }}>Pro</span></div>
+              </motion.div>
+            )}
           </div>
+
+          {!isMobile && (
+            <button 
+              onClick={toggleSidebar} 
+              style={{ 
+                background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', 
+                cursor: 'pointer', padding: 6, borderRadius: 8,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'all 0.2s',
+                marginLeft: sidebarOpen ? 0 : -4
+              }}
+            >
+              {sidebarOpen ? <ChevronLeft size={20} /> : <Menu size={20} />}
+            </button>
+          )}
+
           {isMobile && (
             <button onClick={() => setSidebarOpen(false)} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', cursor: 'pointer', padding: 6, borderRadius: 8 }}>
               <ChevronLeft size={20} />
@@ -208,18 +229,25 @@ export default function Layout() {
         </div>
 
         {/* Navigation Sidebar */}
-        <nav style={{ padding: '24px 16px', flex: 1, overflowY: 'auto' }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em', padding: '0 12px 16px', textTransform: 'uppercase' }}>
-            Main Menu
+        <nav style={{ padding: '24px 16px', flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
+          <div style={{ 
+            fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.3)', 
+            letterSpacing: '0.1em', padding: sidebarOpen ? '0 12px 16px' : '0 0 16px', 
+            textTransform: 'uppercase', textAlign: sidebarOpen ? 'left' : 'center',
+            whiteSpace: 'nowrap'
+          }}>
+            {sidebarOpen ? 'Main Menu' : '•••'}
           </div>
           {navItems.map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}
               to={to}
               end={end}
+              title={!sidebarOpen ? label : ''}
               style={({ isActive }) => ({
                 display: 'flex',
                 alignItems: 'center',
+                justifyContent: sidebarOpen ? 'flex-start' : 'center',
                 gap: 12,
                 padding: '12px 16px',
                 borderRadius: 6,
@@ -230,10 +258,11 @@ export default function Layout() {
                 color: isActive ? 'white' : 'rgba(255,255,255,0.5)',
                 background: isActive ? 'rgba(255,255,255,0.08)' : 'transparent',
                 transition: 'all 0.2s ease',
+                whiteSpace: 'nowrap'
               })}
             >
-              <Icon size={18} opacity={0.8} />
-              {label}
+              <Icon size={20} opacity={0.8} style={{ flexShrink: 0 }} />
+              {sidebarOpen && <span>{label}</span>}
             </NavLink>
           ))}
         </nav>
@@ -245,41 +274,49 @@ export default function Layout() {
           borderTop: '1px solid rgba(255,255,255,0.05)',
         }}>
           <div style={{ 
-            display: 'flex', alignItems: 'center', gap: 12, 
+            display: 'flex', alignItems: 'center', justifyContent: sidebarOpen ? 'flex-start' : 'center', gap: 12, 
             padding: '12px', background: 'rgba(255,255,255,0.03)', 
             borderRadius: 12, marginBottom: 12 
           }}>
             <div style={{ 
               width: 36, height: 36, borderRadius: 6, 
               background: 'var(--bg)', border: '1px solid rgba(255,255,255,0.1)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center' 
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0
             }}>
               <User size={16} color="var(--primary)" />
             </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13, color: 'white', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {user?.companyName || 'Corporate Account'}
-              </div>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>Verified Workspace</div>
-            </div>
+            {sidebarOpen && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, color: 'white', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {user?.companyName || 'Corporate Account'}
+                </div>
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>Verified Workspace</div>
+              </motion.div>
+            )}
           </div>
           <button 
             onClick={logout}
             className="btn-secondary"
-            style={{ width: '100%', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)' }}
+            style={{ 
+              width: '100%', background: 'rgba(255,255,255,0.05)', color: 'white', 
+              border: '1px solid rgba(255,255,255,0.1)', padding: sidebarOpen ? '10px' : '10px 0',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10
+            }}
+            title={!sidebarOpen ? "Sign Out" : ""}
           >
-            <LogOut size={16} /> Sign Out
+            <LogOut size={16} /> {sidebarOpen && "Sign Out"}
           </button>
         </div>
       </aside>
 
       {/* Main Framework */}
       <main style={{ 
-        marginLeft: isMobile ? 0 : (sidebarOpen ? 'var(--sidebar-w)' : 0), 
+        marginLeft: isMobile ? 0 : (sidebarOpen ? 'var(--sidebar-w)' : 'var(--sidebar-mini-w)'), 
         flex: 1, 
         display: 'flex', 
         flexDirection: 'column',
-        transition: 'margin 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
         minWidth: 0
       }}>
         
@@ -298,18 +335,20 @@ export default function Layout() {
           backdropFilter: 'blur(8px)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <button 
-              onClick={toggleSidebar}
-              style={{ 
-                background: 'var(--bg)', border: '1px solid var(--border)', 
-                color: 'var(--text)', cursor: 'pointer', 
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                width: 40, height: 40, borderRadius: 12, transition: 'all 0.2s'
-              }}
-              className="btn-hover"
-            >
-              <Menu size={20} />
-            </button>
+            {isMobile && (
+              <button 
+                onClick={toggleSidebar}
+                style={{ 
+                  background: 'var(--bg)', border: '1px solid var(--border)', 
+                  color: 'var(--text)', cursor: 'pointer', 
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  width: 40, height: 40, borderRadius: 12, transition: 'all 0.2s'
+                }}
+                className="btn-hover"
+              >
+                <Menu size={20} />
+              </button>
+            )}
             <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--primary)', opacity: 0.9, letterSpacing: '-0.01em' }}>
               Workspace Console
             </div>
@@ -319,8 +358,13 @@ export default function Layout() {
             {deferredPrompt && (
               <button
                 onClick={handleInstallClick}
-                className="btn-primary"
-                style={{ width: 40, height: 40, borderRadius: 12, padding: 0 }}
+                className="btn-hover"
+                style={{ 
+                  width: 40, height: 40, borderRadius: 12, 
+                  background: 'var(--primary)', color: 'white', border: 'none',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', boxShadow: '0 4px 12px rgba(88, 131, 59, 0.15)'
+                }}
                 title="Install Application"
               >
                 <Download size={20} />
