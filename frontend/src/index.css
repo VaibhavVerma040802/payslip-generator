@@ -172,14 +172,51 @@ h3 { font-size: 18px; line-height: 1.4; margin-bottom: 0.5rem; }
 }
 
 .btn-primary {
-  background: var(--bda-green);
-  color: white;
-  padding: 10px 20px;
+  background: var(--primary);
+  color: #ffffff !important;
+  padding: 10px 24px;
   border-radius: var(--radius-btn);
-  font-weight: 600;
+  font-weight: 700;
   border: none;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: var(--font-stack);
+  box-shadow: 0 4px 12px rgba(88, 131, 59, 0.15);
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.1);
+  box-shadow: 0 6px 16px rgba(88, 131, 59, 0.25);
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
+}
+
+.btn-secondary {
+  background: var(--bg);
+  color: var(--primary);
+  padding: 10px 24px;
+  border-radius: var(--radius-btn);
+  font-weight: 700;
+  border: 1.5px solid var(--primary);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   transition: all 0.2s ease;
+  font-family: var(--font-stack);
+}
+
+.btn-secondary:hover {
+  background: var(--primary);
+  color: #ffffff;
 }
 
 .btn-primary:hover {

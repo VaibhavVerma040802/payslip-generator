@@ -171,13 +171,11 @@ export default function PayslipList() {
         </div>
         <button
           onClick={() => navigate('/generate')}
-          style={{
-            background: 'var(--primary)', color: '#ffffff', border: 'none',
-            borderRadius: 6, padding: '14px 24px', fontWeight: 800,
-            fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10,
-            boxShadow: '0 10px 20px -5px rgba(88, 131, 59, 0.3)'
-          }}
-          className="btn-hover"
+          className="btn-primary"
+        >
+          <Plus size={18} strokeWidth={3} />
+          Create New
+        </button>
         >
           <Plus size={18} strokeWidth={3} />
           Create New

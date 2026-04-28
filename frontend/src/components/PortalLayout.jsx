@@ -238,12 +238,8 @@ export default function PortalLayout() {
           </div>
           <button 
             onClick={logout}
-            style={{
-              width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, 
-              background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.2)',
-              padding: '10px', borderRadius: 6, color: 'white', fontSize: 13, 
-              cursor: 'pointer', fontWeight: 600, transition: 'all 0.2s'
-            }}
+            className="btn-secondary"
+            style={{ width: '100%', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)' }}
           >
             <LogOut size={16} /> Sign Out
           </button>
@@ -372,21 +368,15 @@ export default function PortalLayout() {
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              {deferredPrompt && (
-                <button
-                  onClick={handleInstallClick}
-                  style={{
-                    background: 'var(--primary)', color: 'white', border: 'none',
-                    display: 'flex', alignItems: 'center', gap: 8,
-                    padding: '8px 16px', borderRadius: 12, fontSize: 13, fontWeight: 700,
-                    cursor: 'pointer', boxShadow: '0 4px 12px rgba(88, 131, 59, 0.15)',
-                    transition: 'all 0.2s'
-                  }}
-                  className="btn-hover"
-                >
-                  Install App
-                </button>
-              )}
+            {deferredPrompt && (
+              <button
+                onClick={handleInstallClick}
+                className="btn-primary"
+                style={{ height: 40, padding: '0 20px' }}
+              >
+                Install App
+              </button>
+            )}
               <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-muted)', display: isMobile ? 'none' : 'block' }}>
                 {staffUser?.companyName}
               </div>

@@ -243,7 +243,12 @@ export default function PortalDashboard() {
               onClick={() => handlePunch('out')}
               disabled={actionLoading}
               className="btn-primary"
-              style={{ width: '100%', height: 56, background: 'var(--text-dark)', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}
+              style={{ 
+                width: '100%', height: 56, 
+                background: '#ef4444', 
+                fontSize: 16, 
+                boxShadow: '0 4px 12px rgba(239, 68, 68, 0.2)' 
+              }}
             >
               {actionLoading ? <Loader2 size={20} className="animate-spin" /> : <LogOut size={20} />}
               Punch Out

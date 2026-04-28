@@ -185,7 +185,7 @@ export default function StaffList() {
           onClick={() => setShowModal(true)}
           className="btn-primary"
         >
-          <Plus size={18} strokeWidth={3} /> Add New Staff
+          <Plus size={18} strokeWidth={2.5} /> Add New Staff
         </button>
       </header>
 
