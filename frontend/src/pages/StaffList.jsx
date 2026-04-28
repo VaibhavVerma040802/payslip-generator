@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link, useNavigate } from 'react-router-dom'
-import { Plus, Search, Briefcase, ChevronRight, X, Loader2, User, Mail, Phone, Key, Ban, Edit, Info, Clock, FileText, Eye } from 'lucide-react'
+import { Plus, Search, Briefcase, ChevronRight, X, Loader2, User, Mail, Phone, Key, Ban, Edit, Info, Clock, FileText, Eye, FilePlus, Zap } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../api'
 import { useTheme } from '../context/ThemeContext'
@@ -255,7 +255,7 @@ export default function StaffList() {
                   style={{ 
                     background: 'var(--surface)',
                     boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
-                    cursor: 'pointer'
+                    cursor: 'default'
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.transform = 'translateY(-2px)';
@@ -265,9 +265,8 @@ export default function StaffList() {
                     e.currentTarget.style.transform = 'translateY(0)';
                     e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.02)';
                   }}
-                  onClick={() => navigate(`/staff/${person._id}`)}
                 >
-                  {/* Employee Info */}
+                  {/* ... previous tds ... */}
                   <td style={{ padding: '12px', borderTopLeftRadius: 12, borderBottomLeftRadius: 12 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                       <div style={{ 
@@ -286,12 +285,10 @@ export default function StaffList() {
                     </div>
                   </td>
 
-                  {/* Role */}
                   <td style={{ padding: '12px' }}>
                     <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text)' }}>{person.designation || 'No Designation'}</div>
                   </td>
 
-                  {/* Type Badge */}
                   <td style={{ padding: '12px' }}>
                     <span style={{ 
                       padding: '4px 12px', borderRadius: 100, fontSize: 11, fontWeight: 700,
@@ -303,7 +300,6 @@ export default function StaffList() {
                     </span>
                   </td>
 
-                  {/* Compensation */}
                   <td style={{ padding: '12px' }}>
                     <div>
                       <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', marginBottom: 2 }}>
@@ -315,7 +311,6 @@ export default function StaffList() {
                     </div>
                   </td>
 
-                  {/* OT Status */}
                   <td style={{ padding: '12px' }}>
                     <span style={{ 
                       padding: '4px 12px', borderRadius: 100, fontSize: 11, fontWeight: 700,
@@ -327,29 +322,28 @@ export default function StaffList() {
                     </span>
                   </td>
 
-                  {/* Actions */}
                   <td style={{ padding: '12px', textAlign: 'right', borderTopRightRadius: 12, borderBottomRightRadius: 12 }}>
                     <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
                       <button 
                         onClick={(e) => handleToggleAccess(e, person)}
-                        title={person.isPortalEnabled ? "Revoke Access" : "Grant Access"}
+                        title={person.isPortalEnabled ? "Revoke Access" : "Give Access"}
                         style={{ padding: 8, borderRadius: 8, border: 'none', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer' }}
                       >
                         {actionLoading === person._id ? <Loader2 size={16} className="animate-spin" /> : <Key size={16} />}
                       </button>
                       <button 
-                        onClick={(e) => { e.stopPropagation(); navigate(`/staff/${person._id}/attendance`); }}
-                        title="View Attendance"
+                        onClick={(e) => handleToggleOvertime(e, person)}
+                        title={person.overtimeEligible ? "Disable OT" : "Enable OT"}
                         style={{ padding: 8, borderRadius: 8, border: 'none', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer' }}
                       >
-                        <Clock size={16} />
+                        {actionLoading === person._id + '_ot' ? <Loader2 size={16} className="animate-spin" /> : <Zap size={16} color={person.overtimeEligible ? 'var(--primary)' : 'inherit'} />}
                       </button>
                       <button 
-                        onClick={(e) => { e.stopPropagation(); navigate(`/staff/${person._id}/payslips`); }}
-                        title="View Payslips"
+                        onClick={(e) => { e.stopPropagation(); navigate(`/generate?staffId=${person._id}`); }}
+                        title="Generate Payslip"
                         style={{ padding: 8, borderRadius: 8, border: 'none', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer' }}
                       >
-                        <FileText size={16} />
+                        <FilePlus size={16} />
                       </button>
                       <button 
                         onClick={(e) => { e.stopPropagation(); navigate(`/staff/${person._id}`); }}
@@ -360,7 +354,7 @@ export default function StaffList() {
                       </button>
                       <button 
                         onClick={(e) => handleEdit(e, person)}
-                        title="Edit Staff"
+                        title="Edit Details"
                         style={{ padding: 8, borderRadius: 8, border: 'none', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer' }}
                       >
                         <Edit size={16} />
