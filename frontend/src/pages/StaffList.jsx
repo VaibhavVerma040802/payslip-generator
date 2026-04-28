@@ -237,7 +237,6 @@ export default function StaffList() {
                 cursor: 'pointer', transition: 'all 0.3s',
                 position: 'relative', overflow: 'hidden'
               }}
-              className="hover:border-gold hover:-translate-y-1"
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
                 <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>

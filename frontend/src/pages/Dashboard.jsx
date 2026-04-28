@@ -206,7 +206,7 @@ export default function Dashboard() {
                 borderBottom: idx === pendingActions.length - 1 ? 'none' : '1px solid var(--border)',
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap',
                 transition: 'background 0.2s'
-              }} className="hover:bg-gray-50">
+              }} >
                 <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
                    <div style={{ width: 44, height: 44, borderRadius: 6, background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', fontWeight: 600 }}>
                      {action.staff?.fullName?.charAt(0).toUpperCase()}

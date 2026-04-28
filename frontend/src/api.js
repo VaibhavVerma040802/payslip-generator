@@ -10,7 +10,7 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
   // Determine which token to use based on the request URL
   const url = config.url
-  const isPortalRoute = url.startsWith('/portal/') || url.startsWith('/attendance/')
+  const isPortalRoute = url.startsWith('/portal/') || url.startsWith('/attendance/') || url.startsWith('/leaves/')
   const isPayslipDownload = url.includes('/payslips/') && url.endsWith('/download')
   
   let token = null

@@ -11,9 +11,10 @@ import api from '../api'
 
 const navItems = [
   { to: '/portal/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/portal/attendance', label: 'Attendance', icon: Clock },
   { to: '/portal/payslips', label: 'My Payslips', icon: FileText },
-  { to: '/portal/summary', label: 'Salary', icon: CalendarDays },
-  { to: '/portal/profile', label: 'Profile', icon: User },
+  { to: '/portal/summary', label: 'Weekly Summary', icon: CalendarDays },
+  { to: '/portal/profile', label: 'My Profile', icon: User },
 ]
 
 function useMediaQuery(query) {

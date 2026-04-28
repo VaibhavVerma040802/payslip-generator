@@ -12,10 +12,12 @@ import { useTheme } from '../context/ThemeContext'
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
-  { to: '/staff', label: 'Employees', icon: Users },
-  { to: '/payslips', label: 'Payroll', icon: List },
-  { to: '/leave-requests', label: 'Leave Requests', icon: CalendarDays },
-  { to: '/audit-logs', label: 'Reports', icon: Activity },
+  { to: '/generate', label: 'Generate Payslip', icon: PlusCircle },
+  { to: '/payslips', label: 'All Payslips', icon: List },
+  { to: '/staff', label: 'Staff Management', icon: Users },
+  { to: '/leave-requests', label: 'Leave Requests', icon: Bell },
+  { to: '/audit-logs', label: 'Audit Logs', icon: Activity },
+  { to: '/profile', label: 'Company Profile', icon: Settings },
 ]
 
 function useMediaQuery(query) {
