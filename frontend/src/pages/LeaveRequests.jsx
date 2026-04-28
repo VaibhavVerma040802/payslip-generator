@@ -53,7 +53,7 @@ export default function LeaveRequests() {
   return (
     <div style={{ padding: 'clamp(24px, 5vw, 48px)', maxWidth: 1200, margin: '0 auto' }}>
       <header style={{ marginBottom: 40 }}>
-        <h1 style={{ fontSize: 32, color: 'var(--navy)', marginBottom: 8, letterSpacing: '-0.02em' }}>Leave Management</h1>
+        <h1 style={{ fontSize: 32, color: 'var(--primary)', marginBottom: 8, letterSpacing: '-0.02em' }}>Leave Management</h1>
         <p style={{ color: 'var(--text-muted)', fontWeight: 500 }}>Review and respond to staff leave applications.</p>
       </header>
 
@@ -63,11 +63,8 @@ export default function LeaveRequests() {
           <input 
             type="text" placeholder="Search by name or ID..." 
             value={search} onChange={e => setSearch(e.target.value)}
-            style={{ 
-              width: '100%', padding: '14px 14px 14px 44px', border: '2px solid var(--border)', 
-              borderRadius: 14, background: 'var(--surface)', fontSize: 14, fontWeight: 500,
-              outline: 'none', color: 'var(--text)'
-            }}
+            className="input-field"
+            style={{ width: '100%', paddingLeft: 44 }}
           />
         </div>
       </div>
@@ -75,7 +72,7 @@ export default function LeaveRequests() {
       {loading ? (
         <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}><Loader2 size={32} className="animate-spin text-muted" /></div>
       ) : filteredRequests.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: 80, background: 'var(--surface)', borderRadius: 24, border: '1px dashed var(--border)' }}>
+        <div style={{ textAlign: 'center', padding: 80, background: 'var(--surface)', borderRadius: 12, border: '1px dashed var(--border)' }}>
           <CalendarIcon size={48} color="var(--text-light)" style={{ marginBottom: 16 }} />
           <h3 style={{ color: 'var(--text)', marginBottom: 8 }}>No pending requests</h3>
           <p style={{ color: 'var(--text-muted)' }}>All caught up! New requests will appear here.</p>
@@ -87,17 +84,17 @@ export default function LeaveRequests() {
               key={req._id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="glass"
-              style={{ padding: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 24 }}
+              className="card"
+              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 24 }}
             >
               <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
-                <div style={{ width: 56, height: 56, borderRadius: 16, background: 'var(--navy)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 800 }}>
+                <div style={{ width: 56, height: 56, borderRadius: 6, background: 'var(--primary)', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 600 }}>
                   {req.staff?.fullName?.charAt(0).toUpperCase()}
                 </div>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <h3 style={{ margin: 0, fontSize: 18, color: 'var(--navy)', fontWeight: 800 }}>{req.staff?.fullName}</h3>
-                    <span className="badge badge-navy" style={{ fontSize: 10 }}>{req.type} LEAVE</span>
+                    <h3 style={{ margin: 0, fontSize: 18, color: 'var(--primary)', fontWeight: 800 }}>{req.staff?.fullName}</h3>
+                    <span className="badge badge-emerald" style={{ fontSize: 10 }}>{req.type} LEAVE</span>
                   </div>
                   <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4, fontWeight: 500 }}>
                     {new Date(req.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} — {new Date(req.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
@@ -111,18 +108,16 @@ export default function LeaveRequests() {
                 </div>
                 <p style={{ margin: 0, fontSize: 14, color: 'var(--text)', lineHeight: 1.5 }}>{req.reason}</p>
                 <div style={{ marginTop: 12, display: 'flex', gap: 16 }}>
-                  <div style={{ fontSize: 11, color: 'var(--text-light)', fontWeight: 700 }}>CASUAL BAL: <span style={{ color: 'var(--navy)' }}>{req.staff?.leaveBalance?.casual || 0}d</span></div>
-                  <div style={{ fontSize: 11, color: 'var(--text-light)', fontWeight: 700 }}>SICK BAL: <span style={{ color: 'var(--navy)' }}>{req.staff?.leaveBalance?.sick || 0}d</span></div>
+                  <div style={{ fontSize: 11, color: 'var(--text-light)', fontWeight: 700 }}>CASUAL BAL: <span style={{ color: 'var(--primary)' }}>{req.staff?.leaveBalance?.casual || 0}d</span></div>
+                  <div style={{ fontSize: 11, color: 'var(--text-light)', fontWeight: 700 }}>SICK BAL: <span style={{ color: 'var(--primary)' }}>{req.staff?.leaveBalance?.sick || 0}d</span></div>
                 </div>
               </div>
 
               <div style={{ display: 'flex', gap: 12 }}>
                 <button
                   onClick={() => setNoteModal(req._id)}
-                  style={{
-                    padding: '12px 24px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--bg)',
-                    color: 'var(--navy)', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8
-                  }}
+                  className="btn-primary"
+                  style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px' }}
                 >
                   Review & Respond
                 </button>
@@ -136,33 +131,37 @@ export default function LeaveRequests() {
       <AnimatePresence>
         {noteModal && (
           <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'absolute', inset: 0, background: 'rgba(2, 6, 23, 0.6)', backdropFilter: 'blur(4px)' }} onClick={() => setNoteModal(null)} />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'absolute', inset: 0, background: 'rgba(26, 26, 26, 0.6)', backdropFilter: 'blur(4px)' }} onClick={() => setNoteModal(null)} />
             <motion.div 
               initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-              style={{ background: 'var(--surface)', borderRadius: 24, width: '100%', maxWidth: 480, padding: 32, position: 'relative', zIndex: 1 }}
+              className="card"
+              style={{ width: '100%', maxWidth: 480, position: 'relative', zIndex: 1 }}
             >
-              <h2 style={{ fontSize: 24, color: 'var(--navy)', marginBottom: 16 }}>Leave Decision</h2>
+              <h2 style={{ fontSize: 24, color: 'var(--primary)', marginBottom: 16 }}>Leave Decision</h2>
               <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 24 }}>Add a note for the employee regarding this decision.</p>
               
               <textarea
                 placeholder="Write a message for the employee... (Optional)"
                 value={adminNote}
                 onChange={e => setAdminNote(e.target.value)}
-                style={{ width: '100%', height: 120, padding: 16, borderRadius: 16, border: '2px solid var(--border)', background: 'var(--bg)', outline: 'none', resize: 'none', fontSize: 14, marginBottom: 24 }}
+                className="input-field"
+                style={{ width: '100%', height: 120, padding: 16, outline: 'none', resize: 'none', fontSize: 14, marginBottom: 24 }}
               />
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                 <button
                   onClick={() => handleResponse(noteModal, 'Rejected')}
                   disabled={actionLoading === noteModal}
-                  style={{ height: 52, borderRadius: 14, border: '1px solid #fee2e2', background: '#fef2f2', color: '#ef4444', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+                  className="btn-secondary"
+                  style={{ height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
                 >
                   {actionLoading === noteModal ? <Loader2 size={20} className="animate-spin" /> : <><XCircle size={20} /> Deny Leave</>}
                 </button>
                 <button
                   onClick={() => handleResponse(noteModal, 'Approved')}
                   disabled={actionLoading === noteModal}
-                  style={{ height: 52, borderRadius: 14, border: 'none', background: 'var(--emerald)', color: 'white', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+                  className="btn-primary"
+                  style={{ height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
                 >
                   {actionLoading === noteModal ? <Loader2 size={20} className="animate-spin" /> : <><CheckCircle2 size={20} /> Approve</>}
                 </button>

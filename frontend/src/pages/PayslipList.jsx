@@ -19,7 +19,7 @@ const EmptyState = React.memo(({ filtered }) => {
           }}>
             <FileText size={32} color="var(--text-light)" />
           </div>
-          <h3 style={{ color: 'var(--navy)', marginBottom: 8 }}>
+          <h3 style={{ color: 'var(--primary)', marginBottom: 8 }}>
             {filtered ? 'No search results' : 'Your archive is empty'}
           </h3>
           <p style={{ fontSize: 14, color: 'var(--text-muted)', maxWidth: 300, margin: '0 auto' }}>
@@ -164,7 +164,7 @@ export default function PayslipList() {
       {/* Header Tier */}
       <div className="fade-in" style={{ marginBottom: 32, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap' }}>
         <div>
-          <h1 style={{ color: 'var(--navy)', letterSpacing: '-0.02em', marginBottom: 4 }}>Payslip Vault</h1>
+          <h1 style={{ color: 'var(--primary)', letterSpacing: '-0.02em', marginBottom: 4 }}>Payslip Vault</h1>
           <p style={{ color: 'var(--text-muted)', fontWeight: 500 }}>
             Management console for <strong>{pagination.total}</strong> generated artifacts.
           </p>
@@ -172,10 +172,10 @@ export default function PayslipList() {
         <button
           onClick={() => navigate('/generate')}
           style={{
-            background: 'var(--navy)', color: 'white', border: 'none',
-            borderRadius: 14, padding: '14px 24px', fontWeight: 800,
+            background: 'var(--primary)', color: '#ffffff', border: 'none',
+            borderRadius: 6, padding: '14px 24px', fontWeight: 800,
             fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10,
-            boxShadow: '0 10px 20px -5px rgba(15,23,42,0.3)'
+            boxShadow: '0 10px 20px -5px rgba(88, 131, 59, 0.3)'
           }}
           className="btn-hover"
         >
@@ -236,7 +236,7 @@ export default function PayslipList() {
             <button
               onClick={() => { setSearch(''); setFilterMonth(''); setFilterYear(''); setPage(1) }}
               style={{
-                background: 'var(--bg)', color: '#ef4444', border: '1px solid #fee2e2',
+                background: 'var(--bg)', color: 'var(--primary)', border: '1px solid var(--primary)',
                 borderRadius: 10, padding: '10px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer',
               }}
             >
@@ -251,11 +251,11 @@ export default function PayslipList() {
         <div style={{ width: '100%', overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 800 }}>
             <thead>
-              <tr style={{ background: 'var(--navy-dark)' }}>
+              <tr style={{ background: '#58833b' }}>
                 {['Employee Details', 'Period', 'Compensation', 'Tracking', 'Portal', 'Actions'].map((h, i) => (
                   <th key={h} style={{
                     padding: '16px 20px', textAlign: i === 5 ? 'right' : 'left',
-                    fontSize: 11, fontWeight: 800, color: 'var(--gold)',
+                    fontSize: 11, fontWeight: 800, color: '#ffffff',
                     letterSpacing: '0.1em', textTransform: 'uppercase',
                   }}>
                     {h}
@@ -293,7 +293,7 @@ export default function PayslipList() {
                       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                         <div style={{
                           width: 42, height: 42, borderRadius: 12,
-                          background: 'var(--navy)', color: 'var(--gold)',
+                          background: 'var(--primary)', color: '#ffffff',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           fontWeight: 900, fontSize: 15, flexShrink: 0,
                           boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
@@ -302,20 +302,20 @@ export default function PayslipList() {
                         </div>
                         <div style={{ overflow: 'hidden' }}>
                           <div style={{ fontWeight: 800, fontSize: 14.5, color: 'var(--text)', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{p.employeeName}</div>
-                          <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>{p.employeeId} · <span style={{ color: 'var(--navy)' }}>{p.department}</span></div>
+                          <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>{p.employeeId} · <span style={{ color: 'var(--primary)' }}>{p.department}</span></div>
                         </div>
                       </div>
                     </td>
 
                     {/* Timeline */}
                     <td style={{ padding: '16px 20px' }}>
-                      <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--navy)' }}>{p.month}</div>
+                      <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--primary)' }}>{p.month}</div>
                       <div style={{ fontSize: 12, color: 'var(--text-light)', fontWeight: 600 }}>CY {p.year}</div>
                     </td>
 
                     {/* Salary */}
                     <td style={{ padding: '16px 20px' }}>
-                      <div style={{ fontWeight: 900, color: 'var(--emerald)', fontSize: 15 }}>{fmt(p.netSalary)}</div>
+                      <div style={{ fontWeight: 900, color: 'var(--primary)', fontSize: 15 }}>{fmt(p.netSalary)}</div>
                       <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>Statutory Net</div>
                     </td>
 
@@ -331,19 +331,19 @@ export default function PayslipList() {
                     <td style={{ padding: '16px 20px' }}>
                       {p.isPushedToPortal 
                         ? <div className="badge badge-emerald">Live</div>
-                        : <div className="badge badge-navy">Hidden</div>
+                        : <div className="badge badge-red">Hidden</div>
                       }
                     </td>
 
                     {/* Professional Actions */}
                     <td style={{ padding: '16px 20px', textAlign: 'right' }}>
                       <div style={{ display: 'inline-flex', gap: 6 }}>
-                        <ActionBtn icon={Eye} label="View Full Slip" onClick={() => navigate(`/payslips/${p._id}`)} color="var(--navy)" />
-                        <ActionBtn icon={Share2} label="Push to Portal" loading={actionLoading[`push_${p._id}`]} onClick={() => handlePush(p._id)} color={p.isPushedToPortal ? 'var(--emerald)' : 'var(--text-light)'} />
-                        <ActionBtn icon={Copy} label="Clone Document" loading={actionLoading[`dup_${p._id}`]} onClick={() => handleDuplicate(p._id)} color="var(--gold)" />
-                        <ActionBtn icon={Download} label="Export PDF" loading={actionLoading[`dl_${p._id}`]} onClick={() => handleDownload(p._id, p.employeeName, p.month, p.year)} color="var(--emerald)" />
-                        <ActionBtn icon={Mail} label="Push to Email" loading={actionLoading[`em_${p._id}`]} onClick={() => handleEmail(p._id, p.employeeEmail)} color="#0284c7" />
-                        <ActionBtn icon={Trash2} label="Purge Record" loading={deleting === p._id} onClick={() => handleDelete(p._id)} color="#ef4444" />
+                        <ActionBtn icon={Eye} label="View Full Slip" onClick={() => navigate(`/payslips/${p._id}`)} color="var(--primary)" />
+                        <ActionBtn icon={Share2} label="Push to Portal" loading={actionLoading[`push_${p._id}`]} onClick={() => handlePush(p._id)} color="var(--primary)" />
+                        <ActionBtn icon={Copy} label="Clone Document" loading={actionLoading[`dup_${p._id}`]} onClick={() => handleDuplicate(p._id)} color="var(--primary)" />
+                        <ActionBtn icon={Download} label="Export PDF" loading={actionLoading[`dl_${p._id}`]} onClick={() => handleDownload(p._id, p.employeeName, p.month, p.year)} color="var(--primary)" />
+                        <ActionBtn icon={Mail} label="Push to Email" loading={actionLoading[`em_${p._id}`]} onClick={() => handleEmail(p._id, p.employeeEmail)} color="var(--primary)" />
+                        <ActionBtn icon={Trash2} label="Purge Record" loading={deleting === p._id} onClick={() => handleDelete(p._id)} color="var(--primary)" />
                       </div>
                     </td>
                   </tr>
@@ -373,7 +373,7 @@ export default function PayslipList() {
                   padding: '10px 16px', border: '1.5px solid var(--border)',
                   borderRadius: 12, background: 'var(--surface)',
                   cursor: page === 1 ? 'not-allowed' : 'pointer',
-                  color: page === 1 ? 'var(--text-light)' : 'var(--navy)', fontSize: 13, fontWeight: 700
+                  color: page === 1 ? 'var(--text-light)' : 'var(--primary)', fontSize: 13, fontWeight: 700
                 }}
               >
                 <ChevronLeft size={16} /> Prev
@@ -387,7 +387,7 @@ export default function PayslipList() {
                   padding: '10px 16px', border: '1.5px solid var(--border)',
                   borderRadius: 12, background: 'var(--surface)',
                   cursor: page === pagination.totalPages ? 'not-allowed' : 'pointer',
-                  color: page === pagination.totalPages ? 'var(--text-light)' : 'var(--navy)', fontSize: 13, fontWeight: 700
+                  color: page === pagination.totalPages ? 'var(--text-light)' : 'var(--primary)', fontSize: 13, fontWeight: 700
                 }}
               >
                 Next <ChevronRight size={16} />

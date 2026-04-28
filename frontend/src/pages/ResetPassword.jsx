@@ -68,20 +68,20 @@ export default function ResetPassword() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 60 }}>
             <div style={{
               width: 44, height: 44, borderRadius: 12,
-              background: 'linear-gradient(135deg, var(--gold) 0%, #f59e0b 100%)',
+              background: 'linear-gradient(135deg, var(--primary) 0%, #f59e0b 100%)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               boxShadow: '0 4px 15px rgba(245, 158, 11, 0.4)',
             }}>
               <FileSpreadsheet size={24} color="var(--navy-dark)" strokeWidth={2.5} />
             </div>
             <div style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 800, color: 'white', letterSpacing: '-0.02em' }}>
-              PaySlip<span style={{ color: 'var(--gold)' }}>Pro</span>
+              PaySlip<span style={{ color: 'var(--primary)' }}>Pro</span>
             </div>
           </div>
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
             <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(2.2rem, 4vw, 3rem)', fontWeight: 900, marginBottom: 20, lineHeight: 1, letterSpacing: '-0.04em' }}>
-              New <span style={{ color: 'var(--gold)' }}>Password.</span>
+              New <span style={{ color: 'var(--primary)' }}>Password.</span>
             </h1>
             <p style={{ fontSize: 18, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, marginBottom: 48, fontWeight: 500 }}>
               Choose a strong password to secure your enterprise payroll dashboard.
@@ -93,7 +93,7 @@ export default function ResetPassword() {
                 'Mix letters & numbers for strength',
               ].map((tip) => (
                 <li key={tip} style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'rgba(255,255,255,0.5)', fontSize: 14 }}>
-                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--gold)', flexShrink: 0 }} />
+                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--primary)', flexShrink: 0 }} />
                   {tip}
                 </li>
               ))}
@@ -111,8 +111,8 @@ export default function ResetPassword() {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.1, duration: 0.4 }}
-          style={{ width: '100%', maxWidth: 440, borderRadius: 32, padding: 'clamp(32px, 5vw, 60px)' }}
-          className="glass"
+          style={{ width: '100%', maxWidth: 440, borderRadius: 12, padding: 'clamp(32px, 5vw, 60px)' }}
+          className="card"
         >
           {success ? (
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ textAlign: 'center' }}>
@@ -124,11 +124,11 @@ export default function ResetPassword() {
               }}>
                 <CheckCircle size={40} color="white" />
               </div>
-              <h2 style={{ fontSize: 28, color: 'var(--navy)', marginBottom: 16 }}>Password Updated!</h2>
+              <h2 style={{ fontSize: 28, color: 'var(--primary)', marginBottom: 16 }}>Password Updated!</h2>
               <p style={{ color: 'var(--text-muted)', fontSize: 15, lineHeight: 1.7, marginBottom: 32 }}>
                 Your password has been reset successfully. Redirecting you to login...
               </p>
-              <Link to="/login" style={{ color: 'var(--navy)', fontWeight: 800, textDecoration: 'none', fontSize: 15 }}>
+              <Link to="/login" style={{ color: 'var(--primary)', fontWeight: 800, textDecoration: 'none', fontSize: 15 }}>
                 Go to Login →
               </Link>
             </motion.div>
@@ -142,12 +142,12 @@ export default function ResetPassword() {
               }}>
                 <XCircle size={40} color="white" />
               </div>
-              <h2 style={{ fontSize: 28, color: 'var(--navy)', marginBottom: 16 }}>Invalid Link</h2>
+              <h2 style={{ fontSize: 28, color: 'var(--primary)', marginBottom: 16 }}>Invalid Link</h2>
               <p style={{ color: 'var(--text-muted)', fontSize: 15, lineHeight: 1.7, marginBottom: 32 }}>
                 This reset link is invalid or missing. Please request a new one.
               </p>
               <Link to="/forgot" style={{
-                display: 'inline-block', background: 'var(--navy)', color: 'white',
+                display: 'inline-block', background: 'var(--primary)', color: 'white',
                 padding: '14px 28px', borderRadius: 12, fontWeight: 700, textDecoration: 'none', fontSize: 15,
               }}>
                 Request New Link
@@ -156,7 +156,7 @@ export default function ResetPassword() {
           ) : (
             <>
               <div style={{ textAlign: 'center', marginBottom: 48 }}>
-                <h2 style={{ fontSize: 32, color: 'var(--navy)', marginBottom: 12 }}>Set New Password</h2>
+                <h2 style={{ fontSize: 32, color: 'var(--primary)', marginBottom: 12 }}>Set New Password</h2>
                 <p style={{ color: 'var(--text-muted)', fontSize: 16, fontWeight: 500 }}>
                   Enter and confirm your new password below.
                 </p>
@@ -180,7 +180,7 @@ export default function ResetPassword() {
                       style={{
                         width: '100%', padding: '16px 48px 16px 50px', background: 'var(--bg)',
                         border: `2px solid ${form.password && !passwordValid ? '#ef4444' : 'var(--border)'}`,
-                        borderRadius: 16, outline: 'none', fontSize: 15,
+                        borderRadius: 12, outline: 'none', fontSize: 15,
                         color: 'var(--text)', transition: 'all 0.2s', fontWeight: 600,
                         boxSizing: 'border-box',
                       }}
@@ -217,7 +217,7 @@ export default function ResetPassword() {
                       style={{
                         width: '100%', padding: '16px 48px 16px 50px', background: 'var(--bg)',
                         border: `2px solid ${form.confirm && !passwordsMatch ? '#ef4444' : form.confirm && passwordsMatch ? '#10b981' : 'var(--border)'}`,
-                        borderRadius: 16, outline: 'none', fontSize: 15,
+                        borderRadius: 12, outline: 'none', fontSize: 15,
                         color: 'var(--text)', transition: 'all 0.2s', fontWeight: 600,
                         boxSizing: 'border-box',
                       }}
@@ -248,8 +248,8 @@ export default function ResetPassword() {
                   type="submit"
                   disabled={loading}
                   style={{
-                    width: '100%', height: 60, background: 'var(--navy)', color: 'white',
-                    border: 'none', borderRadius: 16, fontWeight: 800, fontSize: 16, cursor: 'pointer',
+                    width: '100%', height: 60, background: 'var(--primary)', color: 'white',
+                    border: 'none', borderRadius: 12, fontWeight: 800, fontSize: 16, cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
                     boxShadow: '0 15px 30px -10px rgba(15,23,42,0.4)',
                     opacity: loading ? 0.7 : 1,

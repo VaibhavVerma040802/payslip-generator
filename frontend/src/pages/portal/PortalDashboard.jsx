@@ -118,7 +118,7 @@ export default function PortalDashboard() {
     <div style={{ maxWidth: 1200, margin: '0 auto' }}>
       <header style={{ marginBottom: 40, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h1 style={{ fontSize: 32, color: 'var(--navy)', marginBottom: 8 }}>
+          <h1 style={{ fontSize: 32, color: 'var(--primary)', marginBottom: 8 }}>
             Good {currentTime.getHours() < 12 ? 'Morning' : currentTime.getHours() < 17 ? 'Afternoon' : 'Evening'}
           </h1>
           <p style={{ color: 'var(--text-muted)', fontWeight: 500 }}>Ready to track your progress today?</p>
@@ -128,9 +128,9 @@ export default function PortalDashboard() {
           whileTap={{ scale: 0.95 }}
           onClick={() => setLeaveModalOpen(true)}
           style={{
-            padding: '12px 24px', borderRadius: 12, background: 'var(--navy)', color: 'white',
+            padding: '12px 24px', borderRadius: 6, background: 'var(--primary)', color: 'white',
             border: 'none', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
-            boxShadow: '0 4px 12px rgba(15,23,42,0.15)'
+            boxShadow: '0 4px 12px rgba(88, 131, 59, 0.15)'
           }}
         >
           <CalendarIcon size={18} /> Apply for Leave
@@ -142,8 +142,8 @@ export default function PortalDashboard() {
         <motion.div
           initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
           style={{
-            marginBottom: 32, padding: 24, borderRadius: 20,
-            background: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)',
+            marginBottom: 32, padding: 24, borderRadius: 12,
+            background: 'var(--primary)',
             display: 'flex', alignItems: 'center', gap: 20, color: 'white'
           }}
         >
@@ -161,29 +161,28 @@ export default function PortalDashboard() {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
         {/* Live Clock Card */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass" style={{ padding: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
-          <div style={{ width: 64, height: 64, borderRadius: 20, background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--navy)', marginBottom: 20 }}>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
+          <div style={{ width: 64, height: 64, borderRadius: 6, background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', marginBottom: 20 }}>
             <Clock size={32} />
           </div>
-          <div style={{ fontSize: 48, fontWeight: 800, fontFamily: 'var(--font-display)', color: 'var(--navy)', letterSpacing: '-0.02em', marginBottom: 8 }}>
+          <div style={{ fontSize: 48, fontWeight: 600, fontFamily: 'var(--font-stack)', color: 'var(--primary)', letterSpacing: '-0.02em', marginBottom: 8 }}>
             {currentTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-muted)', fontWeight: 600 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-muted)', fontWeight: 500 }}>
             <CalendarIcon size={16} />
             {currentTime.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
           </div>
         </motion.div>
 
         {/* Punch Action Card */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass" style={{ padding: 32 }}>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 32 }}>
             <div>
-              <h3 style={{ margin: 0, color: 'var(--navy)', fontSize: 18 }}>Shift Status</h3>
+              <h3 style={{ margin: 0, color: 'var(--primary)', fontSize: 18 }}>Shift Status</h3>
               <p style={{ margin: '4px 0 0', color: 'var(--text-muted)', fontSize: 14 }}>
                 {isPunchedIn ? 'Currently PUNCHED IN' : (activeShift?.workStatus ? `Today: ${activeShift.workStatus}` : 'Currently PUNCHED OUT')}
               </p>
             </div>
-            {/* Status badge — green Active when punched in, navy Off-Duty otherwise */}
             <div
               className={`badge ${
                 isPunchedIn ? 'badge-emerald' : 
@@ -193,8 +192,8 @@ export default function PortalDashboard() {
               }`}
               style={{
                 display: 'flex', alignItems: 'center', gap: 6,
-                background: isPunchedIn ? 'var(--emerald)' : undefined,
-                color: 'white',
+                background: isPunchedIn ? 'var(--primary)' : undefined,
+                color: '#ffffff',
               }}
             >
               {isPunchedIn && (
@@ -211,11 +210,11 @@ export default function PortalDashboard() {
 
           {/* Session timer — only visible when punched in */}
           {isPunchedIn && activeShift?.punchIn && (
-            <div style={{ marginBottom: 32, padding: 16, background: 'var(--bg)', borderRadius: 16, border: '1px solid var(--border)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: 'var(--text-muted)', fontSize: 13, marginBottom: 8, fontWeight: 600 }}>
+            <div style={{ marginBottom: 32, padding: 16, background: 'var(--bg)', borderRadius: 6, border: '1px solid var(--border)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: 'var(--text-muted)', fontSize: 13, marginBottom: 8, fontWeight: 500 }}>
                 <Timer size={16} /> SESSION DURATION
               </div>
-              <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--navy)', fontFamily: 'monospace', letterSpacing: '0.05em' }}>
+              <div style={{ fontSize: 28, fontWeight: 600, color: 'var(--primary)', fontFamily: 'monospace', letterSpacing: '0.05em' }}>
                 {formatDuration(activeShift.punchIn)}
               </div>
               <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
@@ -231,13 +230,8 @@ export default function PortalDashboard() {
               whileTap={{ scale: 0.98 }}
               onClick={() => handlePunch('in')}
               disabled={actionLoading}
-              style={{
-                width: '100%', height: 56, background: 'var(--emerald)', color: 'white',
-                border: 'none', borderRadius: 14, fontWeight: 700, fontSize: 16, cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-                boxShadow: '0 10px 20px -5px rgba(16, 185, 129, 0.35)', transition: 'all 0.2s',
-                opacity: actionLoading ? 0.7 : 1,
-              }}
+              className="btn-primary"
+              style={{ width: '100%', height: 56, fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}
             >
               {actionLoading ? <Loader2 size={20} className="animate-spin" /> : <LogIn size={20} />}
               Punch In
@@ -248,13 +242,8 @@ export default function PortalDashboard() {
               whileTap={{ scale: 0.98 }}
               onClick={() => handlePunch('out')}
               disabled={actionLoading}
-              style={{
-                width: '100%', height: 56, background: '#ef4444', color: 'white',
-                border: 'none', borderRadius: 14, fontWeight: 700, fontSize: 16, cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-                boxShadow: '0 10px 20px -5px rgba(239, 68, 68, 0.35)', transition: 'all 0.2s',
-                opacity: actionLoading ? 0.7 : 1,
-              }}
+              className="btn-primary"
+              style={{ width: '100%', height: 56, background: 'var(--text-dark)', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}
             >
               {actionLoading ? <Loader2 size={20} className="animate-spin" /> : <LogOut size={20} />}
               Punch Out
@@ -264,13 +253,13 @@ export default function PortalDashboard() {
       </div>
 
       {/* Work Policy Info */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} style={{ marginTop: 24 }} className="glass">
-        <div style={{ padding: 24, display: 'flex', gap: 16, alignItems: 'center' }}>
-          <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(245,158,11,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gold)', flexShrink: 0 }}>
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} style={{ marginTop: 24 }} className="card">
+        <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+          <div style={{ width: 48, height: 48, borderRadius: 6, background: 'rgba(88, 131, 59, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', flexShrink: 0 }}>
             <AlertCircle size={24} />
           </div>
           <div style={{ flex: 1 }}>
-            <h4 style={{ margin: 0, color: 'var(--navy)', fontSize: 15 }}>Work Hours Policy</h4>
+            <h4 style={{ margin: 0, color: 'var(--primary)', fontSize: 15 }}>Work Hours Policy</h4>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginTop: 12 }}>
               <div style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5 }}>
                 • <strong>Start Time:</strong> 10:30 AM <br/>
@@ -290,24 +279,24 @@ export default function PortalDashboard() {
       {/* Leave History Section */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} style={{ marginTop: 48 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-          <h2 style={{ fontSize: 24, color: 'var(--navy)', margin: 0 }}>My Leave Requests</h2>
-          <div className="badge badge-navy">{leaveHistory.length} Total</div>
+          <h2 style={{ fontSize: 24, color: 'var(--primary)', margin: 0 }}>My Leave Requests</h2>
+          <div className="badge badge-emerald">{leaveHistory.length} Total</div>
         </div>
         
         {leaveHistory.length === 0 ? (
-          <div className="glass" style={{ padding: 48, textAlign: 'center', color: 'var(--text-muted)' }}>
+          <div className="card" style={{ padding: 48, textAlign: 'center', color: 'var(--text-muted)' }}>
             <CalendarIcon size={40} style={{ marginBottom: 16, opacity: 0.2 }} />
             <p>You haven't submitted any leave requests yet.</p>
           </div>
         ) : (
-          <div className="glass" style={{ overflowX: 'auto', padding: 0 }}>
+          <div className="card" style={{ overflowX: 'auto', padding: 0 }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 14 }}>
               <thead>
-                <tr style={{ borderBottom: '1px solid var(--border)', background: 'rgba(15,23,42,0.02)' }}>
-                  <th style={{ padding: '16px 24px', fontWeight: 700, color: 'var(--navy)' }}>Type</th>
-                  <th style={{ padding: '16px 24px', fontWeight: 700, color: 'var(--navy)' }}>Period</th>
-                  <th style={{ padding: '16px 24px', fontWeight: 700, color: 'var(--navy)' }}>Reason</th>
-                  <th style={{ padding: '16px 24px', fontWeight: 700, color: 'var(--navy)' }}>Status</th>
+                <tr style={{ borderBottom: '1px solid var(--border)', background: 'rgba(88, 131, 59, 0.05)' }}>
+                  <th style={{ padding: '16px 24px', fontWeight: 600, color: 'var(--primary)' }}>Type</th>
+                  <th style={{ padding: '16px 24px', fontWeight: 600, color: 'var(--primary)' }}>Period</th>
+                  <th style={{ padding: '16px 24px', fontWeight: 600, color: 'var(--primary)' }}>Reason</th>
+                  <th style={{ padding: '16px 24px', fontWeight: 600, color: 'var(--primary)' }}>Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -341,19 +330,20 @@ export default function PortalDashboard() {
       {/* Leave Request Modal */}
       {leaveModalOpen && (
         <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15,23,42,0.6)',
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(26, 26, 26, 0.6)',
           backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20
         }}>
-          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="glass" style={{ width: '100%', maxWidth: 480, padding: 32 }}>
-            <h2 style={{ fontSize: 24, color: 'var(--navy)', marginBottom: 24 }}>Apply for Leave</h2>
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="card" style={{ width: '100%', maxWidth: 480 }}>
+            <h2 style={{ fontSize: 24, color: 'var(--primary)', marginBottom: 24 }}>Apply for Leave</h2>
             <form onSubmit={handleApplyLeave} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 8, color: 'var(--text-muted)' }}>LEAVE TYPE</label>
+                <label className="label">LEAVE TYPE</label>
                 <select
                   required
                   value={leaveData.type}
                   onChange={e => setLeaveData({ ...leaveData, type: e.target.value })}
-                  style={{ width: '100%', padding: '12px 16px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', outline: 'none' }}
+                  className="input-field"
+                  style={{ width: '100%' }}
                 >
                   <option value="Casual">Paid Casual Leave</option>
                   <option value="Sick">Paid Sick Leave</option>
@@ -362,45 +352,50 @@ export default function PortalDashboard() {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 8, color: 'var(--text-muted)' }}>START DATE</label>
+                  <label className="label">START DATE</label>
                   <input
                     type="date" required
                     value={leaveData.startDate}
                     onChange={e => setLeaveData({ ...leaveData, startDate: e.target.value })}
-                    style={{ width: '100%', padding: '12px 16px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', outline: 'none' }}
+                    className="input-field"
+                    style={{ width: '100%' }}
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 8, color: 'var(--text-muted)' }}>END DATE</label>
+                  <label className="label">END DATE</label>
                   <input
                     type="date" required
                     value={leaveData.endDate}
                     onChange={e => setLeaveData({ ...leaveData, endDate: e.target.value })}
-                    style={{ width: '100%', padding: '12px 16px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', outline: 'none' }}
+                    className="input-field"
+                    style={{ width: '100%' }}
                   />
                 </div>
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 8, color: 'var(--text-muted)' }}>REASON</label>
+                <label className="label">REASON</label>
                 <textarea
                   required rows="3"
                   value={leaveData.reason}
                   onChange={e => setLeaveData({ ...leaveData, reason: e.target.value })}
                   placeholder="Explain your leave requirement..."
-                  style={{ width: '100%', padding: '12px 16px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', outline: 'none', resize: 'none' }}
+                  className="input-field"
+                  style={{ width: '100%', height: 'auto', padding: '12px', resize: 'none' }}
                 />
               </div>
               <div style={{ display: 'flex', gap: 12, marginTop: 12 }}>
                 <button
                   type="button"
                   onClick={() => setLeaveModalOpen(false)}
-                  style={{ flex: 1, height: 48, borderRadius: 12, border: '1px solid var(--border)', background: 'transparent', fontWeight: 700, color: 'var(--text)', cursor: 'pointer' }}
+                  className="btn-secondary"
+                  style={{ flex: 1, height: 48 }}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit" disabled={actionLoading}
-                  style={{ flex: 2, height: 48, borderRadius: 12, border: 'none', background: 'var(--navy)', color: 'white', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  className="btn-primary"
+                  style={{ flex: 2, height: 48 }}
                 >
                   {actionLoading ? <Loader2 size={20} className="animate-spin" /> : 'Submit Application'}
                 </button>

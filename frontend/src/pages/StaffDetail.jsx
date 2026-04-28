@@ -129,15 +129,15 @@ export default function StaffDetail() {
         <ArrowLeft size={18} /> Back to Staff
       </button>
 
-      <div style={{ background: 'var(--surface)', borderRadius: 24, border: '1px solid var(--border)', overflow: 'hidden', boxShadow: '0 10px 30px -10px rgba(0,0,0,0.05)' }}>
+      <div style={{ background: 'var(--surface)', borderRadius: 12, border: '1px solid var(--border)', overflow: 'hidden', boxShadow: '0 10px 30px -10px rgba(0,0,0,0.05)' }}>
         {/* Header Profile Area */}
         <div style={{ padding: 40, borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 24 }}>
           <div style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
-            <div style={{ width: 80, height: 80, borderRadius: 20, background: staff.type === 'Employee' ? 'var(--navy)' : 'var(--emerald)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 32, fontWeight: 800 }}>
+            <div style={{ width: 80, height: 80, borderRadius: 12, background: staff.type === 'Employee' ? 'var(--primary)' : 'var(--emerald)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 32, fontWeight: 800 }}>
               {staff.fullName.charAt(0).toUpperCase()}
             </div>
             <div>
-              <h1 style={{ margin: 0, color: 'var(--navy)', fontSize: 24, marginBottom: 8 }}>{staff.fullName}</h1>
+              <h1 style={{ margin: 0, color: 'var(--primary)', fontSize: 24, marginBottom: 8 }}>{staff.fullName}</h1>
               <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                 <span className={`badge ${staff.type === 'Employee' ? 'badge-navy' : 'badge-emerald'}`}>{staff.type}</span>
                 <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>{staff.designation || 'No Designation'} · {staff.department || 'General'}</span>
@@ -151,12 +151,12 @@ export default function StaffDetail() {
                 Grant Portal Access
               </button>
             ) : (
-              <button onClick={handleRevoke} disabled={revoking} style={{ padding: '10px 20px', borderRadius: 12, border: '1px solid #fee2e2', background: '#fef2f2', color: '#ef4444', fontWeight: 600, cursor: 'pointer', display: 'flex', gap: 8, alignItems: 'center' }}>
+              <button onClick={handleRevoke} disabled={revoking} style={{ padding: '10px 20px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--primary)', fontWeight: 600, cursor: 'pointer', display: 'flex', gap: 8, alignItems: 'center' }}>
                 {revoking ? <Loader2 size={16} className="animate-spin" /> : <Ban size={16} />}
                 Revoke Access
               </button>
             )}
-            <button onClick={handleDelete} disabled={deleting} style={{ padding: '10px', borderRadius: 12, border: '1px solid #fee2e2', background: '#fef2f2', color: '#ef4444', fontWeight: 600, cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <button onClick={handleDelete} disabled={deleting} style={{ padding: '10px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--primary)', fontWeight: 600, cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
               {deleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={18} />}
             </button>
           </div>
@@ -165,7 +165,7 @@ export default function StaffDetail() {
         <div style={{ padding: 40, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 40 }}>
           {/* Professional Details */}
           <div>
-            <h3 style={{ color: 'var(--navy)', marginBottom: 24, borderBottom: '2px solid var(--border)', paddingBottom: 8, display: 'inline-block' }}>Professional Details</h3>
+            <h3 style={{ color: 'var(--primary)', marginBottom: 24, borderBottom: '2px solid var(--border)', paddingBottom: 8, display: 'inline-block' }}>Professional Details</h3>
             <DetailRow icon={Code} label="Employee ID / Code" value={staff.employeeId} />
             <DetailRow icon={Mail} label="Email Address" value={staff.email} />
             <DetailRow icon={Phone} label="Phone Number" value={staff.phone} />
@@ -176,7 +176,7 @@ export default function StaffDetail() {
             {/* Overtime / Weekend Eligibility Toggle */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', borderTop: '1px solid var(--border)', marginTop: 8 }}>
               <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                <div style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gold)' }}><Shield size={18} /></div>
+                <div style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}><Shield size={18} /></div>
                 <div>
                   <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>WEEKEND OVERTIME</div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{staff.overtimeEligible ? 'Allowed (Sat/Sun work permitted)' : 'Not Eligible (Sat/Sun Off)'}</div>
@@ -185,7 +185,7 @@ export default function StaffDetail() {
               <button
                 onClick={handleToggleOvertimeEligible}
                 disabled={savingOT}
-                style={{ padding: '8px 16px', borderRadius: 10, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: staff.overtimeEligible ? '#fee2e2' : 'var(--emerald)', color: staff.overtimeEligible ? '#ef4444' : 'white' }}
+                style={{ padding: '8px 16px', borderRadius: 10, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: staff.overtimeEligible ? 'var(--bg)' : 'var(--primary)', color: staff.overtimeEligible ? 'var(--primary)' : '#ffffff' }}
               >
                 {savingOT ? <Loader2 size={14} className="animate-spin" style={{ display: 'inline' }} /> : (staff.overtimeEligible ? 'Disable' : 'Enable')}
               </button>
@@ -194,7 +194,7 @@ export default function StaffDetail() {
 
           {/* Financials */}
           <div>
-            <h3 style={{ color: 'var(--navy)', marginBottom: 24, borderBottom: '2px solid var(--border)', paddingBottom: 8, display: 'inline-block' }}>Financial Information</h3>
+            <h3 style={{ color: 'var(--primary)', marginBottom: 24, borderBottom: '2px solid var(--border)', paddingBottom: 8, display: 'inline-block' }}>Financial Information</h3>
             <DetailRow icon={CreditCard} label="PAN Number" value={staff.financials?.panNumber} />
             <DetailRow icon={Landmark} label="Bank Name" value={staff.financials?.bankName} />
             <DetailRow icon={Code} label="Account Number" value={staff.financials?.accountNumber} />
@@ -203,7 +203,7 @@ export default function StaffDetail() {
           
           {/* Salary */}
           <div>
-            <h3 style={{ color: 'var(--navy)', marginBottom: 24, borderBottom: '2px solid var(--border)', paddingBottom: 8, display: 'inline-block' }}>Salary Structure</h3>
+            <h3 style={{ color: 'var(--primary)', marginBottom: 24, borderBottom: '2px solid var(--border)', paddingBottom: 8, display: 'inline-block' }}>Salary Structure</h3>
             {isIntern ? (
               <DetailRow icon={IndianRupee} label="Monthly Stipend (Base Salary)" value={`₹ ${staff.salaryDetails?.baseSalary?.toLocaleString() || 0}`} />
             ) : (
@@ -219,15 +219,15 @@ export default function StaffDetail() {
 
         {/* Portal Access Management */}
         <div style={{ padding: '0 40px 40px' }}>
-          <h3 style={{ color: 'var(--navy)', marginBottom: 24, borderBottom: '2px solid var(--border)', paddingBottom: 8, display: 'inline-block' }}>Staff Portal Access</h3>
-          <div style={{ background: 'var(--bg)', padding: 24, borderRadius: 16, display: 'flex', flexWrap: 'wrap', gap: 24, alignItems: 'center', justifyContent: 'space-between' }}>
+          <h3 style={{ color: 'var(--primary)', marginBottom: 24, borderBottom: '2px solid var(--border)', paddingBottom: 8, display: 'inline-block' }}>Staff Portal Access</h3>
+          <div style={{ background: 'var(--bg)', padding: 24, borderRadius: 12, display: 'flex', flexWrap: 'wrap', gap: 24, alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
                 <h4 style={{ margin: 0, color: 'var(--text)', fontSize: 16 }}>Portal Status:</h4>
                 {staff.isPortalEnabled ? (
                   <span className="badge badge-emerald">Active</span>
                 ) : (
-                  <span className="badge" style={{ background: '#f3f4f6', color: '#4b5563' }}>Disabled</span>
+                  <span className="badge" style={{ background: 'var(--bg)', color: 'var(--text)' }}>Disabled</span>
                 )}
               </div>
               <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: 14 }}>
@@ -239,21 +239,21 @@ export default function StaffDetail() {
             
             <div style={{ display: 'flex', gap: 12 }}>
               {!staff.isPortalEnabled ? (
-                <button onClick={handleProvision} disabled={provisioning} style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: 'var(--emerald)', color: 'white', fontWeight: 600, cursor: 'pointer', display: 'flex', gap: 8, alignItems: 'center' }}>
-                  {provisioning ? <Loader2 size={16} className="animate-spin" /> : <Key size={16} />}
-                  Provision Access
-                </button>
+                  <button onClick={handleProvision} disabled={provisioning} style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: 'var(--primary)', color: '#ffffff', fontWeight: 600, cursor: 'pointer', display: 'flex', gap: 8, alignItems: 'center' }}>
+                    {provisioning ? <Loader2 size={16} className="animate-spin" /> : <Key size={16} />}
+                    Provision Access
+                  </button>
               ) : (
-                <button onClick={handleRevoke} disabled={revoking} style={{ padding: '10px 20px', borderRadius: 8, border: '1px solid #fee2e2', background: '#fef2f2', color: '#ef4444', fontWeight: 600, cursor: 'pointer', display: 'flex', gap: 8, alignItems: 'center' }}>
-                  {revoking ? <Loader2 size={16} className="animate-spin" /> : <Ban size={16} />}
-                  Revoke Access
-                </button>
+                  <button onClick={handleRevoke} disabled={revoking} style={{ padding: '10px 20px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--primary)', fontWeight: 600, cursor: 'pointer', display: 'flex', gap: 8, alignItems: 'center' }}>
+                    {revoking ? <Loader2 size={16} className="animate-spin" /> : <Ban size={16} />}
+                    Revoke Access
+                  </button>
               )}
             </div>
           </div>
           
           {tempPassword && (
-            <div style={{ marginTop: 16, padding: 16, background: '#fffbeb', border: '1px solid #fef3c7', borderRadius: 12, color: '#92400e' }}>
+            <div style={{ marginTop: 16, padding: 16, background: 'var(--bg)', border: '1px solid var(--primary)', borderRadius: 12, color: 'var(--primary)' }}>
               <strong>Temporary Password Generated:</strong> <span style={{ fontFamily: 'monospace', fontSize: 18, marginLeft: 8, letterSpacing: 2 }}>{tempPassword}</span>
               <p style={{ margin: '8px 0 0', fontSize: 13 }}>Please share this securely with the staff member if the email fails to deliver.</p>
             </div>
@@ -263,13 +263,13 @@ export default function StaffDetail() {
         {/* Attendance History (Admin View) */}
         {staff.isPortalEnabled && (
           <div style={{ padding: '0 40px 40px' }}>
-            <h3 style={{ color: 'var(--navy)', marginBottom: 24, borderBottom: '2px solid var(--border)', paddingBottom: 8, display: 'inline-block' }}>Recent Attendance (Last 30 Days)</h3>
+            <h3 style={{ color: 'var(--primary)', marginBottom: 24, borderBottom: '2px solid var(--border)', paddingBottom: 8, display: 'inline-block' }}>Recent Attendance (Last 30 Days)</h3>
             {attendance.length === 0 ? (
-              <div style={{ padding: 32, textAlign: 'center', background: 'var(--bg)', borderRadius: 16, color: 'var(--text-muted)' }}>
+              <div style={{ padding: 32, textAlign: 'center', background: 'var(--bg)', borderRadius: 12, color: 'var(--text-muted)' }}>
                 No recent attendance records found.
               </div>
             ) : (
-              <div style={{ overflowX: 'auto', background: 'var(--bg)', borderRadius: 16 }}>
+              <div style={{ overflowX: 'auto', background: 'var(--bg)', borderRadius: 12 }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 14 }}>
                   <thead>
                     <tr style={{ borderBottom: '1px solid var(--border)' }}>
@@ -294,7 +294,7 @@ export default function StaffDetail() {
                         </td>
                         <td style={{ padding: 16, color: 'var(--text-muted)' }}>
                           {record.totalHours > 0 ? `${record.totalHours.toFixed(2)}h` : '-'}
-                          {record.overtimeHours > 0 && <span style={{ marginLeft: 8, color: '#9333ea', fontSize: 12 }}>+{record.overtimeHours.toFixed(2)}h OT</span>}
+                          {record.overtimeHours > 0 && <span style={{ marginLeft: 8, color: 'var(--primary)', fontSize: 12 }}>+{record.overtimeHours.toFixed(2)}h OT</span>}
                         </td>
                         <td style={{ padding: 16 }}>
                           {record.punchIn && record.punchOut ? (
@@ -306,9 +306,9 @@ export default function StaffDetail() {
                               {record.workStatus || 'Complete'}
                             </span>
                           ) : record.punchIn ? (
-                            <span className="badge" style={{ background: '#fef3c7', color: '#92400e' }}>Active</span>
+                            <span className="badge" style={{ background: 'var(--bg)', color: 'var(--primary)' }}>Active</span>
                           ) : (
-                            <span className="badge" style={{ background: '#fee2e2', color: '#991b1b' }}>Absent</span>
+                            <span className="badge" style={{ background: 'var(--text)', color: '#ffffff' }}>Absent</span>
                           )}
                         </td>
                       </tr>
@@ -322,7 +322,7 @@ export default function StaffDetail() {
 
         {/* Leave History (Pending/Approved/Rejected) */}
         <div style={{ padding: '0 40px 40px' }}>
-          <h3 style={{ color: 'var(--navy)', marginBottom: 24, borderBottom: '2px solid var(--border)', paddingBottom: 8, display: 'inline-block' }}>Leave History</h3>
+          <h3 style={{ color: 'var(--primary)', marginBottom: 24, borderBottom: '2px solid var(--border)', paddingBottom: 8, display: 'inline-block' }}>Leave History</h3>
           <LeaveHistoryList staffId={id} />
         </div>
 
@@ -357,7 +357,7 @@ function LeaveHistoryList({ staffId }) {
   if (leaves.length === 0) return <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-muted)', background: 'var(--bg)', borderRadius: 12 }}>No leave records found.</div>
 
   return (
-    <div style={{ overflowX: 'auto', background: 'var(--bg)', borderRadius: 16 }}>
+    <div style={{ overflowX: 'auto', background: 'var(--bg)', borderRadius: 12 }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 13 }}>
         <thead>
           <tr style={{ borderBottom: '1px solid var(--border)' }}>

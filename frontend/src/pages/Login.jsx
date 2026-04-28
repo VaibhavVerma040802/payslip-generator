@@ -49,7 +49,7 @@ export default function Login() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 60 }}>
             <div style={{
               width: 44, height: 44, borderRadius: 12,
-              background: 'linear-gradient(135deg, var(--gold) 0%, #f59e0b 100%)',
+              background: 'linear-gradient(135deg, var(--primary) 0%, #f59e0b 100%)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               boxShadow: '0 4px 15px rgba(245, 158, 11, 0.4)',
             }}>
@@ -59,23 +59,23 @@ export default function Login() {
               fontFamily: 'var(--font-display)',
               fontSize: 24, fontWeight: 800,
               color: 'white', letterSpacing: '-0.02em',
-            }}>PaySlip<span style={{ color: 'var(--gold)' }}>Pro</span></div>
+            }}>PaySlip<span style={{ color: 'var(--primary)' }}>Pro</span></div>
           </div>
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
             <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(2.5rem, 5vw, 3.5rem)', fontWeight: 900, marginBottom: 20, lineHeight: 1, letterSpacing: '-0.04em' }}>
-              Precision in <span style={{ color: 'var(--gold)' }}>Payroll.</span>
+              Precision in <span style={{ color: 'var(--primary)' }}>Payroll.</span>
             </h1>
             <p style={{ fontSize: 18, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, marginBottom: 48, fontWeight: 500 }}>
               The definitive statutory engine for modern Indian enterprises. Fully compliant with 2026 Labour Codes.
             </p>
             
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
-              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '24px', borderRadius: 20, border: '1px solid rgba(255,255,255,0.08)' }}>
-                <ShieldCheck size={28} color="var(--gold)" style={{ marginBottom: 12 }} />
+              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '24px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)' }}>
+                <ShieldCheck size={28} color="var(--primary)" style={{ marginBottom: 12 }} />
                 <div style={{ color: 'white', fontWeight: 800, fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Statutory Lock</div>
               </div>
-              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '24px', borderRadius: 20, border: '1px solid rgba(255,255,255,0.08)' }}>
+              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '24px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)' }}>
                 <Zap size={28} color="var(--emerald)" style={{ marginBottom: 12 }} />
                 <div style={{ color: 'white', fontWeight: 800, fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Instant Pushes</div>
               </div>
@@ -95,12 +95,12 @@ export default function Login() {
           transition={{ delay: 0.1, duration: 0.4 }}
           style={{
             width: '100%', maxWidth: 440,
-            borderRadius: 32, padding: 'clamp(32px, 5vw, 60px)',
+            borderRadius: 12, padding: 'clamp(32px, 5vw, 60px)',
           }}
-          className="glass"
+          className="card"
         >
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
-            <h2 style={{ fontSize: 32, color: 'var(--navy)', marginBottom: 12 }}>Corporate Portal</h2>
+            <h2 style={{ fontSize: 32, color: 'var(--primary)', marginBottom: 12 }}>Corporate Portal</h2>
             <p style={{ color: 'var(--text-muted)', fontSize: 16, fontWeight: 500 }}>
               Securely access your company dashboard.
             </p>
@@ -118,7 +118,7 @@ export default function Login() {
                   placeholder="hr@acme.com"
                   style={{
                     width: '100%', padding: '16px 16px 16px 50px', background: 'var(--bg)',
-                    border: '2px solid var(--border)', borderRadius: 16, outline: 'none', fontSize: 15,
+                    border: '2px solid var(--border)', borderRadius: 12, outline: 'none', fontSize: 15,
                     color: 'var(--text)', transition: 'all 0.2s', fontWeight: 600
                   }}
                   className="btn-hover"
@@ -129,7 +129,7 @@ export default function Login() {
             <div style={{ marginBottom: 40 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                 <label style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Security Key</label>
-                <Link to="/forgot" style={{ fontSize: 12, color: 'var(--gold)', fontWeight: 700, textDecoration: 'none' }}>Recovery Options</Link>
+                <Link to="/forgot" style={{ fontSize: 12, color: 'var(--primary)', fontWeight: 700, textDecoration: 'none' }}>Recovery Options</Link>
               </div>
               <div style={{ position: 'relative' }}>
                 <Lock size={18} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-light)' }} />
@@ -140,7 +140,7 @@ export default function Login() {
                   placeholder="••••••••"
                   style={{
                     width: '100%', padding: '16px 16px 16px 50px', background: 'var(--bg)',
-                    border: '2px solid var(--border)', borderRadius: 16, outline: 'none', fontSize: 15,
+                    border: '2px solid var(--border)', borderRadius: 12, outline: 'none', fontSize: 15,
                     color: 'var(--text)', transition: 'all 0.2s', fontWeight: 600
                   }}
                   className="btn-hover"
@@ -153,8 +153,8 @@ export default function Login() {
               whileTap={{ scale: 0.98 }}
               type="submit" disabled={loading}
               style={{
-                width: '100%', height: 60, background: 'var(--navy)', color: 'white',
-                border: 'none', borderRadius: 16, fontWeight: 800, fontSize: 16, cursor: 'pointer',
+                width: '100%', height: 60, background: 'var(--primary)', color: 'white',
+                border: 'none', borderRadius: 12, fontWeight: 800, fontSize: 16, cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
                 boxShadow: '0 15px 30px -10px rgba(15,23,42,0.4)', transition: 'all 0.3s'
               }}
@@ -164,7 +164,7 @@ export default function Login() {
           </form>
 
           <div style={{ textAlign: 'center', marginTop: 40, fontSize: 15, color: 'var(--text-muted)', fontWeight: 500 }}>
-            No workspace yet? <Link to="/register" style={{ color: 'var(--navy)', fontWeight: 800, textDecoration: 'underline', textDecorationColor: 'var(--gold)', textUnderlineOffset: 4 }}>Register Entity</Link>
+            No workspace yet? <Link to="/register" style={{ color: 'var(--primary)', fontWeight: 800, textDecoration: 'underline', textDecorationColor: 'var(--primary)', textUnderlineOffset: 4 }}>Register Entity</Link>
           </div>
         </motion.div>
       </div>

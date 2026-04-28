@@ -45,13 +45,13 @@ export default function PortalAttendance() {
     <div style={{ maxWidth: 1200, margin: '0 auto' }}>
       <header style={{ marginBottom: 40, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 20 }}>
         <div>
-          <h1 style={{ fontSize: 32, color: 'var(--navy)', marginBottom: 8 }}>Attendance History</h1>
+          <h1 style={{ fontSize: 32, color: 'var(--primary)', marginBottom: 8 }}>Attendance History</h1>
           <p style={{ color: 'var(--text-muted)', fontWeight: 500 }}>Review your detailed work logs and monthly summaries.</p>
         </div>
         
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16, background: 'var(--surface)', padding: '8px 16px', borderRadius: 16, border: '1px solid var(--border)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, background: 'var(--surface)', padding: '8px 16px', borderRadius: 12, border: '1px solid var(--border)' }}>
           <button onClick={handlePrevMonth} style={{ background: 'none', border: 'none', color: 'var(--text)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}><ChevronLeft size={20} /></button>
-          <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--navy)', minWidth: 140, textAlign: 'center' }}>
+          <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--primary)', minWidth: 140, textAlign: 'center' }}>
             {new Date(year, month - 1).toLocaleString('default', { month: 'long', year: 'numeric' })}
           </div>
           <button onClick={handleNextMonth} style={{ background: 'none', border: 'none', color: 'var(--text)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}><ChevronRight size={20} /></button>
@@ -62,24 +62,24 @@ export default function PortalAttendance() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 24, marginBottom: 40 }}>
         {[
           { label: 'Total Present', value: summary?.presentDays || 0, icon: CalendarIcon, color: 'var(--emerald)' },
-          { label: 'Avg. Daily Hours', value: `${(summary?.avgHours || 0).toFixed(1)}h`, icon: Clock, color: 'var(--navy)' },
-          { label: 'Overtime Total', value: `${(summary?.totalOT || 0).toFixed(1)}h`, icon: Clock, color: 'var(--gold)' },
+          { label: 'Avg. Daily Hours', value: `${(summary?.avgHours || 0).toFixed(1)}h`, icon: Clock, color: 'var(--primary)' },
+          { label: 'Overtime Total', value: `${(summary?.totalOT || 0).toFixed(1)}h`, icon: Clock, color: 'var(--primary)' },
           { label: 'Flagged Records', value: summary?.flaggedCount || 0, icon: AlertCircle, color: '#ef4444' },
         ].map((stat, i) => (
-          <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="glass" style={{ padding: 24, display: 'flex', alignItems: 'center', gap: 20 }}>
-            <div style={{ width: 48, height: 48, borderRadius: 14, background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: stat.color }}>
+          <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="card" style={{ padding: 24, display: 'flex', alignItems: 'center', gap: 20 }}>
+            <div style={{ width: 48, height: 48, borderRadius: 6, background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: stat.color }}>
               <stat.icon size={24} />
             </div>
             <div>
               <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-light)', textTransform: 'uppercase', letterSpacing: '0.02em', marginBottom: 4 }}>{stat.label}</div>
-              <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--navy)' }}>{stat.value}</div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--primary)' }}>{stat.value}</div>
             </div>
           </motion.div>
         ))}
       </div>
 
       {/* History Table */}
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="glass" style={{ overflow: 'hidden' }}>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="card" style={{ overflow: 'hidden' }}>
         <div style={{ overflowX: 'auto' }}>
           <table className="data-table">
             <thead>
@@ -108,7 +108,7 @@ export default function PortalAttendance() {
               ) : (
                 history.map((row, i) => (
                   <tr key={i}>
-                    <td style={{ fontWeight: 700, color: 'var(--navy)' }}>{formatDate(row.date)}</td>
+                    <td style={{ fontWeight: 700, color: 'var(--primary)' }}>{formatDate(row.date)}</td>
                     <td>{formatTime(row.punchIn)}</td>
                     <td>{formatTime(row.punchOut)}</td>
                     <td><span style={{ fontWeight: 600 }}>{row.totalHours.toFixed(2)}h</span></td>

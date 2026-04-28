@@ -8,8 +8,8 @@ import api from '../api'
 function InputField({ label, name, value, onChange, type = 'text', placeholder, required }) {
   return (
     <div style={{ marginBottom: 16 }}>
-      <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 8 }}>
-        {label}{required && <span style={{ color: '#ef4444' }}>*</span>}
+      <label className="label">
+        {label}{required && <span style={{ color: 'var(--primary)' }}>*</span>}
       </label>
       <input
         type={type}
@@ -18,13 +18,8 @@ function InputField({ label, name, value, onChange, type = 'text', placeholder, 
         onChange={onChange}
         placeholder={placeholder}
         required={required}
-        style={{
-          width: '100%', padding: '12px 14px', border: '2px solid var(--border)', borderRadius: 12,
-          fontSize: 14, color: 'var(--text)', background: 'var(--surface)',
-          outline: 'none', transition: 'all 0.2s'
-        }}
-        onFocus={e => e.target.style.borderColor = 'var(--gold)'}
-        onBlur={e => e.target.style.borderColor = 'var(--border)'}
+        className="input-field"
+        style={{ width: '100%' }}
       />
     </div>
   )
@@ -181,20 +176,12 @@ export default function StaffList() {
     <div style={{ padding: 'clamp(20px, 4vw, 40px)', maxWidth: 1400, margin: '0 auto' }}>
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 20, marginBottom: 40 }}>
         <div>
-          <h1 style={{ color: 'var(--navy)', marginBottom: 8, fontSize: 28, letterSpacing: '-0.02em' }}>Staff Management</h1>
+          <h1 style={{ color: 'var(--primary)', marginBottom: 8, fontSize: 28, letterSpacing: '-0.02em' }}>Staff Management</h1>
           <p style={{ color: 'var(--text-muted)', fontWeight: 500 }}>Manage your regular employees and interns.</p>
         </div>
         <button 
           onClick={() => setShowModal(true)}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 10,
-            background: 'var(--navy)', color: 'white',
-            border: 'none', borderRadius: 14, padding: '14px 28px',
-            fontWeight: 800, fontSize: 15, cursor: 'pointer',
-            boxShadow: '0 10px 20px -5px rgba(15,23,42,0.3)',
-            transition: 'all 0.3s',
-          }}
-          className="btn-hover"
+          className="btn-primary"
         >
           <Plus size={18} strokeWidth={3} /> Add New Staff
         </button>
@@ -206,22 +193,19 @@ export default function StaffList() {
           <input 
             type="text" placeholder="Search staff members..." 
             value={search} onChange={e => setSearch(e.target.value)}
-            style={{ 
-              width: '100%', padding: '14px 14px 14px 44px', border: '2px solid var(--border)', 
-              borderRadius: 14, background: 'var(--surface)', fontSize: 14, fontWeight: 500,
-              outline: 'none', color: 'var(--text)'
-            }}
+            className="input-field"
+            style={{ width: '100%', paddingLeft: 44 }}
           />
         </div>
-        <div style={{ display: 'flex', background: 'var(--surface)', border: '2px solid var(--border)', borderRadius: 14, padding: 4 }}>
+        <div style={{ display: 'flex', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 6, padding: 4 }}>
           {['All', 'Employee', 'Intern'].map(type => (
             <button
               key={type}
               onClick={() => setFilterType(type)}
               style={{
-                padding: '8px 16px', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 700,
-                background: filterType === type ? 'var(--navy)' : 'transparent',
-                color: filterType === type ? 'white' : 'var(--text-muted)',
+                padding: '8px 16px', border: 'none', borderRadius: 6, fontSize: 14, fontWeight: 600,
+                background: filterType === type ? 'var(--primary)' : 'transparent',
+                color: filterType === type ? (theme === 'dark' ? 'var(--bda-dark)' : '#ffffff') : 'var(--text-muted)',
                 cursor: 'pointer', transition: 'all 0.2s'
               }}
             >
@@ -234,7 +218,7 @@ export default function StaffList() {
       {loading ? (
         <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}><Loader2 size={32} className="animate-spin text-muted" /></div>
       ) : filteredStaff.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: 60, background: 'var(--surface)', borderRadius: 24, border: '1px dashed var(--border)' }}>
+        <div style={{ textAlign: 'center', padding: 60, background: 'var(--surface)', borderRadius: 12, border: '1px dashed var(--border)' }}>
           <Briefcase size={48} color="var(--text-light)" style={{ marginBottom: 16 }} />
           <h3 style={{ color: 'var(--text)', marginBottom: 8 }}>No staff members found</h3>
           <p style={{ color: 'var(--text-muted)' }}>Try adjusting your search criteria or add a new staff member.</p>
@@ -248,21 +232,21 @@ export default function StaffList() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
               onClick={() => navigate(`/staff/${person._id}`)}
+              className="card"
               style={{
-                background: 'var(--surface)', borderRadius: 20, padding: 24, border: '1px solid var(--border)',
-                cursor: 'pointer', transition: 'all 0.3s', boxShadow: '0 4px 6px rgba(0,0,0,0.02)',
+                cursor: 'pointer', transition: 'all 0.3s',
                 position: 'relative', overflow: 'hidden'
               }}
               className="hover:border-gold hover:-translate-y-1"
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
                 <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                  <div style={{ width: 48, height: 48, borderRadius: 14, background: person.type === 'Employee' ? 'var(--navy)' : 'var(--emerald)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 20, fontWeight: 800 }}>
+                  <div style={{ width: 48, height: 48, borderRadius: 6, background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff', fontSize: 20, fontWeight: 800 }}>
                     {person.fullName.charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <h3 style={{ margin: 0, fontSize: 16, color: 'var(--navy)', fontWeight: 800 }}>{person.fullName}</h3>
-                    <div style={{ fontSize: 12, color: 'var(--gold)', fontWeight: 800 }}>{person.employeeId}</div>
+                    <h3 style={{ margin: 0, fontSize: 16, color: 'var(--primary)', fontWeight: 800 }}>{person.fullName}</h3>
+                    <div style={{ fontSize: 12, color: 'var(--primary)', fontWeight: 800 }}>{person.employeeId}</div>
                   </div>
                 </div>
                 <button 
@@ -293,10 +277,10 @@ export default function StaffList() {
                 {person.isPortalEnabled ? (
                   <span className="badge badge-emerald">Portal Active</span>
                 ) : (
-                  <span className="badge" style={{ background: '#f3f4f6', color: '#4b5563' }}>Portal Disabled</span>
+                  <span className="badge" style={{ background: 'var(--bg)', color: 'var(--text)' }}>Portal Disabled</span>
                 )}
                 {person.overtimeEligible && (
-                  <span className="badge" style={{ background: '#fef3c7', color: '#d97706' }}>Overtime Enabled</span>
+                  <span className="badge" style={{ background: 'var(--bg)', color: 'var(--primary)' }}>Overtime Enabled</span>
                 )}
               </div>
 
@@ -308,9 +292,9 @@ export default function StaffList() {
                     style={{
                       flex: 1, padding: '8px 12px', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                      background: person.isPortalEnabled ? '#fef2f2' : 'var(--emerald)',
-                      color: person.isPortalEnabled ? '#ef4444' : 'white',
-                      border: person.isPortalEnabled ? '1px solid #fee2e2' : 'none'
+                      background: person.isPortalEnabled ? 'var(--bg)' : 'var(--primary)',
+                      color: person.isPortalEnabled ? 'var(--primary)' : '#ffffff',
+                      border: person.isPortalEnabled ? '1px solid var(--primary)' : 'none'
                     }}
                   >
                     {actionLoading === person._id ? (
@@ -327,9 +311,9 @@ export default function StaffList() {
                     style={{
                       flex: 1, padding: '8px 12px', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                      background: person.overtimeEligible ? '#fff7ed' : '#f0f9ff',
-                      color: person.overtimeEligible ? '#ea580c' : '#0284c7',
-                      border: person.overtimeEligible ? '1px solid #ffedd5' : '1px solid #e0f2fe'
+                      background: 'var(--bg)',
+                      color: 'var(--primary)',
+                      border: '1px solid var(--primary)'
                     }}
                   >
                     {actionLoading === person._id + '_ot' ? (
@@ -345,14 +329,14 @@ export default function StaffList() {
                      <div style={{ fontSize: 11, color: 'var(--text-light)', fontWeight: 600, textTransform: 'uppercase' }}>
                        {person.type === 'Employee' ? 'Annual CTC' : 'Stipend'}
                      </div>
-                     <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--navy)' }}>
+                     <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--primary)' }}>
                        ₹{person.type === 'Employee' ? (person.salaryDetails?.annualCTC?.toLocaleString() || 0) : (person.salaryDetails?.baseSalary?.toLocaleString() || 0)}
                      </div>
                   </div>
                   <button 
                     onClick={() => navigate(`/staff/${person._id}`)}
                     style={{
-                      background: 'var(--navy)', color: 'white', border: 'none', borderRadius: 10,
+                      background: 'var(--primary)', color: '#ffffff', border: 'none', borderRadius: 10,
                       padding: '8px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer',
                       display: 'flex', alignItems: 'center', gap: 6
                     }}
@@ -371,33 +355,33 @@ export default function StaffList() {
       <AnimatePresence>
         {showModal && (
           <div style={{ position: 'fixed', inset: 0, zIndex: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'absolute', inset: 0, background: 'rgba(2, 6, 23, 0.6)', backdropFilter: 'blur(4px)' }} onClick={() => setShowModal(false)} />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'absolute', inset: 0, background: 'rgba(26, 26, 26, 0.6)', backdropFilter: 'blur(4px)' }} onClick={() => setShowModal(false)} />
             <motion.div 
               initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-              style={{ background: 'var(--surface)', borderRadius: 24, width: '100%', maxWidth: 700, maxHeight: '90vh', display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 1, overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}
+              style={{ background: 'var(--surface)', borderRadius: 12, width: '100%', maxWidth: 700, maxHeight: '90vh', display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 1, overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}
             >
               <div style={{ padding: '24px 32px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h2 style={{ margin: 0, color: 'var(--navy)' }}>{editingStaff ? 'Edit Staff Member' : 'Add New Staff Member'}</h2>
+                <h2 style={{ margin: 0, color: 'var(--primary)' }}>{editingStaff ? 'Edit Staff Member' : 'Add New Staff Member'}</h2>
                 <button onClick={() => { setShowModal(false); setEditingStaff(null); resetForm(); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-light)' }}><X size={24} /></button>
               </div>
               
               <div style={{ padding: 32, overflowY: 'auto', flex: 1 }}>
                 <form id="addStaffForm" onSubmit={handleSubmit}>
-                  <div style={{ display: 'flex', gap: 10, marginBottom: 24, background: 'var(--bg)', padding: 6, borderRadius: 16 }}>
+                  <div style={{ display: 'flex', gap: 10, marginBottom: 24, background: 'var(--bg)', padding: 6, borderRadius: 12 }}>
                     {['Employee', 'Intern'].map(type => (
                       <button 
                         key={type} type="button" onClick={() => setFormData({ ...formData, type })}
                         style={{ 
                           flex: 1, padding: '10px', borderRadius: 12, border: 'none', fontWeight: 700,
-                          background: formData.type === type ? 'var(--surface)' : 'transparent',
-                          color: formData.type === type ? 'var(--navy)' : 'var(--text-muted)',
+                          background: formData.type === type ? 'var(--primary)' : 'transparent',
+                          color: formData.type === type ? '#ffffff' : 'var(--text-muted)',
                           boxShadow: formData.type === type ? 'var(--shadow-sm)' : 'none', cursor: 'pointer'
                         }}
                       >{type}</button>
                     ))}
                   </div>
 
-                  <h4 style={{ color: 'var(--navy)', marginBottom: 16 }}>Professional Details</h4>
+                  <h4 style={{ color: 'var(--primary)', marginBottom: 16 }}>Professional Details</h4>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                     <InputField label="Full Name" name="fullName" value={formData.fullName} onChange={handleInputChange} required />
                     <InputField label="Employee ID / Code" name="employeeId" value={formData.employeeId} onChange={handleInputChange} required />
@@ -409,7 +393,7 @@ export default function StaffList() {
                     <InputField label="PF Number" name="pfNumber" value={formData.pfNumber} onChange={handleInputChange} placeholder="XX/XXX/0000000" />
                   </div>
 
-                  <h4 style={{ color: 'var(--navy)', marginTop: 24, marginBottom: 16 }}>Financial Information</h4>
+                  <h4 style={{ color: 'var(--primary)', marginTop: 24, marginBottom: 16 }}>Financial Information</h4>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                     <InputField label="PAN Number" name="panNumber" value={formData.panNumber} onChange={handleInputChange} required />
                     <InputField label="Bank Name" name="bankName" value={formData.bankName} onChange={handleInputChange} required />
@@ -417,7 +401,7 @@ export default function StaffList() {
                     <InputField label="IFSC Code" name="ifscCode" value={formData.ifscCode} onChange={handleInputChange} required />
                   </div>
 
-                  <h4 style={{ color: 'var(--navy)', marginTop: 24, marginBottom: 16 }}>Salary Structure</h4>
+                  <h4 style={{ color: 'var(--primary)', marginTop: 24, marginBottom: 16 }}>Salary Structure</h4>
                   {formData.type === 'Employee' ? (
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 16 }}>
                       <InputField label="Annual CTC (in ₹)" type="number" name="annualCTC" value={formData.annualCTC} onChange={handleInputChange} required />
@@ -434,7 +418,7 @@ export default function StaffList() {
 
               <div style={{ padding: '24px 32px', borderTop: '1px solid var(--border)', background: 'var(--bg)', display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
                 <button type="button" onClick={() => { setShowModal(false); setEditingStaff(null); resetForm(); }} style={{ padding: '12px 24px', borderRadius: 12, border: '2px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
-                <button type="submit" form="addStaffForm" disabled={submitting} style={{ padding: '12px 24px', borderRadius: 12, border: 'none', background: 'var(--navy)', color: 'white', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <button type="submit" form="addStaffForm" disabled={submitting} style={{ padding: '12px 24px', borderRadius: 12, border: 'none', background: 'var(--primary)', color: '#ffffff', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
                   {submitting ? <Loader2 size={18} className="animate-spin" /> : (editingStaff ? 'Update Staff Member' : 'Save Staff Member')}
                 </button>
               </div>

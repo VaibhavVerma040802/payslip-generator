@@ -7,18 +7,18 @@ import { formatDistanceToNow } from 'date-fns'
 const RecentRow = React.memo(({ log, navigate }) => {
   const getActionConfig = (action) => {
     switch (action) {
-      case 'PAYSLIP_GENERATED': return { icon: FileText, color: '#6366f1', label: 'Payslip' }
-      case 'EMAIL_SENT': return { icon: Send, color: '#10b981', label: 'Email' }
-      case 'BULK_EMAIL': return { icon: Zap, color: '#0ea5e9', label: 'Bulk Email' }
-      case 'STAFF_CREATED': return { icon: UserPlus, color: '#8b5cf6', label: 'Staff' }
-      case 'STAFF_UPDATED': return { icon: UserCog, color: '#f59e0b', label: 'Update' }
-      case 'STAFF_DELETED': return { icon: UserMinus, color: '#ef4444', label: 'Deletion' }
-      case 'PORTAL_ACCESS_GRANTED': return { icon: Key, color: '#10b981', label: 'Access' }
-      case 'PORTAL_ACCESS_REVOKED': return { icon: Ban, color: '#ef4444', label: 'Revoke' }
-      case 'PUNCH_OUT': return { icon: Clock, color: '#6366f1', label: 'Attendance' }
-      case 'ATTENDANCE_RESOLVED': return { icon: CheckCircle2, color: '#10b981', label: 'Resolved' }
-      case 'FORCE_PUNCH_OUT': return { icon: LogOut, color: '#f43f5e', label: 'Admin Fix' }
-      default: return { icon: Activity, color: 'var(--navy)', label: 'System' }
+      case 'PAYSLIP_GENERATED': return { icon: FileText, color: 'var(--primary)', label: 'Payslip' }
+      case 'EMAIL_SENT': return { icon: Send, color: 'var(--primary)', label: 'Email' }
+      case 'BULK_EMAIL': return { icon: Zap, color: 'var(--primary)', label: 'Bulk Email' }
+      case 'STAFF_CREATED': return { icon: UserPlus, color: 'var(--primary)', label: 'Staff' }
+      case 'STAFF_UPDATED': return { icon: UserCog, color: 'var(--primary)', label: 'Update' }
+      case 'STAFF_DELETED': return { icon: UserMinus, color: 'var(--primary)', label: 'Deletion' }
+      case 'PORTAL_ACCESS_GRANTED': return { icon: Key, color: 'var(--primary)', label: 'Access' }
+      case 'PORTAL_ACCESS_REVOKED': return { icon: Ban, color: 'var(--primary)', label: 'Revoke' }
+      case 'PUNCH_OUT': return { icon: Clock, color: 'var(--primary)', label: 'Attendance' }
+      case 'ATTENDANCE_RESOLVED': return { icon: CheckCircle2, color: 'var(--primary)', label: 'Resolved' }
+      case 'FORCE_PUNCH_OUT': return { icon: LogOut, color: 'var(--primary)', label: 'Admin Fix' }
+      default: return { icon: Activity, color: 'var(--primary)', label: 'System' }
     }
   }
 
@@ -34,7 +34,7 @@ const RecentRow = React.memo(({ log, navigate }) => {
       style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '16px 24px',
-        borderRadius: 16,
+        borderRadius: 12,
         cursor: (log.metadata?.payslipId || log.metadata?.staffId) ? 'pointer' : 'default',
         transition: 'all 0.2s',
         marginBottom: 10,
@@ -47,14 +47,14 @@ const RecentRow = React.memo(({ log, navigate }) => {
         <div style={{
           width: 44, height: 44,
           borderRadius: 12,
-          background: `${config.color}15`,
+          background: 'var(--bg)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           color: config.color, flexShrink: 0
         }}>
           <Icon size={20} />
         </div>
         <div>
-          <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--navy)', marginBottom: 2 }}>{log.details}</div>
+          <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--primary)', marginBottom: 2 }}>{log.details}</div>
           <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
              <span style={{ color: config.color, fontWeight: 800, textTransform: 'uppercase', fontSize: 10 }}>{config.label}</span>
              <span>•</span>
@@ -92,13 +92,13 @@ export default function AuditLogs() {
     <div style={{ padding: 'clamp(24px, 5vw, 48px)', maxWidth: 1200, margin: '0 auto' }}>
       <header className="fade-in" style={{ marginBottom: 40, display: 'flex', alignItems: 'center', gap: 16 }}>
         <div style={{
-          width: 48, height: 48, borderRadius: 14, background: 'var(--navy)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gold)'
+          width: 48, height: 48, borderRadius: 6, background: '#58833b',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff'
         }}>
           <Activity size={24} />
         </div>
         <div>
-          <h1 style={{ color: 'var(--navy)', marginBottom: 4, fontSize: 28, letterSpacing: '-0.02em' }}>Audit Logs</h1>
+          <h1 style={{ margin: 0, color: 'var(--primary)', fontSize: 32, letterSpacing: '-0.02em' }}>Audit Logs</h1>
           <p style={{ color: 'var(--text-muted)', fontWeight: 500, fontSize: 15 }}>Recent workspace activities and generated slips.</p>
         </div>
       </header>
@@ -111,7 +111,7 @@ export default function AuditLogs() {
           background: 'var(--bg)'
         }}>
           <div>
-            <div style={{ fontWeight: 800, fontSize: 17, color: 'var(--navy)' }}>Comprehensive Activity Timeline</div>
+            <div style={{ fontWeight: 800, fontSize: 17, color: 'var(--primary)' }}>Comprehensive Activity Timeline</div>
             <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>Tracking every workspace action and system event</div>
           </div>
         </div>
@@ -119,17 +119,17 @@ export default function AuditLogs() {
         <div style={{ padding: '24px' }}>
           {loading ? (
             [...Array(6)].map((_, i) => (
-              <div key={i} className="skeleton" style={{ height: 76, marginBottom: 12, borderRadius: 16 }} />
+              <div key={i} className="skeleton" style={{ height: 76, marginBottom: 12, borderRadius: 12 }} />
             ))
           ) : recent.length === 0 ? (
             <div style={{ padding: 60, textAlign: 'center' }}>
               <Building2 size={48} color="var(--border)" style={{ margin: '0 auto 20px' }} />
-              <div style={{ color: 'var(--navy)', fontSize: 18, fontWeight: 700, marginBottom: 8 }}>No recent activity</div>
+              <div style={{ color: 'var(--primary)', fontSize: 18, fontWeight: 700, marginBottom: 8 }}>No recent activity</div>
               <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 24 }}>Start by generating your first statutory compliance document.</p>
               <button
                 onClick={() => navigate('/generate')}
                 style={{
-                  background: 'var(--navy)', color: 'white',
+                  background: 'var(--primary)', color: 'white',
                   border: 'none', borderRadius: 12, padding: '12px 24px',
                   fontWeight: 700, fontSize: 14, cursor: 'pointer',
                 }}

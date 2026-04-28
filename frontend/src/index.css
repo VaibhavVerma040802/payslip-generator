@@ -1,46 +1,48 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  /* High-Performance Palette */
-  --navy: #0f172a;        /* Deep Space Navy */
-  --navy-dark: #020617;   /* Almost Black */
-  --navy-light: #1e293b;  /* Surface Gray-Navy */
-  --gold: #f59e0b;        /* Vibrant Amber */
-  --gold-pale: #fef3c7;   /* Muted Amber */
-  --emerald: #10b981;     /* Success Green */
-  --emerald-light: #ecfdf5;
-  --bg: #f8fafc;          /* Off-White Slate */
-  --surface: #ffffff;
-  --border: #e2e8f0;
-  --text: #1e293b;
-  --text-muted: #64748b;
-  --text-light: #94a3b8;
+  /* Official Design System Palette (Light) */
+  --bda-green: #58833b;
+  --bda-sage: #e5ebdd;
+  --text-dark: #1a1a1a;
+  --white: #ffffff;
   
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-  --shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
-  --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
+  /* Semantic Mappings */
+  --primary: var(--bda-green);
+  --bg: var(--bda-sage);
+  --surface: var(--white);
+  --text: var(--text-dark);
+  --text-muted: #666666;
+  --text-light: #999999;
+  --border: rgba(88, 131, 59, 0.2);
   
-  --radius: 12px;
-  --radius-lg: 24px;
+  --shadow-sm: 0 1px 2px rgba(26,26,26,0.05);
+  --shadow: 0 4px 6px -1px rgba(26,26,26,0.1);
   
-  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-display: 'Outfit', sans-serif;
+  /* Component Specs */
+  --radius-btn: 6px;
+  --radius-card: 12px;
+  --padding-card: 1.5rem;
+  
+  /* Typography */
+  --font-stack: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
 :root[data-theme='dark'] {
-  --navy: #6c9a4d;
-  --navy-dark: #0a0d0a;
-  --navy-light: #2b3b2b;
-  --gold: #f59e0b;
-  --gold-pale: #451a03;
-  --emerald: #6c9a4d;
-  --emerald-light: #2a3f1f;
-  --bg: #0a0d0a;
-  --surface: #161916;
-  --border: #2a2f2a;
-  --text: #ededed;
-  --text-muted: #a3a3a3;
-  --text-light: #6b7a60;
+  /* Official Design System Palette (Dark) */
+  --bda-dark: #0a0f0a;
+  --bda-surface: #1a1f1a;
+  --bda-green-light: #6fa945;
+  --text-light: #e5ebdd;
+  
+  /* Semantic Mappings */
+  --primary: var(--bda-green-light);
+  --bg: var(--bda-dark);
+  --surface: var(--bda-surface);
+  --text: var(--text-light);
+  --text-muted: #a1a1aa;
+  --text-light: #71717a;
+  --border: rgba(111, 169, 69, 0.2);
 }
 
 :root[data-theme='dark'] [style*="color: var(--navy)"] {
@@ -48,26 +50,20 @@
 }
 
 body {
-  font-family: var(--font-body);
+  font-family: var(--font-stack);
   background-color: var(--bg);
   color: var(--text);
-  line-height: 1.5;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Premium Glassmorphism */
+/* Brand Surfaces */
 .glass {
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-.glass-dark {
-  background: rgba(15, 23, 42, 0.9);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
 }
 
 /* Animations */
@@ -98,7 +94,17 @@ body {
 ::-webkit-scrollbar-thumb { background: var(--text-light); border-radius: 10px; }
 
 /* Global Utilities */
-h1, h2, h3 { font-family: var(--font-display); font-weight: 700; letter-spacing: -0.02em; }
+/* Typography Scale */
+h1, h2, h3 { 
+  font-family: var(--font-stack); 
+  font-weight: 600; 
+  letter-spacing: -0.02em; 
+  color: var(--text);
+}
+
+h1 { font-size: 28px; line-height: 1.2; margin-bottom: 1rem; }
+h2 { font-size: 22px; line-height: 1.3; margin-bottom: 0.75rem; }
+h3 { font-size: 18px; line-height: 1.4; margin-bottom: 0.5rem; }
 
 .badge {
   padding: 4px 12px;
@@ -109,8 +115,9 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 700; letter-spacing:
   letter-spacing: 0.05em;
 }
 
-.badge-emerald { background: var(--emerald-light); color: #065f46; }
-.badge-gold { background: var(--gold-pale); color: #92400e; }
+.badge-emerald { background: var(--primary); color: #ffffff; }
+.badge-navy { background: var(--bg); color: var(--primary); }
+.badge-red { background: #fee2e2; color: #991b1b; }
 
 /* Breakpoints & Layout Systems */
 :root {
@@ -130,21 +137,70 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 700; letter-spacing:
 }
 
 /* Fluid Typography */
-h1 { font-size: clamp(1.75rem, 5vw, 2.5rem); }
-h2 { font-size: clamp(1.5rem, 4vw, 2rem); }
-h3 { font-size: clamp(1.25rem, 3vw, 1.5rem); }
-
-/* Premium Glassmorphism & Cards */
-.glass {
+/* Design System Components */
+.card {
   background: var(--surface);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow);
-  border-radius: var(--radius-lg);
-  transition: var(--transition);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: var(--padding-card);
+  transition: all 0.2s ease;
 }
 
-.glass:hover {
-  box-shadow: var(--shadow-lg);
+.btn-primary {
+  background: var(--bda-green);
+  color: white;
+  padding: 10px 20px;
+  border-radius: var(--radius-btn);
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+:root[data-theme='dark'] .btn-primary {
+  background: var(--bda-green-light);
+  color: var(--bda-dark);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--primary);
+  border: 1px solid var(--primary);
+  padding: 10px 20px;
+  border-radius: var(--radius-btn);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Form Elements */
+.input-field {
+  height: 36px;
+  padding: 0 12px;
+  border-radius: var(--radius-btn);
+  border: 0.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.input-field:focus {
+  border-color: var(--primary);
+  border-width: 1px;
+}
+
+.label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 6px;
+  color: var(--text);
 }
 
 /* Badge System */
@@ -160,15 +216,15 @@ h3 { font-size: clamp(1.25rem, 3vw, 1.5rem); }
   letter-spacing: 0.05em;
 }
 
-.badge-green, .badge-emerald { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
-.badge-gold { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
-.badge-navy { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
-.badge-red { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+.badge-emerald, .badge-green { background: var(--bg); color: var(--primary); border: 1px solid var(--primary); }
+.badge-gold { background: var(--surface); color: var(--primary); border: 1px solid var(--primary); }
+.badge-navy { background: var(--primary); color: var(--surface); border: 1px solid var(--primary); }
+.badge-red { background: var(--text); color: var(--surface); border: 1px solid var(--text); }
 
-:root[data-theme='dark'] .badge-green, :root[data-theme='dark'] .badge-emerald { background: rgba(21, 128, 61, 0.2); color: #4ade80; border-color: rgba(74, 222, 128, 0.2); }
-:root[data-theme='dark'] .badge-gold { background: rgba(180, 83, 9, 0.2); color: #fbbf24; border-color: rgba(251, 191, 36, 0.2); }
-:root[data-theme='dark'] .badge-navy { background: rgba(3, 105, 161, 0.2); color: #38bdf8; border-color: rgba(56, 189, 248, 0.2); }
-:root[data-theme='dark'] .badge-red { background: rgba(185, 28, 28, 0.2); color: #f87171; border-color: rgba(248, 113, 113, 0.2); }
+:root[data-theme='dark'] .badge-emerald, :root[data-theme='dark'] .badge-green { background: rgba(111, 169, 69, 0.2); color: var(--text); border-color: var(--primary); }
+:root[data-theme='dark'] .badge-gold { background: rgba(229, 235, 221, 0.1); color: var(--text); border-color: var(--primary); }
+:root[data-theme='dark'] .badge-navy { background: var(--primary); color: var(--bg); border-color: var(--primary); }
+:root[data-theme='dark'] .badge-red { background: var(--text); color: var(--bg); border-color: var(--text); }
 
 /* Dashboard Grid System */
 .split-screen {

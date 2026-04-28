@@ -43,26 +43,26 @@ export default function ForgotPassword() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 60 }}>
             <div style={{
               width: 44, height: 44, borderRadius: 12,
-              background: 'linear-gradient(135deg, var(--gold) 0%, #f59e0b 100%)',
+              background: 'linear-gradient(135deg, var(--primary) 0%, #f59e0b 100%)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               boxShadow: '0 4px 15px rgba(245, 158, 11, 0.4)',
             }}>
               <FileSpreadsheet size={24} color="var(--navy-dark)" strokeWidth={2.5} />
             </div>
             <div style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 800, color: 'white', letterSpacing: '-0.02em' }}>
-              PaySlip<span style={{ color: 'var(--gold)' }}>Pro</span>
+              PaySlip<span style={{ color: 'var(--primary)' }}>Pro</span>
             </div>
           </div>
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
             <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(2.2rem, 4vw, 3rem)', fontWeight: 900, marginBottom: 20, lineHeight: 1, letterSpacing: '-0.04em' }}>
-              Recover <span style={{ color: 'var(--gold)' }}>Access.</span>
+              Recover <span style={{ color: 'var(--primary)' }}>Access.</span>
             </h1>
             <p style={{ fontSize: 18, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, marginBottom: 48, fontWeight: 500 }}>
               Enter your registered email and we'll send you a secure password reset link.
             </p>
-            <div style={{ background: 'rgba(255,255,255,0.03)', padding: '24px', borderRadius: 20, border: '1px solid rgba(255,255,255,0.08)', maxWidth: 260 }}>
-              <ShieldCheck size={28} color="var(--gold)" style={{ marginBottom: 12 }} />
+            <div style={{ background: 'rgba(255,255,255,0.03)', padding: '24px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)', maxWidth: 260 }}>
+              <ShieldCheck size={28} color="var(--primary)" style={{ marginBottom: 12 }} />
               <div style={{ color: 'white', fontWeight: 800, fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Secure Reset</div>
               <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginTop: 6, lineHeight: 1.5 }}>
                 Link expires in 1 hour for your security.
@@ -81,13 +81,13 @@ export default function ForgotPassword() {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.1, duration: 0.4 }}
-          style={{ width: '100%', maxWidth: 440, borderRadius: 32, padding: 'clamp(32px, 5vw, 60px)' }}
-          className="glass"
+          style={{ width: '100%', maxWidth: 440, borderRadius: 12, padding: 'clamp(32px, 5vw, 60px)' }}
+          className="card"
         >
           {!sent ? (
             <>
               <div style={{ textAlign: 'center', marginBottom: 48 }}>
-                <h2 style={{ fontSize: 32, color: 'var(--navy)', marginBottom: 12 }}>Password Recovery</h2>
+                <h2 style={{ fontSize: 32, color: 'var(--primary)', marginBottom: 12 }}>Password Recovery</h2>
                 <p style={{ color: 'var(--text-muted)', fontSize: 16, fontWeight: 500 }}>
                   We'll email you a link to reset your password.
                 </p>
@@ -109,7 +109,7 @@ export default function ForgotPassword() {
                       placeholder="hr@acme.com"
                       style={{
                         width: '100%', padding: '16px 16px 16px 50px', background: 'var(--bg)',
-                        border: '2px solid var(--border)', borderRadius: 16, outline: 'none',
+                        border: '2px solid var(--border)', borderRadius: 12, outline: 'none',
                         fontSize: 15, color: 'var(--text)', transition: 'all 0.2s', fontWeight: 600,
                         boxSizing: 'border-box',
                       }}
@@ -123,8 +123,8 @@ export default function ForgotPassword() {
                   type="submit"
                   disabled={loading}
                   style={{
-                    width: '100%', height: 60, background: 'var(--navy)', color: 'white',
-                    border: 'none', borderRadius: 16, fontWeight: 800, fontSize: 16, cursor: 'pointer',
+                    width: '100%', height: 60, background: 'var(--primary)', color: 'white',
+                    border: 'none', borderRadius: 12, fontWeight: 800, fontSize: 16, cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
                     boxShadow: '0 15px 30px -10px rgba(15,23,42,0.4)',
                   }}
@@ -141,21 +141,21 @@ export default function ForgotPassword() {
             >
               <div style={{
                 width: 80, height: 80, borderRadius: '50%',
-                background: 'linear-gradient(135deg, var(--gold), #f59e0b)',
+                background: 'linear-gradient(135deg, var(--primary), #f59e0b)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 margin: '0 auto 32px',
                 boxShadow: '0 10px 30px rgba(245,158,11,0.3)',
               }}>
                 <Mail size={36} color="var(--navy-dark)" strokeWidth={2.5} />
               </div>
-              <h2 style={{ fontSize: 28, color: 'var(--navy)', marginBottom: 16 }}>Check Your Inbox</h2>
+              <h2 style={{ fontSize: 28, color: 'var(--primary)', marginBottom: 16 }}>Check Your Inbox</h2>
               <p style={{ color: 'var(--text-muted)', fontSize: 15, lineHeight: 1.7, marginBottom: 8 }}>
-                If <strong style={{ color: 'var(--navy)' }}>{email}</strong> is registered, you will receive a password reset link shortly.
+                If <strong style={{ color: 'var(--primary)' }}>{email}</strong> is registered, you will receive a password reset link shortly.
               </p>
               <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 40 }}>
                 The link expires in <strong>1 hour</strong>. Check your spam folder if you don't see it.
               </p>
-              <Link to="/login" style={{ color: 'var(--navy)', fontWeight: 800, textDecoration: 'none', fontSize: 15 }}>
+              <Link to="/login" style={{ color: 'var(--primary)', fontWeight: 800, textDecoration: 'none', fontSize: 15 }}>
                 ← Back to Login
               </Link>
             </motion.div>

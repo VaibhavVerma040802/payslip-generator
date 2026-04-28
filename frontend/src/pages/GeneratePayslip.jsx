@@ -33,14 +33,14 @@ function StepLabel({ num, label, active, completed }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, opacity: active || completed ? 1 : 0.4 }}>
       <div style={{
-        width: 32, height: 32, borderRadius: 10,
-        background: completed ? 'var(--emerald)' : active ? 'var(--navy)' : 'var(--border)',
+        width: 32, height: 32, borderRadius: 6,
+        background: completed ? 'var(--primary)' : active ? 'var(--primary)' : 'var(--border)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        color: 'white', fontSize: 14, fontWeight: 800, transition: 'all 0.3s'
+        color: '#ffffff', fontSize: 14, fontWeight: 600, transition: 'all 0.3s'
       }}>
         {completed ? <CheckCircle2 size={18} /> : num}
       </div>
-      <span style={{ fontSize: 13, fontWeight: 700, color: active ? 'var(--navy)' : 'var(--text-muted)' }}>{label}</span>
+      <span style={{ fontSize: 13, fontWeight: 600, color: active ? 'var(--primary)' : 'var(--text-muted)' }}>{label}</span>
     </div>
   )
 }
@@ -54,8 +54,8 @@ function InputField({ label, name, value, onChange, type = 'text', placeholder, 
 
   return (
     <div style={{ marginBottom: 20 }}>
-      <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 8, letterSpacing: '0.02em' }}>
-        {label}{required && <span style={{ color: '#ef4444', marginLeft: 4 }}>*</span>}
+      <label className="label">
+        {label}{required && <span style={{ color: 'var(--primary)', marginLeft: 4 }}>*</span>}
       </label>
       <div style={{ position: 'relative' }}>
         {Icon && <Icon size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-light)' }} />}
@@ -68,16 +68,8 @@ function InputField({ label, name, value, onChange, type = 'text', placeholder, 
           min={min}
           max={max}
           required={required}
-          style={{
-            width: '100%', padding: Icon ? '12px 14px 12px 42px' : '12px 14px',
-            border: '2px solid var(--border)', borderRadius: 12,
-            fontSize: 14, color: 'var(--text)', outline: 'none',
-            background: 'var(--surface)', transition: 'all 0.2s',
-            fontWeight: 500
-          }}
-          className="btn-hover"
-          onFocus={e => e.target.style.borderColor = 'var(--gold)'}
-          onBlur={e => e.target.style.borderColor = 'var(--border)'}
+          className="input-field"
+          style={{ width: '100%', paddingLeft: Icon ? 42 : 12 }}
         />
       </div>
     </div>
@@ -91,7 +83,7 @@ function PreviewRow({ label, value, type = 'normal', isDeduction }) {
       <span style={{ 
         fontSize: 14, 
         fontWeight: type === 'bold' ? 800 : 700,
-        color: isDeduction ? '#ef4444' : type === 'bold' ? 'var(--navy)' : 'var(--text)'
+        color: type === 'bold' ? 'var(--primary)' : 'var(--text)'
       }}>
         {type === 'text' ? value : <div style={{ display: 'flex', alignItems: 'center' }}><AnimatedNumber value={parseFloat(value || 0)} decimals={0} /></div>}
       </span>
@@ -245,7 +237,7 @@ export default function GeneratePayslip() {
         <div style={{ maxWidth: 540, margin: '0 auto' }}>
           <header style={{ marginBottom: 48 }}>
             <div className="badge badge-navy" style={{ marginBottom: 12 }}>Statutory v2.6</div>
-            <h1 style={{ color: 'var(--navy)', marginBottom: 12, letterSpacing: '-0.03em' }}>Payroll Engine</h1>
+            <h1 style={{ color: 'var(--primary)', marginBottom: 12, letterSpacing: '-0.03em' }}>Payroll Engine</h1>
             <p style={{ color: 'var(--text-muted)', fontSize: 16, fontWeight: 500 }}>Generate localized Indian payslips with 2026 tax standards.</p>
           </header>
 
@@ -259,17 +251,17 @@ export default function GeneratePayslip() {
             <AnimatePresence mode="wait">
               {step === 1 && (
                 <motion.div key="s1" initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 12 }}>
-                  <div style={{ marginBottom: 24, padding: 20, background: 'rgba(245,158,11,0.05)', borderRadius: 20, border: '1px solid rgba(245,158,11,0.2)' }}>
+                  <div className="card" style={{ marginBottom: 24, padding: 20, background: 'var(--bg)', border: '1px solid var(--border)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
-                        <h4 style={{ margin: 0, color: 'var(--navy)', fontSize: 15 }}>Statutory Automation</h4>
+                        <h4 style={{ margin: 0, color: 'var(--primary)', fontSize: 15 }}>Statutory Automation</h4>
                         <p style={{ margin: '4px 0 0', color: 'var(--text-muted)', fontSize: 12 }}>Auto-calculate PF, ESI, and PT based on earnings.</p>
                       </div>
                       <button
                         type="button"
                         onClick={() => setForm({...form, automationEnabled: !form.automationEnabled})}
                         style={{
-                          width: 52, height: 28, borderRadius: 14, background: form.automationEnabled ? 'var(--emerald)' : 'var(--border)',
+                          width: 52, height: 28, borderRadius: 6, background: form.automationEnabled ? 'var(--primary)' : 'var(--border)',
                           position: 'relative', border: 'none', cursor: 'pointer', transition: 'all 0.3s'
                         }}
                       >
@@ -282,17 +274,13 @@ export default function GeneratePayslip() {
                   </div>
 
                   <label style={{ display: 'block', fontSize: 12, fontWeight: 800, color: 'var(--text-muted)', marginBottom: 12, textTransform: 'uppercase' }}>Employment Category</label>
-                  <div style={{ display: 'flex', gap: 10, marginBottom: 32, background: 'var(--bg)', padding: 6, borderRadius: 16, border: '1px solid var(--border)' }}>
+                  <div style={{ display: 'flex', gap: 10, marginBottom: 32, background: 'var(--bg)', padding: 6, borderRadius: 12, border: '1px solid var(--border)' }}>
                     {['regular', 'intern'].map(type => (
                       <button 
                         key={type} type="button"
                         onClick={() => setForm({...form, employmentType: type})}
                         style={{ 
-                          flex: 1, padding: '12px', borderRadius: 12, border: 'none', fontSize: 14, fontWeight: 700,
-                          background: form.employmentType === type ? 'var(--surface)' : 'transparent',
-                          color: form.employmentType === type ? 'var(--navy)' : 'var(--text-muted)',
-                          boxShadow: form.employmentType === type ? 'var(--shadow)' : 'none',
-                          cursor: 'pointer', transition: 'all 0.2s'
+                          flex: 1, padding: '16px', borderRadius: 12, background: form.employmentType === type ? 'var(--primary)' : 'transparent', color: form.employmentType === type ? '#ffffff' : 'var(--text-muted)', border: 'none', fontWeight: 700, cursor: 'pointer' 
                         }}
                       >{type === 'regular' ? 'Regular Employee' : 'Internship'}</button>
                     ))}
@@ -375,7 +363,7 @@ export default function GeneratePayslip() {
                     <InputField label="Date of Joining" required type="date" value={form.dateOfJoining} onChange={e => setForm({...form, dateOfJoining: e.target.value})} icon={Calendar} />
                     <InputField label="Payout Date" required type="date" value={form.payDate} onChange={e => setForm({...form, payDate: e.target.value})} icon={Calendar} />
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, padding: 20, background: 'var(--bg)', borderRadius: 20, border: '1px solid var(--border)' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, padding: 20, background: 'var(--bg)', borderRadius: 12, border: '1px solid var(--border)' }}>
                     <InputField label="Working Days" required type="number" min="0" max="31" value={form.workingDays} onChange={e => setForm({...form, workingDays: Math.max(0, parseInt(e.target.value) || 0)})} />
                     <InputField label="Paid Days" required type="number" min="0" max="31" value={form.paidDays} onChange={e => setForm({...form, paidDays: Math.max(0, parseInt(e.target.value) || 0)})} />
                   </div>
@@ -391,7 +379,7 @@ export default function GeneratePayslip() {
                   )}
                   
                   {form.employmentType === 'regular' && (
-                    <div style={{ padding: 24, background: 'var(--bg)', borderRadius: 24, border: '1px solid var(--border)', marginBottom: 24 }}>
+                    <div style={{ padding: 24, background: 'var(--bg)', borderRadius: 12, border: '1px solid var(--border)', marginBottom: 24 }}>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
                         <InputField label="TDS" required type="number" min="0" value={form.tds} onChange={e => setForm({...form, tds: Math.max(0, parseFloat(e.target.value) || 0)})} placeholder="0" />
                         <InputField label="Loan/Recovery" required type="number" min="0" value={form.loanDeduction} onChange={e => setForm({...form, loanDeduction: Math.max(0, parseFloat(e.target.value) || 0)})} placeholder="0" />
@@ -411,15 +399,11 @@ export default function GeneratePayslip() {
 
             <div style={{ display: 'flex', gap: 14, marginTop: 40 }}>
               {step > 1 && (
-                <button type="button" onClick={() => setStep(s => s - 1)} style={{ width: 110, height: 52, borderRadius: 14, border: '2px solid var(--border)', background: 'var(--surface)', fontWeight: 700, cursor: 'pointer' }}>Back</button>
+                <button type="button" onClick={() => setStep(s => s - 1)} className="btn-secondary" style={{ width: 110, height: 48 }}>Back</button>
               )}
               <button 
-                type="submit" disabled={submitting} className="btn-hover"
-                style={{ 
-                  flex: 1, height: 52, borderRadius: 14, border: 'none', 
-                  background: submitting ? 'var(--text-light)' : 'var(--navy)', color: 'white', fontWeight: 800, fontSize: 16,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, boxShadow: '0 10px 20px -5px rgba(15,23,42,0.3)'
-                }}
+                type="submit" disabled={submitting} className="btn-primary"
+                style={{ flex: 1, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}
               >
                 {submitting ? <Loader2 size={20} className="animate-spin" /> : step === 3 ? 'Generate Professional Slip' : 'Next Stage'}
                 {step < 3 && <ChevronRight size={20} />}
@@ -436,34 +420,30 @@ export default function GeneratePayslip() {
         minHeight: '100%', overflowY: 'auto'
       }}>
         <div style={{ width: '100%', maxWidth: 500 }} className="fade-in">
-          <div style={{ 
-            background: 'var(--surface)', borderRadius: 32, padding: 'clamp(24px, 5vw, 40px)',
-            boxShadow: '0 40px 100px -20px rgba(0,0,0,0.12)', border: '1px solid var(--border)',
-            position: 'relative'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32, borderBottom: '2px solid var(--bg)', paddingBottom: 24 }}>
+          <div className="card" style={{ padding: 'clamp(24px, 5vw, 40px)', position: 'relative' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32, borderBottom: '1px solid var(--border)', paddingBottom: 24 }}>
               <div style={{ display: 'flex', gap: 12, alignItems: 'center', minWidth: 0, flex: 1 }}>
                 {form.companyLogo && (
-                  <img src={form.companyLogo} alt="Logo" style={{ height: 44, width: 44, borderRadius: 10, objectFit: 'contain', background: '#f8fafc', padding: 4, flexShrink: 0 }} />
+                  <img src={form.companyLogo} alt="Logo" style={{ height: 44, width: 44, borderRadius: 6, objectFit: 'contain', background: 'var(--bg)', padding: 4, flexShrink: 0 }} />
                 )}
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 15, fontWeight: 900, color: 'var(--navy)', letterSpacing: '-0.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{form.companyName || 'Corporate Entity'}</div>
-                  <div className="badge badge-gold" style={{ marginTop: 4, display: 'inline-block' }}>Certified Payload</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--primary)', letterSpacing: '-0.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{form.companyName || 'Corporate Entity'}</div>
+                  <div className="badge badge-navy" style={{ marginTop: 4, display: 'inline-block' }}>Certified Payroll</div>
                 </div>
               </div>
               <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 12 }}>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>Period</div>
-                <div style={{ fontSize: 14, fontWeight: 800 }}>{form.month} {form.year}</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Period</div>
+                <div style={{ fontSize: 14, fontWeight: 700 }}>{form.month} {form.year}</div>
               </div>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 32, padding: 16, background: 'var(--bg)', borderRadius: 20 }}>
-              <div style={{ width: 50, height: 50, borderRadius: 14, background: 'var(--navy)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 20, fontWeight: 900 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 32, padding: 16, background: 'var(--bg)', borderRadius: 6 }}>
+              <div style={{ width: 50, height: 50, borderRadius: 6, background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 20, fontWeight: 700 }}>
                 {(form.employeeName || 'U')[0].toUpperCase()}
               </div>
               <div style={{ overflow: 'hidden' }}>
-                <div style={{ fontSize: 16, fontWeight: 800, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{form.employeeName || 'Active User'}</div>
-                <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>{form.designation || 'Position Unspecified'} · {form.department}</div>
+                <div style={{ fontSize: 16, fontWeight: 700, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{form.employeeName || 'Active User'}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>{form.designation || 'Position Unspecified'} · {form.department}</div>
               </div>
             </div>
 
@@ -488,13 +468,13 @@ export default function GeneratePayslip() {
             </div>
 
             <div style={{ 
-              background: 'var(--navy)', color: 'white', padding: '24px', 
-              borderRadius: 24, textAlign: 'center', boxShadow: '0 20px 40px -10px rgba(15,23,42,0.4)'
+              background: 'var(--primary)', color: 'white', padding: '24px', 
+              borderRadius: 6, textAlign: 'center'
             }}>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 700, textTransform: 'uppercase', marginBottom: 4 }}>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>
                 {form.employmentType === 'intern' ? 'Net Stipend Payable' : 'Net Salary Payable'}
               </div>
-              <div style={{ fontSize: 36, fontWeight: 900, color: 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ fontSize: 36, fontWeight: 700, color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <AnimatedNumber value={totals.net} decimals={0} />
               </div>
             </div>

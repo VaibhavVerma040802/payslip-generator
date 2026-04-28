@@ -62,7 +62,7 @@ export default function Profile() {
       {/* Header Tier */}
       <div className="fade-in" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 40, gap: 20, flexWrap: 'wrap' }}>
         <div>
-          <h1 style={{ color: 'var(--navy)', letterSpacing: '-0.02em', marginBottom: 4 }}>Workspace Settings</h1>
+          <h1 style={{ color: 'var(--primary)', letterSpacing: '-0.02em', marginBottom: 4 }}>Workspace Settings</h1>
           <p style={{ color: 'var(--text-muted)', fontWeight: 500 }}>Configure your corporate identity and statutory branding.</p>
         </div>
         <div className="badge badge-gold" style={{ padding: '8px 16px', fontSize: 13 }}>Enterprise Mode</div>
@@ -75,7 +75,7 @@ export default function Profile() {
             <label style={{ display: 'block', fontSize: 13, fontWeight: 800, color: 'var(--text-muted)', marginBottom: 20, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Corporate Branding</label>
             <div style={{ position: 'relative' }}>
               <div style={{
-                width: 140, height: 140, borderRadius: 24, background: 'var(--bg)',
+                width: 140, height: 140, borderRadius: 12, background: 'var(--bg)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 border: '2px solid var(--border)', overflow: 'hidden',
                 boxShadow: '0 10px 30px -10px rgba(0,0,0,0.1)', transition: 'all 0.3s'
@@ -91,7 +91,7 @@ export default function Profile() {
               </div>
               <label style={{
                 position: 'absolute', bottom: -12, right: -12, 
-                width: 44, height: 44, borderRadius: 14, background: 'var(--navy)',
+                width: 44, height: 44, borderRadius: 6, background: 'var(--primary)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 color: 'white', cursor: 'pointer', border: '4px solid var(--surface)',
                 boxShadow: '0 4px 12px rgba(0,0,0,0.2)', transition: 'all 0.2s'
@@ -112,7 +112,7 @@ export default function Profile() {
                 <input 
                   type="text" required value={form.companyName}
                   onChange={e => setForm({ ...form, companyName: e.target.value })}
-                  style={{ width: '100%', padding: '14px 14px 14px 50px', borderRadius: 14, border: '2px solid var(--border)', background: 'var(--bg)', fontSize: 15, fontWeight: 600, color: 'var(--text)', outline: 'none', boxSizing: 'border-box' }} 
+                  style={{ width: '100%', padding: '14px 14px 14px 50px', borderRadius: 6, border: '2px solid var(--border)', background: 'var(--bg)', fontSize: 15, fontWeight: 600, color: 'var(--text)', outline: 'none', boxSizing: 'border-box' }} 
                   className="btn-hover"
                 />
               </div>
@@ -125,7 +125,7 @@ export default function Profile() {
                 <input 
                   type="text" required value={form.companyAddress}
                   onChange={e => setForm({ ...form, companyAddress: e.target.value })}
-                  style={{ width: '100%', padding: '14px 14px 14px 50px', borderRadius: 14, border: '2px solid var(--border)', background: 'var(--bg)', fontSize: 15, fontWeight: 600, color: 'var(--text)', outline: 'none', boxSizing: 'border-box' }} 
+                  style={{ width: '100%', padding: '14px 14px 14px 50px', borderRadius: 6, border: '2px solid var(--border)', background: 'var(--bg)', fontSize: 15, fontWeight: 600, color: 'var(--text)', outline: 'none', boxSizing: 'border-box' }} 
                   className="btn-hover"
                 />
               </div>
@@ -138,7 +138,7 @@ export default function Profile() {
                 <input 
                   type="email" value={form.companyEmail}
                   onChange={e => setForm({ ...form, companyEmail: e.target.value })}
-                  style={{ width: '100%', padding: '14px 14px 14px 50px', borderRadius: 14, border: '2px solid var(--border)', background: 'var(--bg)', fontSize: 15, fontWeight: 600, color: 'var(--text)', outline: 'none', boxSizing: 'border-box' }} 
+                  style={{ width: '100%', padding: '14px 14px 14px 50px', borderRadius: 6, border: '2px solid var(--border)', background: 'var(--bg)', fontSize: 15, fontWeight: 600, color: 'var(--text)', outline: 'none', boxSizing: 'border-box' }} 
                   className="btn-hover"
                 />
               </div>
@@ -151,7 +151,7 @@ export default function Profile() {
                 <input 
                   type="text" value={form.companyPhone}
                   onChange={e => setForm({ ...form, companyPhone: e.target.value })}
-                  style={{ width: '100%', padding: '14px 14px 14px 50px', borderRadius: 14, border: '2px solid var(--border)', background: 'var(--bg)', fontSize: 15, fontWeight: 600, color: 'var(--text)', outline: 'none', boxSizing: 'border-box' }} 
+                  style={{ width: '100%', padding: '14px 14px 14px 50px', borderRadius: 6, border: '2px solid var(--border)', background: 'var(--bg)', fontSize: 15, fontWeight: 600, color: 'var(--text)', outline: 'none', boxSizing: 'border-box' }} 
                   className="btn-hover"
                 />
               </div>
@@ -164,7 +164,7 @@ export default function Profile() {
                 <input 
                   type="text" value={form.companyCIN}
                   onChange={e => setForm({ ...form, companyCIN: e.target.value })}
-                  style={{ width: '100%', padding: '14px 14px 14px 50px', borderRadius: 14, border: '2px solid var(--border)', background: 'var(--bg)', fontSize: 15, fontWeight: 600, color: 'var(--text)', outline: 'none', boxSizing: 'border-box' }} 
+                  style={{ width: '100%', padding: '14px 14px 14px 50px', borderRadius: 6, border: '2px solid var(--border)', background: 'var(--bg)', fontSize: 15, fontWeight: 600, color: 'var(--text)', outline: 'none', boxSizing: 'border-box' }} 
                   className="btn-hover"
                 />
               </div>
@@ -175,8 +175,8 @@ export default function Profile() {
             type="submit" 
             disabled={loading} 
             style={{
-              marginTop: 48, width: '100%', height: 56, background: 'var(--navy)', color: 'white',
-              borderRadius: 16, fontWeight: 800, cursor: 'pointer', border: 'none', display: 'flex',
+              marginTop: 48, width: '100%', height: 56, background: 'var(--primary)', color: 'white',
+              borderRadius: 12, fontWeight: 800, cursor: 'pointer', border: 'none', display: 'flex',
               alignItems: 'center', justifyContent: 'center', gap: 12, fontSize: 16,
               boxShadow: '0 10px 25px -5px rgba(15,23,42,0.3)', transition: 'all 0.3s'
             }}

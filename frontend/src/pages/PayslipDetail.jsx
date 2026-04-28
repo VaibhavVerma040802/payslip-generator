@@ -29,19 +29,19 @@ function SectionCard({ title, icon: Icon, children, accent }) {
     }}>
       <div style={{
         display: 'flex', alignItems: 'center', gap: 10,
-        padding: '14px 20px', background: accent ? 'var(--navy)' : 'var(--surface-2)',
+        padding: '14px 20px', background: accent ? 'var(--primary)' : 'var(--surface-2)',
         borderBottom: '1px solid var(--border)',
       }}>
         <div style={{
           width: 30, height: 30, borderRadius: 8,
-          background: accent ? 'rgba(201,168,76,0.2)' : 'var(--navy)',
+          background: accent ? 'rgba(201,168,76,0.2)' : 'var(--primary)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          <Icon size={14} color={accent ? 'var(--gold)' : 'white'} />
+          <Icon size={14} color={accent ? 'var(--primary)' : 'white'} />
         </div>
         <span style={{
           fontWeight: 700, fontSize: 13.5,
-          color: accent ? 'white' : 'var(--navy)',
+          color: accent ? 'white' : 'var(--primary)',
         }}>
           {title}
         </span>
@@ -52,18 +52,18 @@ function SectionCard({ title, icon: Icon, children, accent }) {
 }
 
 function SalaryRow({ label, amount, type = 'earning', bold }) {
-  const color = type === 'earning' ? 'var(--green)' : type === 'deduction' ? 'var(--red)' : 'var(--navy)'
+  const color = type === 'earning' ? 'var(--green)' : type === 'deduction' ? 'var(--red)' : 'var(--primary)'
   if (!amount || parseFloat(amount) === 0) return null
   return (
     <div style={{
       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
       padding: '8px 12px', borderRadius: 7, marginBottom: 3,
-      background: bold ? (type === 'net' ? 'var(--navy)' : 'var(--surface-2)') : 'transparent',
+      background: bold ? (type === 'net' ? 'var(--primary)' : 'var(--surface-2)') : 'transparent',
     }}>
       <span style={{
         fontSize: bold ? 13.5 : 13,
         fontWeight: bold ? 700 : 400,
-        color: bold && type === 'net' ? 'var(--gold)' : 'var(--text)',
+        color: bold && type === 'net' ? 'var(--primary)' : 'var(--text)',
       }}>
         {label}
       </span>
@@ -133,7 +133,7 @@ function EmailModal({ payslip, onClose, onSent }) {
               border: '1.5px solid var(--border)', borderRadius: 8,
               fontSize: 14, color: 'var(--text)', outline: 'none',
             }}
-            onFocus={e => e.target.style.borderColor = 'var(--navy)'}
+            onFocus={e => e.target.style.borderColor = 'var(--primary)'}
             onBlur={e => e.target.style.borderColor = 'var(--border)'}
             onKeyDown={e => e.key === 'Enter' && handleSend()}
           />
@@ -276,7 +276,7 @@ export default function PayslipDetail() {
             )}
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 700, color: 'var(--navy)', lineHeight: 1 }}>
+                <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 700, color: 'var(--primary)', lineHeight: 1 }}>
                   {p.employeeName}
                 </h1>
                 {p.emailSent && (
@@ -291,7 +291,7 @@ export default function PayslipDetail() {
             </div>
           </div>
             <div style={{ marginTop: 8, display: 'flex', gap: 10 }}>
-              <span className="badge" style={{ background: 'var(--surface-2)', color: 'var(--navy)' }}>
+              <span className="badge" style={{ background: 'var(--surface-2)', color: 'var(--primary)' }}>
                 {p.month} {p.year}
               </span>
               {p.annualCTC > 0 && (
@@ -323,7 +323,7 @@ export default function PayslipDetail() {
               disabled={actionLoading[`push_${p._id}`]}
               style={{
                 display: 'flex', alignItems: 'center', gap: 7,
-                background: p.isPushedToPortal ? 'var(--emerald)' : 'var(--navy)', color: 'white',
+                background: p.isPushedToPortal ? 'var(--emerald)' : 'var(--primary)', color: 'white',
                 border: 'none', borderRadius: 9, padding: '10px 18px',
                 fontWeight: 600, fontSize: 13.5, cursor: 'pointer',
               }}

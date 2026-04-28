@@ -49,7 +49,7 @@ export default function VerifyAction() {
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="glass" 
+        className="card" 
         style={{
           width: '100%', maxWidth: 500, padding: 'clamp(40px, 6vw, 80px)', textAlign: 'center',
           boxShadow: '0 40px 100px -20px rgba(0,0,0,0.15)', border: '1px solid var(--border)'
@@ -58,25 +58,25 @@ export default function VerifyAction() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 40 }}>
           <div style={{
             width: 38, height: 38, borderRadius: 10,
-            background: 'var(--navy)',
+            background: 'var(--primary)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             boxShadow: '0 4px 12px rgba(15,23,42,0.2)',
           }}>
-            <FileSpreadsheet size={20} color="var(--gold)" strokeWidth={2.5} />
+            <FileSpreadsheet size={20} color="var(--primary)" strokeWidth={2.5} />
           </div>
           <div style={{
             fontFamily: 'var(--font-display)',
             fontSize: 20, fontWeight: 800,
-            color: 'var(--navy)', letterSpacing: '-0.02em',
-          }}>PaySlip<span style={{ color: 'var(--gold)' }}>Pro</span></div>
+            color: 'var(--primary)', letterSpacing: '-0.02em',
+          }}>PaySlip<span style={{ color: 'var(--primary)' }}>Pro</span></div>
         </div>
 
         {status === 'loading' && (
           <div className="fade-in">
-            <div style={{ margin: '0 auto 32px', color: 'var(--navy)', display: 'flex', justifyContent: 'center' }}>
+            <div style={{ margin: '0 auto 32px', color: 'var(--primary)', display: 'flex', justifyContent: 'center' }}>
               <Loader2 size={56} className="animate-spin" strokeWidth={2} />
             </div>
-            <h1 style={{ color: 'var(--navy)', marginBottom: 12, letterSpacing: '-0.02em' }}>
+            <h1 style={{ color: 'var(--primary)', marginBottom: 12, letterSpacing: '-0.02em' }}>
               Validating Artifact...
             </h1>
             <p style={{ color: 'var(--text-muted)', fontSize: 16, fontWeight: 500 }}>Establishing secure session protocol.</p>
@@ -86,7 +86,7 @@ export default function VerifyAction() {
         {status === 'success' && (
           <div className="fade-in">
             <div style={{
-              width: 80, height: 80, borderRadius: 24, background: 'var(--emerald-light)',
+              width: 80, height: 80, borderRadius: 12, background: 'var(--emerald-light)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               color: 'var(--emerald)', margin: '0 auto 32px', border: '2px solid var(--emerald)'
             }}>
@@ -99,8 +99,8 @@ export default function VerifyAction() {
               {message} Redirecting to Corporate Portal...
             </p>
             <Link to="/login" style={{
-              display: 'inline-flex', alignItems: 'center', gap: 10, background: 'var(--navy)',
-              color: 'white', padding: '14px 28px', borderRadius: 14, fontWeight: 800, textDecoration: 'none',
+              display: 'inline-flex', alignItems: 'center', gap: 10, background: 'var(--primary)',
+              color: 'white', padding: '14px 28px', borderRadius: 6, fontWeight: 800, textDecoration: 'none',
               boxShadow: '0 10px 20px -5px rgba(15,23,42,0.3)'
             }} className="btn-hover">
               Enter Portal <ArrowRight size={20} />
@@ -111,7 +111,7 @@ export default function VerifyAction() {
         {status === 'error' && (
           <div className="fade-in">
             <div style={{
-              width: 80, height: 80, borderRadius: 24, background: '#fee2e2',
+              width: 80, height: 80, borderRadius: 12, background: '#fee2e2',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               color: '#ef4444', margin: '0 auto 32px', border: '2px solid #fecaca'
             }}>
@@ -124,8 +124,8 @@ export default function VerifyAction() {
               {message} The verification sequence may have expired or was previously utilized.
             </p>
             <Link to="/login" style={{
-              display: 'inline-flex', alignItems: 'center', gap: 10, border: '2.5px solid var(--navy)',
-              color: 'var(--navy)', padding: '14px 28px', borderRadius: 14, fontWeight: 800, textDecoration: 'none'
+              display: 'inline-flex', alignItems: 'center', gap: 10, border: '2.5px solid var(--primary)',
+              color: 'var(--primary)', padding: '14px 28px', borderRadius: 6, fontWeight: 800, textDecoration: 'none'
             }} className="btn-hover">
               Return to Access Point
             </Link>

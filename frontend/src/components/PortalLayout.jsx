@@ -11,10 +11,9 @@ import api from '../api'
 
 const navItems = [
   { to: '/portal/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/portal/attendance', label: 'Attendance', icon: Clock },
   { to: '/portal/payslips', label: 'My Payslips', icon: FileText },
-  { to: '/portal/summary', label: 'Weekly Summary', icon: CalendarDays },
-  { to: '/portal/profile', label: 'My Profile', icon: User },
+  { to: '/portal/summary', label: 'Salary', icon: CalendarDays },
+  { to: '/portal/profile', label: 'Profile', icon: User },
 ]
 
 function useMediaQuery(query) {
@@ -129,7 +128,7 @@ export default function PortalLayout() {
         <div 
           onClick={() => setSidebarOpen(false)}
           style={{ 
-            position: 'fixed', inset: 0, background: 'rgba(2, 6, 23, 0.5)', 
+            position: 'fixed', inset: 0, background: 'rgba(26, 26, 26, 0.5)', 
             zIndex: 100, backdropFilter: 'blur(4px)', transition: 'all 0.3s'
           }}
         />
@@ -138,7 +137,7 @@ export default function PortalLayout() {
       {/* Sidebar */}
       <aside style={{
         width: 'var(--sidebar-w)',
-        background: 'var(--navy-dark)',
+        background: 'var(--primary)',
         display: 'flex',
         flexDirection: 'column',
         position: 'fixed',
@@ -146,7 +145,7 @@ export default function PortalLayout() {
         zIndex: 120,
         transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
         transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-        borderRight: '1px solid rgba(255,255,255,0.05)',
+        borderRight: '1px solid rgba(255,255,255,0.1)',
       }}>
         {/* Brand Header */}
         <div style={{
@@ -155,23 +154,22 @@ export default function PortalLayout() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          borderBottom: '1px solid rgba(255,255,255,0.05)',
+          borderBottom: '1px solid rgba(255,255,255,0.1)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{
-              width: 38, height: 38, borderRadius: 12,
-              background: 'linear-gradient(135deg, var(--emerald) 0%, #059669 100%)',
+              width: 38, height: 38, borderRadius: 6,
+              background: 'var(--white)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
             }}>
-              <Clock size={20} color="white" strokeWidth={2.5} />
+              <Clock size={20} color="var(--primary)" strokeWidth={2.5} />
             </div>
             <div>
               <div style={{
                 fontFamily: 'var(--font-display)',
                 fontSize: 19, fontWeight: 800,
                 color: 'white', letterSpacing: '-0.02em'
-              }}>Staff<span style={{ color: 'var(--emerald)' }}>Portal</span></div>
+              }}>Staff<span style={{ color: 'var(--bg)' }}>Portal</span></div>
             </div>
           </div>
           {isMobile && (
@@ -195,7 +193,7 @@ export default function PortalLayout() {
                 alignItems: 'center',
                 gap: 12,
                 padding: '12px 16px',
-                borderRadius: 12,
+                borderRadius: 6,
                 marginBottom: 6,
                 textDecoration: 'none',
                 fontSize: 14,
@@ -220,11 +218,11 @@ export default function PortalLayout() {
           <div style={{ 
             display: 'flex', alignItems: 'center', gap: 12, 
             padding: '12px', background: 'rgba(255,255,255,0.03)', 
-            borderRadius: 16, marginBottom: 12 
+            borderRadius: 12, marginBottom: 12 
           }}>
             <div style={{ 
               width: 36, height: 36, borderRadius: 10, 
-              background: 'var(--navy-light)', border: '1px solid rgba(255,255,255,0.1)',
+              background: 'var(--bg)', border: '1px solid rgba(255,255,255,0.1)',
               display: 'flex', alignItems: 'center', justifyContent: 'center' 
             }}>
               <User size={16} color="white" />
@@ -240,8 +238,8 @@ export default function PortalLayout() {
             onClick={logout}
             style={{
               width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, 
-              background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)',
-              padding: '10px', borderRadius: 12, color: '#f87171', fontSize: 13, 
+              background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.2)',
+              padding: '10px', borderRadius: 6, color: 'white', fontSize: 13, 
               cursor: 'pointer', fontWeight: 600, transition: 'all 0.2s'
             }}
           >
@@ -287,7 +285,7 @@ export default function PortalLayout() {
             >
               <Menu size={20} />
             </button>
-            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--navy)', opacity: 0.9, letterSpacing: '-0.01em' }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--primary)', opacity: 0.9, letterSpacing: '-0.01em' }}>
               Staff Portal Console
             </div>
           </div>
@@ -311,7 +309,7 @@ export default function PortalLayout() {
               >
                 <Bell size={20} />
                 {notifications.length > 0 && (
-                  <span style={{ position: 'absolute', top: -4, right: -4, width: 18, height: 18, background: '#ef4444', color: 'white', fontSize: 10, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, border: '2px solid var(--surface)' }}>
+                  <span style={{ position: 'absolute', top: -4, right: -4, width: 18, height: 18, background: 'var(--primary)', color: 'white', fontSize: 10, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, border: '2px solid var(--surface)' }}>
                     {notifications.length}
                   </span>
                 )}
@@ -327,16 +325,16 @@ export default function PortalLayout() {
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
                       style={{
                         position: 'absolute', top: '100%', right: 0, marginTop: 12,
-                        width: 320, background: 'var(--surface)', borderRadius: 20,
+                        width: 320, background: 'var(--surface)', borderRadius: 12,
                         border: '1px solid var(--border)', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)',
                         zIndex: 100, overflow: 'hidden'
                       }}
                     >
                       <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg)' }}>
-                        <h4 style={{ margin: 0, fontSize: 14, color: 'var(--navy)', fontWeight: 800 }}>Notifications</h4>
+                        <h4 style={{ margin: 0, fontSize: 14, color: 'var(--primary)', fontWeight: 800 }}>Notifications</h4>
                         <button 
                           onClick={markAllAsRead}
-                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--emerald)', fontSize: 11, fontWeight: 700 }}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', fontSize: 11, fontWeight: 700 }}
                         >
                           Mark all read
                         </button>
@@ -355,7 +353,7 @@ export default function PortalLayout() {
                                 {!n.isRead && (
                                   <button 
                                     onClick={() => markAsRead(n._id)}
-                                    style={{ background: 'none', border: 'none', color: 'var(--emerald)', fontSize: 10, fontWeight: 700, cursor: 'pointer' }}
+                                    style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: 10, fontWeight: 700, cursor: 'pointer' }}
                                   >
                                     Mark as read
                                   </button>
@@ -376,10 +374,10 @@ export default function PortalLayout() {
                 <button
                   onClick={handleInstallClick}
                   style={{
-                    background: 'var(--navy)', color: 'white', border: 'none',
+                    background: 'var(--primary)', color: 'white', border: 'none',
                     display: 'flex', alignItems: 'center', gap: 8,
                     padding: '8px 16px', borderRadius: 12, fontSize: 13, fontWeight: 700,
-                    cursor: 'pointer', boxShadow: '0 4px 12px rgba(15,23,42,0.15)',
+                    cursor: 'pointer', boxShadow: '0 4px 12px rgba(88, 131, 59, 0.15)',
                     transition: 'all 0.2s'
                   }}
                   className="btn-hover"
@@ -394,7 +392,7 @@ export default function PortalLayout() {
 
             {/* Theme Control System */}
             <div style={{ 
-              display: 'flex', background: 'var(--bg)', borderRadius: 14, 
+              display: 'flex', background: 'var(--bg)', borderRadius: 6, 
               padding: 3, border: '1.5px solid var(--border)' 
             }}>
               {[
@@ -405,8 +403,8 @@ export default function PortalLayout() {
                   key={t.id}
                   onClick={() => setTheme(t.id)}
                   style={{
-                    background: theme === t.id ? 'var(--surface)' : 'transparent',
-                    color: theme === t.id ? 'var(--gold)' : 'var(--text-light)',
+                    background: theme === t.id ? 'var(--bg)' : 'transparent',
+                    color: theme === t.id ? 'var(--primary)' : 'var(--primary)',
                     boxShadow: theme === t.id ? 'var(--shadow-sm)' : 'none',
                     border: 'none', borderRadius: 11, padding: '7px 14px',
                     display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer',

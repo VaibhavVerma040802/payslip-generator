@@ -9,13 +9,16 @@ const api = axios.create({
 // Request interceptor to add bearer token
 api.interceptors.request.use((config) => {
   // Determine which token to use based on the request URL
-  // Staff portal routes typically start with /portal/ or /attendance/
-  const isPortalRoute = config.url.startsWith('/portal/') || config.url.startsWith('/attendance/')
+  const url = config.url
+  const isPortalRoute = url.startsWith('/portal/') || url.startsWith('/attendance/')
+  const isPayslipDownload = url.includes('/payslips/') && url.endsWith('/download')
   
   let token = null
-  if (isPortalRoute) {
+  if (isPortalRoute || isPayslipDownload) {
+    // Priority to staffToken if on portal routes or download
     token = localStorage.getItem('staffToken') || localStorage.getItem('token')
   } else {
+    // Priority to admin token for corporate routes
     token = localStorage.getItem('token') || localStorage.getItem('staffToken')
   }
 

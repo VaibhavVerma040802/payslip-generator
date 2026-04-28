@@ -74,11 +74,11 @@ export default function PortalLogin() {
             </p>
             
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
-              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '24px', borderRadius: 20, border: '1px solid rgba(255,255,255,0.08)' }}>
+              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '24px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)' }}>
                 <ShieldCheck size={28} color="var(--emerald)" style={{ marginBottom: 12 }} />
                 <div style={{ color: 'white', fontWeight: 800, fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Secure Auth</div>
               </div>
-              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '24px', borderRadius: 20, border: '1px solid rgba(255,255,255,0.08)' }}>
+              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '24px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)' }}>
                 <Zap size={28} color="var(--emerald)" style={{ marginBottom: 12 }} />
                 <div style={{ color: 'white', fontWeight: 800, fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Real-time Logs</div>
               </div>
@@ -98,12 +98,12 @@ export default function PortalLogin() {
           transition={{ delay: 0.1, duration: 0.4 }}
           style={{
             width: '100%', maxWidth: 440,
-            borderRadius: 32, padding: 'clamp(32px, 5vw, 60px)',
+            borderRadius: 12, padding: 'clamp(32px, 5vw, 60px)',
           }}
-          className="glass"
+          className="card"
         >
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
-            <h2 style={{ fontSize: 32, color: 'var(--navy)', marginBottom: 12 }}>Staff Login</h2>
+            <h2 style={{ fontSize: 32, color: 'var(--primary)', marginBottom: 12 }}>Staff Login</h2>
             <p style={{ color: 'var(--text-muted)', fontSize: 16, fontWeight: 500 }}>
               Enter your credentials to continue.
             </p>
@@ -121,7 +121,7 @@ export default function PortalLogin() {
                   placeholder="employee@company.com"
                   style={{
                     width: '100%', padding: '16px 16px 16px 50px', background: 'var(--bg)',
-                    border: '2px solid var(--border)', borderRadius: 16, outline: 'none', fontSize: 15,
+                    border: '2px solid var(--border)', borderRadius: 12, outline: 'none', fontSize: 15,
                     color: 'var(--text)', transition: 'all 0.2s', fontWeight: 600
                   }}
                   className="btn-hover"
@@ -143,7 +143,7 @@ export default function PortalLogin() {
                   placeholder="••••••••"
                   style={{
                     width: '100%', padding: '16px 16px 16px 50px', background: 'var(--bg)',
-                    border: '2px solid var(--border)', borderRadius: 16, outline: 'none', fontSize: 15,
+                    border: '2px solid var(--border)', borderRadius: 12, outline: 'none', fontSize: 15,
                     color: 'var(--text)', transition: 'all 0.2s', fontWeight: 600
                   }}
                   className="btn-hover"
@@ -156,8 +156,8 @@ export default function PortalLogin() {
               whileTap={{ scale: 0.98 }}
               type="submit" disabled={loading}
               style={{
-                width: '100%', height: 60, background: 'var(--navy)', color: 'white',
-                border: 'none', borderRadius: 16, fontWeight: 800, fontSize: 16, cursor: 'pointer',
+                width: '100%', height: 60, background: 'var(--primary)', color: 'white',
+                border: 'none', borderRadius: 12, fontWeight: 800, fontSize: 16, cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
                 boxShadow: '0 15px 30px -10px rgba(15,23,42,0.4)', transition: 'all 0.3s'
               }}

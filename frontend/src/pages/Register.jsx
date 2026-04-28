@@ -38,19 +38,19 @@ export default function Register() {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 24 }}>
             <div style={{
               width: 38, height: 38, borderRadius: 10,
-              background: 'var(--navy)',
+              background: 'var(--primary)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               boxShadow: '0 4px 12px rgba(15,23,42,0.2)',
             }}>
-              <FileSpreadsheet size={20} color="var(--gold)" strokeWidth={2.5} />
+              <FileSpreadsheet size={20} color="var(--primary)" strokeWidth={2.5} />
             </div>
             <div style={{
               fontFamily: 'var(--font-display)',
               fontSize: 20, fontWeight: 800,
-              color: 'var(--navy)', letterSpacing: '-0.02em',
-            }}>PaySlip<span style={{ color: 'var(--gold)' }}>Pro</span></div>
+              color: 'var(--primary)', letterSpacing: '-0.02em',
+            }}>PaySlip<span style={{ color: 'var(--primary)' }}>Pro</span></div>
           </div>
-          <h1 style={{ color: 'var(--navy)', marginBottom: 8, letterSpacing: '-0.01em' }}>Initialize Workspace</h1>
+          <h1 style={{ color: 'var(--primary)', marginBottom: 8, letterSpacing: '-0.01em' }}>Initialize Workspace</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: 15, fontWeight: 500 }}>
             Setup your statutory payroll dashboard in seconds.
           </p>
@@ -68,7 +68,7 @@ export default function Register() {
                 placeholder="Formal Company Name"
                 style={{
                   width: '100%', padding: '14px 14px 14px 44px', background: 'var(--bg)',
-                  border: '2px solid var(--border)', borderRadius: 14, outline: 'none', fontSize: 14,
+                  border: '2px solid var(--border)', borderRadius: 6, outline: 'none', fontSize: 14,
                   fontWeight: 600, color: 'var(--text)'
                 }}
                 className="btn-hover"
@@ -87,7 +87,7 @@ export default function Register() {
                 placeholder="hr@enterprise.com"
                 style={{
                   width: '100%', padding: '14px 14px 14px 44px', background: 'var(--bg)',
-                  border: '2px solid var(--border)', borderRadius: 14, outline: 'none', fontSize: 14,
+                  border: '2px solid var(--border)', borderRadius: 6, outline: 'none', fontSize: 14,
                   fontWeight: 600, color: 'var(--text)'
                 }}
                 className="btn-hover"
@@ -106,7 +106,7 @@ export default function Register() {
                 placeholder="Full Statutory Address"
                 style={{
                   width: '100%', padding: '14px 14px 14px 44px', background: 'var(--bg)',
-                  border: '2px solid var(--border)', borderRadius: 14, outline: 'none', fontSize: 14,
+                  border: '2px solid var(--border)', borderRadius: 6, outline: 'none', fontSize: 14,
                   fontWeight: 600, color: 'var(--text)'
                 }}
                 className="btn-hover"
@@ -125,7 +125,7 @@ export default function Register() {
                 placeholder="••••••••"
                 style={{
                   width: '100%', padding: '14px 14px 14px 44px', background: 'var(--bg)',
-                  border: '2px solid var(--border)', borderRadius: 14, outline: 'none', fontSize: 14,
+                  border: '2px solid var(--border)', borderRadius: 6, outline: 'none', fontSize: 14,
                   fontWeight: 600, color: 'var(--text)'
                 }}
                 className="btn-hover"
@@ -136,8 +136,8 @@ export default function Register() {
           <button
             type="submit" disabled={loading}
             style={{
-              width: '100%', height: 56, background: 'var(--navy)', color: 'white',
-              border: 'none', borderRadius: 16, fontWeight: 800, fontSize: 15, cursor: 'pointer',
+              width: '100%', height: 56, background: 'var(--primary)', color: 'white',
+              border: 'none', borderRadius: 12, fontWeight: 800, fontSize: 15, cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
               boxShadow: '0 10px 25px -5px rgba(15,23,42,0.3)', transition: 'all 0.3s'
             }}
@@ -148,7 +148,7 @@ export default function Register() {
         </form>
 
         <div style={{ textAlign: 'center', marginTop: 32, fontSize: 14, color: 'var(--text-muted)', fontWeight: 500 }}>
-          Existing enterprise account? <Link to="/login" style={{ color: 'var(--navy)', fontWeight: 800, textDecoration: 'none' }}>Sign In</Link>
+          Existing enterprise account? <Link to="/login" style={{ color: 'var(--primary)', fontWeight: 800, textDecoration: 'none' }}>Sign In</Link>
         </div>
       </div>
     </div>

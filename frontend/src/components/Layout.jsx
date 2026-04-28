@@ -12,12 +12,10 @@ import { useTheme } from '../context/ThemeContext'
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
-  { to: '/generate', label: 'Generate Payslip', icon: PlusCircle },
-  { to: '/payslips', label: 'All Payslips', icon: List },
-  { to: '/staff', label: 'Staff Management', icon: Users },
-  { to: '/leave-requests', label: 'Leave Requests', icon: Bell },
-  { to: '/audit-logs', label: 'Audit Logs', icon: Activity },
-  { to: '/profile', label: 'Company Profile', icon: Settings },
+  { to: '/staff', label: 'Employees', icon: Users },
+  { to: '/payslips', label: 'Payroll', icon: List },
+  { to: '/leave-requests', label: 'Leave Requests', icon: CalendarDays },
+  { to: '/audit-logs', label: 'Reports', icon: Activity },
 ]
 
 function useMediaQuery(query) {
@@ -154,7 +152,7 @@ export default function Layout() {
         <div 
           onClick={() => setSidebarOpen(false)}
           style={{ 
-            position: 'fixed', inset: 0, background: 'rgba(2, 6, 23, 0.5)', 
+            position: 'fixed', inset: 0, background: 'rgba(26, 26, 26, 0.5)', 
             zIndex: 100, backdropFilter: 'blur(4px)', transition: 'all 0.3s'
           }}
         />
@@ -163,7 +161,7 @@ export default function Layout() {
       {/* Sidebar */}
       <aside style={{
         width: 'var(--sidebar-w)',
-        background: 'var(--navy-dark)',
+        background: 'var(--primary)',
         display: 'flex',
         flexDirection: 'column',
         position: 'fixed',
@@ -171,7 +169,7 @@ export default function Layout() {
         zIndex: 120,
         transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
         transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-        borderRight: '1px solid rgba(255,255,255,0.05)',
+        borderRight: '1px solid rgba(255,255,255,0.1)',
       }}>
         {/* Brand Header */}
         <div style={{
@@ -184,19 +182,18 @@ export default function Layout() {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{
-              width: 38, height: 38, borderRadius: 12,
-              background: 'linear-gradient(135deg, var(--gold) 0%, #f59e0b 100%)',
+              width: 38, height: 38, borderRadius: 6,
+              background: 'var(--white)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)',
             }}>
-              <FileSpreadsheet size={20} color="var(--navy-dark)" strokeWidth={2.5} />
+              <FileSpreadsheet size={20} color="var(--primary)" strokeWidth={2.5} />
             </div>
             <div>
               <div style={{
                 fontFamily: 'var(--font-display)',
                 fontSize: 19, fontWeight: 800,
                 color: 'white', letterSpacing: '-0.02em'
-              }}>PaySlip<span style={{ color: 'var(--gold)' }}>Pro</span></div>
+              }}>PaySlip<span style={{ color: 'var(--bg)' }}>Pro</span></div>
             </div>
           </div>
           {isMobile && (
@@ -221,7 +218,7 @@ export default function Layout() {
                 alignItems: 'center',
                 gap: 12,
                 padding: '12px 16px',
-                borderRadius: 12,
+                borderRadius: 6,
                 marginBottom: 6,
                 textDecoration: 'none',
                 fontSize: 14,
@@ -246,14 +243,14 @@ export default function Layout() {
           <div style={{ 
             display: 'flex', alignItems: 'center', gap: 12, 
             padding: '12px', background: 'rgba(255,255,255,0.03)', 
-            borderRadius: 16, marginBottom: 12 
+            borderRadius: 12, marginBottom: 12 
           }}>
             <div style={{ 
-              width: 36, height: 36, borderRadius: 10, 
-              background: 'var(--navy-light)', border: '1px solid rgba(255,255,255,0.1)',
+              width: 36, height: 36, borderRadius: 6, 
+              background: 'var(--bg)', border: '1px solid rgba(255,255,255,0.1)',
               display: 'flex', alignItems: 'center', justifyContent: 'center' 
             }}>
-              <User size={16} color="white" />
+              <User size={16} color="var(--primary)" />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 13, color: 'white', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -266,8 +263,8 @@ export default function Layout() {
             onClick={logout}
             style={{
               width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, 
-              background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)',
-              padding: '10px', borderRadius: 12, color: '#f87171', fontSize: 13, 
+              background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.2)',
+              padding: '10px', borderRadius: 6, color: 'white', fontSize: 13, 
               cursor: 'pointer', fontWeight: 600, transition: 'all 0.2s'
             }}
           >
@@ -313,7 +310,7 @@ export default function Layout() {
             >
               <Menu size={20} />
             </button>
-            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--navy)', opacity: 0.9, letterSpacing: '-0.01em' }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--primary)', opacity: 0.9, letterSpacing: '-0.01em' }}>
               Workspace Console
             </div>
           </div>
@@ -323,10 +320,10 @@ export default function Layout() {
               <button
                 onClick={handleInstallClick}
                 style={{
-                  background: 'var(--navy)', color: 'white', border: 'none',
+                  background: 'var(--primary)', color: 'white', border: 'none',
                   display: 'flex', alignItems: 'center', gap: 8,
                   padding: '8px 16px', borderRadius: 12, fontSize: 13, fontWeight: 700,
-                  cursor: 'pointer', boxShadow: '0 4px 12px rgba(15,23,42,0.15)',
+                  cursor: 'pointer', boxShadow: '0 4px 12px rgba(88, 131, 59, 0.15)',
                   transition: 'all 0.2s'
                 }}
                 className="btn-hover"
@@ -351,7 +348,7 @@ export default function Layout() {
                 {notifications.length > 0 && (
                   <span style={{
                     position: 'absolute', top: -4, right: -4,
-                    width: 18, height: 18, background: '#ef4444', color: 'white',
+                    width: 18, height: 18, background: 'var(--primary)', color: 'white',
                     borderRadius: '50%', fontSize: 10, fontWeight: 800,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     border: '2px solid var(--surface)'
@@ -364,15 +361,15 @@ export default function Layout() {
               {notifOpen && (
                 <div style={{
                   position: 'absolute', top: 50, right: 0, width: 360,
-                  background: 'var(--surface)', borderRadius: 20,
+                  background: 'var(--surface)', borderRadius: 12,
                   boxShadow: '0 20px 40px rgba(0,0,0,0.15)', border: '1px solid var(--border)',
                   zIndex: 200, padding: 0, overflow: 'hidden'
                 }}>
                   <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--navy)' }}>Notifications</div>
+                    <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--primary)' }}>Notifications</div>
                     <button 
                       onClick={markAllAsRead}
-                      style={{ fontSize: 11, fontWeight: 700, color: 'var(--emerald)', textTransform: 'uppercase', background: 'none', border: 'none', cursor: 'pointer' }}
+                      style={{ fontSize: 11, fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', background: 'none', border: 'none', cursor: 'pointer' }}
                     >
                       Mark all as read
                     </button>
@@ -393,11 +390,11 @@ export default function Layout() {
                             }}
                             style={{ display: 'flex', gap: 12, marginBottom: 16, cursor: 'pointer' }}
                           >
-                            <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--navy-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', flexShrink: 0 }}>
+                            <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', flexShrink: 0 }}>
                               <User size={18} />
                             </div>
                             <div>
-                              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--navy)' }}>{n.staff?.fullName || 'Employee'}</div>
+                              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--primary)' }}>{n.staff?.fullName || 'Employee'}</div>
                               <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{n.message}</div>
                               <div style={{ fontSize: 10, color: 'var(--text-light)', marginTop: 4 }}>{new Date(n.createdAt).toLocaleString()}</div>
                             </div>
@@ -405,13 +402,13 @@ export default function Layout() {
                           <div style={{ display: 'flex', gap: 8 }}>
                             <button 
                               onClick={() => handleLeaveAction(n.referenceId, 'Approved')}
-                              style={{ flex: 1, padding: '8px', borderRadius: 8, background: 'var(--emerald)', color: 'white', border: 'none', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+                              style={{ flex: 1, padding: '8px', borderRadius: 8, background: 'var(--primary)', color: 'white', border: 'none', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
                             >
                               Approve
                             </button>
                             <button 
                               onClick={() => handleLeaveAction(n.referenceId, 'Rejected')}
-                              style={{ flex: 1, padding: '8px', borderRadius: 8, background: 'var(--bg)', color: '#ef4444', border: '1px solid #ef4444', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+                              style={{ flex: 1, padding: '8px', borderRadius: 8, background: 'var(--bg)', color: 'var(--primary)', border: '1px solid var(--primary)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
                             >
                               Deny
                             </button>
@@ -432,7 +429,7 @@ export default function Layout() {
 
             {/* Theme Control System */}
             <div style={{ 
-              display: 'flex', background: 'var(--bg)', borderRadius: 14, 
+              display: 'flex', background: 'var(--bg)', borderRadius: 6, 
               padding: 3, border: '1.5px solid var(--border)' 
             }}>
               {[
@@ -443,8 +440,8 @@ export default function Layout() {
                   key={t.id}
                   onClick={() => setTheme(t.id)}
                   style={{
-                    background: theme === t.id ? 'var(--surface)' : 'transparent',
-                    color: theme === t.id ? 'var(--gold)' : 'var(--text-light)',
+                    background: theme === t.id ? 'var(--bg)' : 'transparent',
+                    color: theme === t.id ? 'var(--primary)' : 'var(--primary)',
                     boxShadow: theme === t.id ? 'var(--shadow-sm)' : 'none',
                     border: 'none', borderRadius: 11, padding: '7px 14px',
                     display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer',

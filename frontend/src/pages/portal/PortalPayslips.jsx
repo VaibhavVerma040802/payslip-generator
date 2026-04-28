@@ -51,7 +51,7 @@ export default function PortalPayslips() {
     <div style={{ maxWidth: 1000, margin: '0 auto' }}>
       <header style={{ marginBottom: 40, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 20 }}>
         <div>
-          <h1 style={{ fontSize: 32, color: 'var(--navy)', marginBottom: 8, letterSpacing: '-0.02em' }}>My Payslips</h1>
+          <h1 style={{ fontSize: 32, color: 'var(--primary)', marginBottom: 8, letterSpacing: '-0.02em' }}>My Payslips</h1>
           <p style={{ color: 'var(--text-muted)', fontWeight: 500 }}>Access and download your digital payslip archive.</p>
         </div>
         <div style={{ position: 'relative', width: '100%', maxWidth: 300 }}>
@@ -61,10 +61,8 @@ export default function PortalPayslips() {
             placeholder="Search by month or year..."
             value={search}
             onChange={handleSearch}
-            style={{
-              width: '100%', padding: '14px 14px 14px 44px', borderRadius: 14, border: '2px solid var(--border)',
-              background: 'var(--surface)', fontSize: 14, outline: 'none', color: 'var(--text)'
-            }}
+            className="input-field"
+            style={{ width: '100%', paddingLeft: 44 }}
           />
         </div>
       </header>
@@ -74,11 +72,11 @@ export default function PortalPayslips() {
           <Loader2 size={40} className="animate-spin text-muted" />
         </div>
       ) : payslips.length === 0 ? (
-        <div className="glass" style={{ padding: 80, textAlign: 'center', color: 'var(--text-muted)' }}>
+        <div className="card" style={{ padding: 80, textAlign: 'center', color: 'var(--text-muted)' }}>
           <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
             <FileText size={40} color="var(--text-light)" />
           </div>
-          <h3 style={{ color: 'var(--navy)', marginBottom: 8 }}>No payslips found</h3>
+          <h3 style={{ color: 'var(--primary)', marginBottom: 8 }}>No payslips found</h3>
           <p>Your workspace administrator has not pushed any payslips to your portal yet.</p>
         </div>
       ) : (
@@ -86,19 +84,19 @@ export default function PortalPayslips() {
           {payslips.map((p) => (
             <motion.div 
               key={p._id} 
-              whileHover={{ y: -5, boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }} 
-              className="glass" 
+              whileHover={{ y: -2 }} 
+              className="card" 
               style={{ padding: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
             >
               <div>
-                <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--navy)' }}>{p.month} {p.year}</div>
-                <div style={{ fontSize: 13, color: 'var(--emerald)', marginTop: 4, fontWeight: 700 }}>Net Payable: ₹{p.netSalary.toLocaleString()}</div>
-                <div style={{ fontSize: 11, color: 'var(--text-light)', marginTop: 2, fontWeight: 600 }}>Ref: {p._id.slice(-8).toUpperCase()}</div>
+                <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--primary)' }}>{p.month} {p.year}</div>
+                <div style={{ fontSize: 13, color: 'var(--primary)', marginTop: 4, fontWeight: 600 }}>Net Payable: ₹{p.netSalary.toLocaleString()}</div>
+                <div style={{ fontSize: 11, color: 'var(--text-light)', marginTop: 2, fontWeight: 500 }}>Ref: {p._id.slice(-8).toUpperCase()}</div>
               </div>
               <button
                 onClick={() => handleDownload(p._id)}
                 style={{
-                  width: 44, height: 44, borderRadius: 12, background: 'var(--navy)', color: 'white',
+                  width: 44, height: 44, borderRadius: 12, background: 'var(--primary)', color: 'white',
                   border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
                   transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(15,23,42,0.2)'
                 }}
@@ -112,13 +110,13 @@ export default function PortalPayslips() {
         </div>
       )}
       
-      <div style={{ marginTop: 48, padding: 24, background: 'var(--bg)', borderRadius: 20, border: '1px solid var(--border)' }}>
+      <div style={{ marginTop: 48, padding: 24, background: 'var(--bg)', borderRadius: 12, border: '1px solid var(--border)' }}>
         <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
           <div style={{ width: 40, height: 40, borderRadius: 10, background: '#fef3c7', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d97706', flexShrink: 0 }}>
             <CalendarIcon size={20} />
           </div>
           <div>
-            <h4 style={{ margin: 0, color: 'var(--navy)', fontSize: 15 }}>Policy Reminder</h4>
+            <h4 style={{ margin: 0, color: 'var(--primary)', fontSize: 15 }}>Policy Reminder</h4>
             <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>
               The portal displays payslips for the <strong>last 3 months only</strong>. For older records or historical data, please contact your HR or Corporate Portal administrator.
             </p>
