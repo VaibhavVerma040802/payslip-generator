@@ -40,7 +40,7 @@ export default function PortalDashboard() {
   const fetchLeaveHistory = async () => {
     try {
       const res = await api.get('/leaves/my-requests')
-      setLeaveHistory(res.data.data)
+      setLeaveHistory(res.data.data || [])
     } catch (err) {
       console.error('Failed to fetch leave history')
     }
@@ -104,7 +104,6 @@ export default function PortalDashboard() {
   const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
   const isPunchedIn = Boolean(activeShift && !activeShift.punchOut)
 
-  // Weekend + not overtime-eligible = show day off card
   const isOvertimeEligible = staffUser?.overtimeEligible || false
   const isOffDay = isWeekend && !isOvertimeEligible
 
@@ -115,71 +114,69 @@ export default function PortalDashboard() {
   )
 
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-      <header style={{ marginBottom: 40, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 20px' }}>
+      <header style={{ marginBottom: 48, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 24 }}>
         <div>
-          <h1 style={{ fontSize: 32, color: 'var(--primary)', marginBottom: 8 }}>
-            Good {currentTime.getHours() < 12 ? 'Morning' : currentTime.getHours() < 17 ? 'Afternoon' : 'Evening'}
+          <h1 style={{ fontSize: 'clamp(24px, 5vw, 36px)', color: 'var(--primary)', marginBottom: 8, letterSpacing: '-0.02em' }}>
+            Good {currentTime.getHours() < 12 ? 'Morning' : currentTime.getHours() < 17 ? 'Afternoon' : 'Evening'}, {staffUser?.fullName?.split(' ')[0] || 'Member'}
           </h1>
-          <p style={{ color: 'var(--text-muted)', fontWeight: 500 }}>Ready to track your progress today?</p>
+          <p style={{ color: 'var(--text-muted)', fontWeight: 600, fontSize: 16 }}>Ready to track your progress today?</p>
         </div>
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+        <button
           onClick={() => setLeaveModalOpen(true)}
-          style={{
-            padding: '12px 24px', borderRadius: 6, background: 'var(--primary)', color: 'white',
-            border: 'none', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
-            boxShadow: '0 4px 12px rgba(88, 131, 59, 0.15)'
-          }}
+          className="btn-primary"
+          style={{ height: 48, padding: '0 28px', borderRadius: 14 }}
         >
           <CalendarIcon size={18} /> Apply for Leave
-        </motion.button>
+        </button>
       </header>
 
       {/* Weekend Day-Off Banner */}
       {isOffDay && (
         <motion.div
-          initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}
           style={{
-            marginBottom: 32, padding: 24, borderRadius: 12,
-            background: 'var(--primary)',
-            display: 'flex', alignItems: 'center', gap: 20, color: 'white'
+            marginBottom: 40, padding: 32, borderRadius: 20,
+            background: 'linear-gradient(135deg, var(--primary) 0%, var(--bda-green-light) 100%)',
+            display: 'flex', alignItems: 'center', gap: 24, color: 'white',
+            boxShadow: '0 20px 40px -10px rgba(88, 131, 59, 0.3)'
           }}
         >
-          <Coffee size={40} style={{ flexShrink: 0 }} />
+          <div style={{ width: 64, height: 64, borderRadius: 16, background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Coffee size={36} />
+          </div>
           <div>
-            <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 4 }}>
-              {dayOfWeek === 0 ? 'Sunday' : 'Saturday'} — Your Day Off 🎉
+            <div style={{ fontSize: 22, fontWeight: 900, marginBottom: 4, letterSpacing: '-0.01em' }}>
+              Happy {dayOfWeek === 0 ? 'Sunday' : 'Saturday'}!
             </div>
-            <div style={{ fontSize: 14, opacity: 0.85 }}>
-              Attendance tracking is paused for weekends. Relax and recharge! If you believe you should have weekend access, contact your administrator.
+            <div style={{ fontSize: 15, opacity: 0.9, fontWeight: 500, lineHeight: 1.6 }}>
+              It's your scheduled day off. Attendance tracking is currently paused. Enjoy your time off and recharge for the week ahead!
             </div>
           </div>
         </motion.div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 32, marginBottom: 48 }}>
         {/* Live Clock Card */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
-          <div style={{ width: 64, height: 64, borderRadius: 6, background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', marginBottom: 20 }}>
-            <Clock size={32} />
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card glass" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: 40, borderRadius: 24 }}>
+          <div style={{ width: 72, height: 72, borderRadius: 18, background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', marginBottom: 24 }}>
+            <Clock size={36} />
           </div>
-          <div style={{ fontSize: 48, fontWeight: 600, fontFamily: 'var(--font-stack)', color: 'var(--primary)', letterSpacing: '-0.02em', marginBottom: 8 }}>
+          <div style={{ fontSize: 56, fontWeight: 900, color: 'var(--primary)', letterSpacing: '-0.02em', marginBottom: 12 }}>
             {currentTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-muted)', fontWeight: 500 }}>
-            <CalendarIcon size={16} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--text-muted)', fontWeight: 700, fontSize: 15, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <CalendarIcon size={18} color="var(--primary)" />
             {currentTime.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
           </div>
         </motion.div>
 
         {/* Punch Action Card */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="card">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="card glass" style={{ padding: 40, borderRadius: 24 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 32 }}>
             <div>
-              <h3 style={{ margin: 0, color: 'var(--primary)', fontSize: 18 }}>Shift Status</h3>
-              <p style={{ margin: '4px 0 0', color: 'var(--text-muted)', fontSize: 14 }}>
+              <h3 style={{ margin: 0, color: 'var(--primary)', fontSize: 20, fontWeight: 800 }}>Shift Status</h3>
+              <p style={{ margin: '6px 0 0', color: 'var(--text-muted)', fontSize: 15, fontWeight: 500 }}>
                 {isPunchedIn ? 'Currently PUNCHED IN' : (activeShift?.workStatus ? `Today: ${activeShift.workStatus}` : 'Currently PUNCHED OUT')}
               </p>
             </div>
@@ -191,128 +188,123 @@ export default function PortalDashboard() {
                 activeShift?.workStatus === 'LOP' ? 'badge-red' : 'badge-navy'
               }`}
               style={{
-                display: 'flex', alignItems: 'center', gap: 6,
-                background: isPunchedIn ? 'var(--primary)' : undefined,
-                color: '#ffffff',
+                display: 'flex', alignItems: 'center', gap: 8, height: 28, padding: '0 14px'
               }}
             >
               {isPunchedIn && (
-                <span style={{
-                  width: 8, height: 8, borderRadius: '50%',
-                  background: 'white', display: 'inline-block',
-                  boxShadow: '0 0 0 2px rgba(255,255,255,0.4)',
-                  animation: 'pulse 1.5s infinite'
-                }} />
+                <span className="pulse-dot" style={{ width: 8, height: 8, borderRadius: '50%', background: 'currentColor' }} />
               )}
               {isPunchedIn ? 'ACTIVE' : (activeShift?.workStatus ? activeShift.workStatus.toUpperCase() : 'OFF-DUTY')}
             </div>
           </div>
 
-          {/* Session timer — only visible when punched in */}
           {isPunchedIn && activeShift?.punchIn && (
-            <div style={{ marginBottom: 32, padding: 16, background: 'var(--bg)', borderRadius: 6, border: '1px solid var(--border)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: 'var(--text-muted)', fontSize: 13, marginBottom: 8, fontWeight: 500 }}>
-                <Timer size={16} /> SESSION DURATION
+            <div style={{ marginBottom: 32, padding: 24, background: 'var(--bg)', borderRadius: 16, border: '1px solid var(--border)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: 'var(--primary)', fontSize: 12, marginBottom: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <Timer size={18} /> Session Duration
               </div>
-              <div style={{ fontSize: 28, fontWeight: 600, color: 'var(--primary)', fontFamily: 'monospace', letterSpacing: '0.05em' }}>
+              <div style={{ fontSize: 36, fontWeight: 900, color: 'var(--primary)', fontFamily: 'monospace', letterSpacing: '0.05em' }}>
                 {formatDuration(activeShift.punchIn)}
               </div>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
+              <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 8, fontWeight: 500 }}>
                 Punched in at {new Date(activeShift.punchIn).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}
               </div>
             </div>
           )}
 
-          {/* The single punch button — toggles between Punch In and Punch Out */}
           {!isPunchedIn ? (
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+            <button
               onClick={() => handlePunch('in')}
-              disabled={actionLoading}
+              disabled={actionLoading || isOffDay}
               className="btn-primary"
-              style={{ width: '100%', height: 56, fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}
+              style={{ width: '100%', height: 64, fontSize: 18, borderRadius: 16 }}
             >
-              {actionLoading ? <Loader2 size={20} className="animate-spin" /> : <LogIn size={20} />}
-              Punch In
-            </motion.button>
+              {actionLoading ? <Loader2 size={24} className="animate-spin" /> : <LogIn size={24} />}
+              Punch In Now
+            </button>
           ) : (
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+            <button
               onClick={() => handlePunch('out')}
               disabled={actionLoading}
               className="btn-primary"
               style={{ 
-                width: '100%', height: 56, 
-                background: '#ef4444', 
-                fontSize: 16, 
-                boxShadow: '0 4px 12px rgba(239, 68, 68, 0.2)' 
+                width: '100%', height: 64, 
+                background: '#dc2626', 
+                color: 'white',
+                fontSize: 18, 
+                borderRadius: 16,
+                boxShadow: '0 10px 25px -5px rgba(220, 38, 38, 0.3)'
               }}
             >
-              {actionLoading ? <Loader2 size={20} className="animate-spin" /> : <LogOut size={20} />}
-              Punch Out
-            </motion.button>
+              {actionLoading ? <Loader2 size={24} className="animate-spin" /> : <LogOut size={24} />}
+              Punch Out Now
+            </button>
           )}
         </motion.div>
       </div>
 
-      {/* Work Policy Info */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} style={{ marginTop: 24 }} className="card">
-        <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-          <div style={{ width: 48, height: 48, borderRadius: 6, background: 'rgba(88, 131, 59, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', flexShrink: 0 }}>
-            <AlertCircle size={24} />
+      {/* Policy Card */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="card glass" style={{ borderRadius: 20, padding: 32 }}>
+        <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
+          <div style={{ width: 56, height: 56, borderRadius: 16, background: 'rgba(88, 131, 59, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', flexShrink: 0 }}>
+            <AlertCircle size={28} />
           </div>
           <div style={{ flex: 1 }}>
-            <h4 style={{ margin: 0, color: 'var(--primary)', fontSize: 15 }}>Work Hours Policy</h4>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginTop: 12 }}>
-              <div style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5 }}>
-                • <strong>Start Time:</strong> 10:30 AM <br/>
-                • <strong>Half Day Threshold:</strong> Punch-in after 11:00 AM <br/>
-                • <strong>Overtime:</strong> Starts after 8.5h (Max 4h)
+            <h4 style={{ margin: 0, color: 'var(--primary)', fontSize: 18, fontWeight: 800 }}>Attendance & Punctuality Policy</h4>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24, marginTop: 20 }}>
+              <div style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, fontWeight: 500 }}>
+                <div style={{ color: 'var(--primary)', fontWeight: 800, fontSize: 11, textTransform: 'uppercase', marginBottom: 8 }}>Timings</div>
+                • Shift Start: <strong>10:30 AM</strong> <br/>
+                • Late Entry: <strong>After 11:00 AM</strong> (Half Day) <br/>
+                • Overtime: Starts after <strong>8.5h</strong> logged
               </div>
-              <div style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5 }}>
-                • <strong>Full Day:</strong> 8.5+ hours logged <br/>
-                • <strong>Half Day:</strong> 4 to 7.9 hours logged <br/>
-                • <strong>Absent/LOP:</strong> Less than 4 hours logged
+              <div style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, fontWeight: 500 }}>
+                <div style={{ color: 'var(--primary)', fontWeight: 800, fontSize: 11, textTransform: 'uppercase', marginBottom: 8 }}>Classification</div>
+                • Full Day: <strong>8.5+ hours</strong> logged <br/>
+                • Half Day: <strong>4 to 7.9 hours</strong> logged <br/>
+                • Absent/LOP: Less than <strong>4 hours</strong> logged
               </div>
             </div>
           </div>
         </div>
       </motion.div>
 
-      {/* Leave History Section */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} style={{ marginTop: 48 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-          <h2 style={{ fontSize: 24, color: 'var(--primary)', margin: 0 }}>My Leave Requests</h2>
-          <div className="badge badge-emerald">{leaveHistory.length} Total</div>
+      {/* Leave History */}
+      <div style={{ marginTop: 64 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 32 }}>
+          <div>
+            <h2 style={{ fontSize: 28, color: 'var(--primary)', margin: 0, letterSpacing: '-0.02em' }}>My Leave History</h2>
+            <p style={{ color: 'var(--text-muted)', marginTop: 4, fontWeight: 500 }}>Track your leave applications and status.</p>
+          </div>
+          <div className="badge badge-navy" style={{ padding: '6px 16px', borderRadius: 10 }}>{leaveHistory.length} Total Requests</div>
         </div>
         
         {leaveHistory.length === 0 ? (
-          <div className="card" style={{ padding: 48, textAlign: 'center', color: 'var(--text-muted)' }}>
-            <CalendarIcon size={40} style={{ marginBottom: 16, opacity: 0.2 }} />
-            <p>You haven't submitted any leave requests yet.</p>
+          <div className="card glass" style={{ padding: 80, textAlign: 'center', color: 'var(--text-muted)', borderRadius: 24, border: '2px dashed var(--border)' }}>
+            <CalendarIcon size={56} style={{ marginBottom: 24, color: 'var(--border)' }} />
+            <h3 style={{ color: 'var(--primary)', marginBottom: 8 }}>No Leave Records</h3>
+            <p>Your leave applications will be listed here once submitted.</p>
           </div>
         ) : (
-          <div className="card" style={{ overflowX: 'auto', padding: 0 }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 14 }}>
+          <div className="card glass" style={{ overflowX: 'auto', padding: 0, borderRadius: 20 }}>
+            <table className="data-table">
               <thead>
-                <tr style={{ borderBottom: '1px solid var(--border)', background: 'rgba(88, 131, 59, 0.05)' }}>
-                  <th style={{ padding: '16px 24px', fontWeight: 600, color: 'var(--primary)' }}>Type</th>
-                  <th style={{ padding: '16px 24px', fontWeight: 600, color: 'var(--primary)' }}>Period</th>
-                  <th style={{ padding: '16px 24px', fontWeight: 600, color: 'var(--primary)' }}>Reason</th>
-                  <th style={{ padding: '16px 24px', fontWeight: 600, color: 'var(--primary)' }}>Status</th>
+                <tr>
+                  <th>Leave Type</th>
+                  <th>Period</th>
+                  <th>Reason</th>
+                  <th>Status</th>
                 </tr>
               </thead>
               <tbody>
                 {leaveHistory.map((req) => (
-                  <tr key={req._id} style={{ borderBottom: '1px solid var(--border)' }}>
-                    <td style={{ padding: '16px 24px', fontWeight: 600 }}>{req.type}</td>
-                    <td style={{ padding: '16px 24px' }}>
+                  <tr key={req._id}>
+                    <td style={{ fontWeight: 800, color: 'var(--primary)' }}>{req.type}</td>
+                    <td>
                       {new Date(req.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} — {new Date(req.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </td>
-                    <td style={{ padding: '16px 24px', color: 'var(--text-muted)', maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{req.reason}</td>
-                    <td style={{ padding: '16px 24px' }}>
+                    <td style={{ color: 'var(--text-muted)', maxWidth: 280, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{req.reason}</td>
+                    <td>
                       <span className={`badge ${
                         req.status === 'Approved' ? 'badge-emerald' : 
                         req.status === 'Rejected' ? 'badge-red' : 
@@ -321,7 +313,7 @@ export default function PortalDashboard() {
                         {req.status}
                       </span>
                       {req.adminNotes && (
-                        <div style={{ fontSize: 11, color: 'var(--text-light)', marginTop: 4 }}>Note: {req.adminNotes}</div>
+                        <div style={{ fontSize: 11, color: 'var(--text-light)', marginTop: 6, fontWeight: 500 }}>Note: {req.adminNotes}</div>
                       )}
                     </td>
                   </tr>
@@ -330,90 +322,100 @@ export default function PortalDashboard() {
             </table>
           </div>
         )}
-      </motion.div>
+      </div>
 
       {/* Leave Request Modal */}
-      {leaveModalOpen && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(26, 26, 26, 0.6)',
-          backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20
-        }}>
-          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="card" style={{ width: '100%', maxWidth: 480 }}>
-            <h2 style={{ fontSize: 24, color: 'var(--primary)', marginBottom: 24 }}>Apply for Leave</h2>
-            <form onSubmit={handleApplyLeave} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-              <div>
-                <label className="label">LEAVE TYPE</label>
-                <select
-                  required
-                  value={leaveData.type}
-                  onChange={e => setLeaveData({ ...leaveData, type: e.target.value })}
-                  className="input-field"
-                  style={{ width: '100%' }}
-                >
-                  <option value="Casual">Paid Casual Leave</option>
-                  <option value="Sick">Paid Sick Leave</option>
-                  <option value="Custom">Custom Leave</option>
-                </select>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+      <AnimatePresence>
+        {leaveModalOpen && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(10, 15, 10, 0.7)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="card glass" style={{ width: '100%', maxWidth: 500, padding: 40, borderRadius: 24 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 32 }}>
                 <div>
-                  <label className="label">START DATE</label>
-                  <input
-                    type="date" required
-                    value={leaveData.startDate}
-                    onChange={e => setLeaveData({ ...leaveData, startDate: e.target.value })}
-                    className="input-field"
-                    style={{ width: '100%' }}
-                  />
+                  <h2 style={{ fontSize: 24, color: 'var(--primary)', margin: 0 }}>Apply for Leave</h2>
+                  <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4, fontWeight: 500 }}>Submit your request for administrative review.</p>
+                </div>
+                <button onClick={() => setLeaveModalOpen(false)} style={{ background: 'var(--bg)', border: 'none', borderRadius: 10, padding: 8, cursor: 'pointer', color: 'var(--primary)' }}><LogOut size={20} style={{ transform: 'rotate(180deg)' }} /></button>
+              </div>
+              
+              <form onSubmit={handleApplyLeave} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                <div>
+                  <label className="label">LEAVE TYPE</label>
+                  <select
+                    required
+                    value={leaveData.type}
+                    onChange={e => setLeaveData({ ...leaveData, type: e.target.value })}
+                    className="input-field glass"
+                    style={{ width: '100%', height: 48 }}
+                  >
+                    <option value="Casual">Paid Casual Leave</option>
+                    <option value="Sick">Paid Sick Leave</option>
+                    <option value="Custom">Other Personal Leave</option>
+                  </select>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                  <div>
+                    <label className="label">START DATE</label>
+                    <input
+                      type="date" required
+                      value={leaveData.startDate}
+                      onChange={e => setLeaveData({ ...leaveData, startDate: e.target.value })}
+                      className="input-field glass"
+                      style={{ width: '100%', height: 48 }}
+                    />
+                  </div>
+                  <div>
+                    <label className="label">END DATE</label>
+                    <input
+                      type="date" required
+                      value={leaveData.endDate}
+                      onChange={e => setLeaveData({ ...leaveData, endDate: e.target.value })}
+                      className="input-field glass"
+                      style={{ width: '100%', height: 48 }}
+                    />
+                  </div>
                 </div>
                 <div>
-                  <label className="label">END DATE</label>
-                  <input
-                    type="date" required
-                    value={leaveData.endDate}
-                    onChange={e => setLeaveData({ ...leaveData, endDate: e.target.value })}
-                    className="input-field"
-                    style={{ width: '100%' }}
+                  <label className="label">REASON FOR LEAVE</label>
+                  <textarea
+                    required rows="3"
+                    value={leaveData.reason}
+                    onChange={e => setLeaveData({ ...leaveData, reason: e.target.value })}
+                    placeholder="Briefly describe the reason for your leave..."
+                    className="input-field glass"
+                    style={{ width: '100%', height: 'auto', padding: '16px', resize: 'none', minHeight: 100 }}
                   />
                 </div>
-              </div>
-              <div>
-                <label className="label">REASON</label>
-                <textarea
-                  required rows="3"
-                  value={leaveData.reason}
-                  onChange={e => setLeaveData({ ...leaveData, reason: e.target.value })}
-                  placeholder="Explain your leave requirement..."
-                  className="input-field"
-                  style={{ width: '100%', height: 'auto', padding: '12px', resize: 'none' }}
-                />
-              </div>
-              <div style={{ display: 'flex', gap: 12, marginTop: 12 }}>
-                <button
-                  type="button"
-                  onClick={() => setLeaveModalOpen(false)}
-                  className="btn-secondary"
-                  style={{ flex: 1, height: 48 }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit" disabled={actionLoading}
-                  className="btn-primary"
-                  style={{ flex: 2, height: 48 }}
-                >
-                  {actionLoading ? <Loader2 size={20} className="animate-spin" /> : 'Submit Application'}
-                </button>
-              </div>
-            </form>
-          </motion.div>
-        </div>
-      )}
+                <div style={{ display: 'flex', gap: 16, marginTop: 12 }}>
+                  <button
+                    type="button"
+                    onClick={() => setLeaveModalOpen(false)}
+                    className="btn-secondary"
+                    style={{ flex: 1, height: 52, borderRadius: 14 }}
+                  >
+                    Discard
+                  </button>
+                  <button
+                    type="submit" disabled={actionLoading}
+                    className="btn-primary"
+                    style={{ flex: 2, height: 52, borderRadius: 14 }}
+                  >
+                    {actionLoading ? <Loader2 size={20} className="animate-spin" /> : 'Submit Application'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       <style>{`
+        .pulse-dot {
+          animation: pulse 2s infinite;
+        }
         @keyframes pulse {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.6; transform: scale(1.3); }
+          0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
+          70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(255, 255, 255, 0); }
+          100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
         }
       `}</style>
     </div>
