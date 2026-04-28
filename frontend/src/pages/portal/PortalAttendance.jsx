@@ -119,7 +119,11 @@ export default function PortalAttendance() {
                         row.workStatus === 'Full Day' ? 'badge-emerald' : 
                         row.workStatus === 'Half Day' ? 'badge-navy' :
                         row.workStatus === 'LOP' ? 'badge-red' : 'badge-navy'
-                      }`} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      }`} style={{ 
+                        display: 'flex', alignItems: 'center', gap: 6,
+                        background: row.workStatus === 'Active' ? 'var(--primary)' : undefined,
+                        color: row.workStatus === 'Active' ? 'white' : undefined
+                      }}>
                         {row.workStatus === 'Active' && (
                           <span style={{ 
                             width: 6, height: 6, borderRadius: '50%', background: 'white',

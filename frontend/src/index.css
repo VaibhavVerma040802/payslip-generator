@@ -56,14 +56,17 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: -0.02em;
 }
 
-body {
+body, button, input, select, textarea {
   font-family: var(--font-stack);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
   background-color: var(--bg);
   color: var(--text);
   font-size: 16px;
   font-weight: 400;
   line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
 }
 
 /* Brand Surfaces */
@@ -227,7 +230,7 @@ h3 { font-size: 18px; line-height: 1.4; margin-bottom: 0.5rem; }
 
 :root[data-theme='dark'] .btn-primary {
   background: var(--bda-green-light);
-  color: var(--bda-dark);
+  color: var(--bda-dark) !important;
 }
 
 .btn-secondary {

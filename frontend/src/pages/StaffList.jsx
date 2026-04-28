@@ -277,7 +277,7 @@ export default function StaffList() {
                         color: '#ffffff', fontSize: 16, fontWeight: 700, flexShrink: 0,
                         boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'
                       }}>
-                        {person.fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                        {person.fullName?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '??'}
                       </div>
                       <div>
                         <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--text)' }}>{person.fullName}</div>
