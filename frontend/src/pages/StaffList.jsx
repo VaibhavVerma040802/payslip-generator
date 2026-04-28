@@ -328,13 +328,13 @@ export default function StaffList() {
                   </td>
 
                   {/* Actions */}
-                  <td style={{ padding: '12px', textAlign: 'right', borderTopRightRadius: 12, borderBottomRightRadius: 12 }}>
+                  <td style={{ padding: '12px', textAlign: 'right', borderTopRightRadius: 12, borderBottomRightRadius: 12, whiteSpace: 'nowrap' }}>
                     <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', alignItems: 'center' }}>
                       <button 
                         onClick={(e) => handleToggleAccess(e, person)}
                         title={person.isPortalEnabled ? "Revoke Access" : "Give Access"}
                         className="btn-action-glass"
-                        style={{ width: 40, height: 40 }}
+                        style={{ width: 40, height: 40, border: '1px solid var(--border)' }}
                       >
                         {actionLoading === person._id ? <Loader2 size={16} className="animate-spin" /> : <Key size={16} />}
                       </button>
@@ -342,21 +342,21 @@ export default function StaffList() {
                         onClick={(e) => handleToggleOvertime(e, person)}
                         title={person.overtimeEligible ? "Disable OT" : "Enable OT"}
                         className="btn-action-glass"
-                        style={{ width: 40, height: 40 }}
+                        style={{ width: 40, height: 40, border: '1px solid var(--border)' }}
                       >
-                        {actionLoading === person._id + '_ot' ? <Loader2 size={16} className="animate-spin" /> : <Zap size={16} color={person.overtimeEligible ? 'var(--primary)' : 'inherit'} />}
+                        {actionLoading === person._id + '_ot' ? <Loader2 size={16} className="animate-spin" /> : <Zap size={16} color={person.overtimeEligible ? '#6fa945' : 'var(--text-muted)'} />}
                       </button>
                       <button 
                         onClick={(e) => { e.stopPropagation(); navigate(`/generate?staffId=${person._id}`); }}
                         title="Generate Payslip"
                         className="btn-action-glass"
-                        style={{ width: 40, height: 40 }}
+                        style={{ width: 40, height: 40, border: '1px solid var(--border)' }}
                       >
                         <FilePlus size={16} />
                       </button>
                       <button 
                         onClick={(e) => { e.stopPropagation(); navigate(`/staff/${person._id}`); }}
-                        title="View Details"
+                        title="View Full Details"
                         style={{ 
                           padding: '10px 24px', 
                           background: 'var(--primary)', 

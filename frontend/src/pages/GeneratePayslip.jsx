@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Building2, User, Calendar,
@@ -95,11 +95,41 @@ export default function GeneratePayslip() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  const [searchParams] = useSearchParams()
+  const staffId = searchParams.get('staffId')
   
   const [staffList, setStaffList] = useState([])
   useEffect(() => {
-    api.get('/staff').then(res => setStaffList(res.data.data)).catch(console.error)
-  }, [])
+    api.get('/staff').then(res => {
+      const list = res.data.data;
+      setStaffList(list);
+      
+      // If staffId from URL, auto-fill
+      if (staffId) {
+        const s = list.find(x => x._id === staffId);
+        if (s) {
+          const empType = s.type === 'Employee' ? 'regular' : 'intern';
+          setForm(f => ({
+            ...f,
+            employmentType: empType,
+            employeeName: s.fullName,
+            employeeId: s.employeeId,
+            employeeEmail: s.email,
+            designation: s.designation || '',
+            department: s.department || '',
+            dateOfJoining: s.joiningDate ? s.joiningDate.split('T')[0] : '',
+            panNumber: s.financials?.panNumber || '',
+            pfNumber: s.pfNumber || '',
+            bankAccount: s.financials?.accountNumber || '',
+            bankName: s.financials?.bankName || '',
+            annualCTC: s.type === 'Employee' ? (s.salaryDetails?.annualCTC || '') : '',
+            baseSalary: s.type === 'Intern' ? (s.salaryDetails?.baseSalary || '') : '',
+          }))
+          setStep(1); // Jump to first form stage
+        }
+      }
+    }).catch(console.error)
+  }, [staffId])
 
   const [step, setStep] = useState(user?.companyName ? 1 : 0)
   const [form, setForm] = useState(() => {
@@ -123,7 +153,7 @@ export default function GeneratePayslip() {
     
     if (location.state?.predefinedStaff) {
       const s = location.state.predefinedStaff;
-      initialValues = {
+      return {
         ...initialValues,
         employmentType: s.type.toLowerCase(),
         employeeName: s.fullName,
