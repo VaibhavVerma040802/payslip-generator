@@ -362,6 +362,8 @@ router.get('/admin/export-csv', authAdmin, async (req, res) => {
   } catch (err) {
     res.status(500).json({ success: false, message: 'Export failed' });
   }
+});
+
 // POST /api/attendance/admin/force-punch-out — Close all "incomplete" shifts from previous days
 router.post('/admin/force-punch-out', authAdmin, async (req, res) => {
   try {
