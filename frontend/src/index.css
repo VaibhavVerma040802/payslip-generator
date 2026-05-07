@@ -9,12 +9,14 @@
   
   /* Semantic Mappings */
   --primary: var(--bda-green);
-  --bg: var(--bda-sage);
-  --surface: var(--white);
+  --bg: #f4f6fa;
+  --surface: #ffffff;
+  --sidebar-bg: #152216;
+  --sidebar-active: var(--primary);
   --text: var(--text-dark);
-  --text-muted: #666666;
-  --text-light: #999999;
-  --border: rgba(88, 131, 59, 0.2);
+  --text-muted: #6b7280;
+  --text-light: #9ca3af;
+  --border: #e5e7eb;
   
   --shadow-sm: 0 1px 2px rgba(26,26,26,0.05);
   --shadow: 0 4px 6px -1px rgba(26,26,26,0.1);
@@ -393,4 +395,39 @@ h3 { font-size: 18px; line-height: 1.4; margin-bottom: 0.5rem; }
 @media (max-width: 640px) {
   .container { padding-left: 1rem; padding-right: 1rem; }
   .split-screen { padding-bottom: 80px; }
+}
+
+/* Custom UI Template Classes */
+.donut-chart {
+  position: relative;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 0 0 16px rgba(0,0,0,0.03); /* Fallback track */
+}
+
+.donut-inner {
+  background: var(--surface);
+  border-radius: 50%;
+  position: absolute;
+  inset: 16px; /* Thickness of the donut */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.progress-bar-track {
+  width: 100%;
+  height: 8px;
+  background-color: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease;
 }

@@ -427,4 +427,83 @@ async function sendStaffProvisionEmail(staff, tempPassword, loginUrl) {
   }
 }
 
-module.exports = { sendPayslipEmail, sendVerificationEmail, sendPasswordResetEmail, sendStaffProvisionEmail };
+// ─────────────────────────────────────────────────────────────
+// Send punch-out reminder email
+// ─────────────────────────────────────────────────────────────
+async function sendPunchOutReminderEmail(staff, loginUrl) {
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.warn('⚠️ Email credentials missing — skipping punch-out reminder email.');
+    return;
+  }
+
+  console.log(`✉️ Sending punch-out reminder email to: ${staff.email}`);
+
+  const transporter = createSMTPTransporter();
+
+  const mailOptions = {
+    from: `"PaySlip Pro" <${(process.env.EMAIL_FROM || process.env.EMAIL_USER || '').trim()}>`,
+    to: staff.email,
+    subject: `⏰ Reminder: Please Punch Out for the Day`,
+    html: `
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f4f6fa; font-family: 'Segoe UI', Arial, sans-serif;">
+  <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f4f6fa; padding: 40px 10px;">
+    <tr>
+      <td align="center">
+        <table border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #ffffff; border-radius: 12px; overflow: hidden;">
+          <tr><td height="6" bgcolor="#e11d48" style="font-size: 0; line-height: 0;">&nbsp;</td></tr>
+          <tr>
+            <td bgcolor="#1e3a5f" style="padding: 40px 45px; text-align: center;">
+              <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 800;">Action Required</h1>
+              <p style="margin: 8px 0 0 0; color: #a8c0d6; font-size: 14px;">Shift Duration Alert</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 40px 45px;">
+              <p style="margin: 0 0 20px 0; font-size: 18px; font-weight: 700; color: #374151;">Hi ${staff.fullName},</p>
+              <p style="margin: 0 0 10px 0; font-size: 15px; color: #6b7280; line-height: 1.6;">
+                It looks like your current shift has been active for over 8.5 hours. If you have finished your workday, please remember to punch out.
+              </p>
+              <p style="margin: 0 0 30px 0; font-size: 15px; color: #6b7280; line-height: 1.6;">
+                <strong>Note:</strong> Shifts exceeding 10 hours will be automatically closed and flagged for admin review.
+              </p>
+              <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td align="center">
+                    <a href="${loginUrl}" style="display: inline-block; background: #e11d48; color: #ffffff; padding: 16px 36px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 15px;">
+                      Punch Out Now
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td bgcolor="#f9fafb" style="padding: 20px 45px; text-align: center;">
+              <p style="margin: 0; color: #9ca3af; font-size: 11px;">&copy; 2026 PaySlip Pro. All rights reserved.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(`✅ Punch-out reminder email sent to: ${staff.email}`);
+  } catch (err) {
+    console.error(`❌ Punch-out reminder email SMTP error: ${err.message}`);
+    throw err;
+  }
+}
+
+module.exports = { sendPayslipEmail, sendVerificationEmail, sendPasswordResetEmail, sendStaffProvisionEmail, sendPunchOutReminderEmail };

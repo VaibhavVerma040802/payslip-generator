@@ -1,9 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const Attendance = require('../models/Attendance');
+const Notification = require('../models/Notification');
 const { authStaff } = require('./staffPortal');
 const { auth: authAdmin } = require('./auth');
 const { logActivity } = require('../utils/logger');
+const { sendPunchOutReminderEmail } = require('../utils/emailService');
 
 // Helper to get start of day in UTC for querying
 const getStartOfDay = (dateString = null) => {
@@ -360,23 +362,120 @@ router.get('/admin/export-csv', authAdmin, async (req, res) => {
   } catch (err) {
     res.status(500).json({ success: false, message: 'Export failed' });
   }
-});
-
+// POST /api/attendance/admin/force-punch-out — Close all "incomplete" shifts from previous days
 router.post('/admin/force-punch-out', authAdmin, async (req, res) => {
   try {
     const today = getStartOfDay();
-    const result = await Attendance.updateMany(
-      { admin: req.user._id, status: 'incomplete', date: { $lt: today } },
-      { $set: { status: 'flagged' } } // Mark as flagged so admin can fix them
-    );
-
-    if (result.modifiedCount > 0) {
-      await logActivity(req.user._id, 'FORCE_PUNCH_OUT', `Bulk closed ${result.modifiedCount} stale attendance shifts.`);
+    const staleShifts = await Attendance.find({ admin: req.user._id, status: 'incomplete', date: { $lt: today } });
+    
+    let modifiedCount = 0;
+    for (const shift of staleShifts) {
+      if (shift.punchIn) {
+        // Set punch out to 10 hours after punch in
+        shift.punchOut = new Date(shift.punchIn.getTime() + 10 * 60 * 60 * 1000);
+        shift.totalHours = 10;
+        // If > 8.5, then OT is 1.5
+        shift.overtimeHours = 1.5; 
+        shift.workStatus = 'Full Day';
+      }
+      shift.status = 'flagged';
+      shift.notes = (shift.notes ? shift.notes + ' | ' : '') + 'System: Force closed stale shift from previous day.';
+      await shift.save();
+      modifiedCount++;
     }
 
-    res.json({ success: true, message: `Closed ${result.modifiedCount} stale shifts. They are now flagged for review.` });
+    if (modifiedCount > 0) {
+      await logActivity(req.user._id, 'FORCE_PUNCH_OUT', `Bulk closed ${modifiedCount} stale attendance shifts.`);
+    }
+
+    res.json({ success: true, message: `Closed ${modifiedCount} stale shifts. They are now flagged for review.` });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────
+// CRON JOBS / BACKGROUND TASKS
+// ─────────────────────────────────────────────────────────────
+
+// GET /api/attendance/cron/check-shifts
+// Called by Vercel Cron periodically (e.g., every hour)
+router.get('/cron/check-shifts', async (req, res) => {
+  try {
+    // 1. Force punch-out shifts > 10 hours
+    const tenHoursAgo = new Date(Date.now() - 10 * 60 * 60 * 1000);
+    const overdueShifts = await Attendance.find({
+      status: 'incomplete',
+      punchOut: { $exists: false },
+      punchIn: { $lte: tenHoursAgo }
+    }).populate('staff');
+
+    for (const shift of overdueShifts) {
+      shift.punchOut = new Date(shift.punchIn.getTime() + 10 * 60 * 60 * 1000);
+      shift.totalHours = 10;
+      shift.overtimeHours = 1.5;
+      shift.workStatus = 'Full Day';
+      shift.status = 'flagged';
+      shift.notes = (shift.notes ? shift.notes + ' | ' : '') + 'System: Auto-closed after 10 hours maximum duration.';
+      await shift.save();
+
+      // Notify Staff about the auto-close
+      if (shift.staff) {
+        const notif = new Notification({
+          admin: shift.admin,
+          staff: shift.staff._id,
+          recipientType: 'staff',
+          type: 'ATTENDANCE_ALERT',
+          referenceId: shift._id,
+          message: `Your shift on ${shift.date.toLocaleDateString()} was automatically closed after 10 hours. Please review your attendance.`
+        });
+        await notif.save();
+      }
+    }
+
+    // 2. Remind shifts > 8.5 hours but < 10 hours
+    const eightHalfHoursAgo = new Date(Date.now() - 8.5 * 60 * 60 * 1000);
+    const reminderShifts = await Attendance.find({
+      status: 'incomplete',
+      punchOut: { $exists: false },
+      punchIn: { $gt: tenHoursAgo, $lte: eightHalfHoursAgo }
+    }).populate('staff');
+
+    for (const shift of reminderShifts) {
+      // Check if we already reminded them for this shift
+      const existingReminder = await Notification.findOne({
+        staff: shift.staff._id,
+        referenceId: shift._id,
+        type: 'ATTENDANCE_ALERT'
+      });
+
+      if (!existingReminder && shift.staff && shift.staff.email) {
+        // Send email
+        const loginUrl = process.env.FRONTEND_URL || 'https://payslip-gen-rouge.vercel.app';
+        await sendPunchOutReminderEmail(shift.staff, loginUrl).catch(console.error);
+
+        // Create notification
+        const notif = new Notification({
+          admin: shift.admin,
+          staff: shift.staff._id,
+          recipientType: 'staff',
+          type: 'ATTENDANCE_ALERT',
+          referenceId: shift._id,
+          message: `Reminder: You have been punched in for over 8.5 hours. Please punch out if your workday is complete.`
+        });
+        await notif.save();
+      }
+    }
+
+    res.json({ 
+      success: true, 
+      message: 'Cron executed successfully', 
+      autoClosed: overdueShifts.length,
+      remindersSent: reminderShifts.length 
+    });
+  } catch (err) {
+    console.error('Cron job error:', err);
+    res.status(500).json({ success: false, message: 'Cron job failed' });
   }
 });
 

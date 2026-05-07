@@ -345,9 +345,9 @@ export default function PortalLayout() {
                 className="btn-hover"
               >
                 <Bell size={20} />
-                {notifications.length > 0 && (
+                {notifications.filter(n => !n.isRead).length > 0 && (
                   <span style={{ position: 'absolute', top: -4, right: -4, width: 18, height: 18, background: 'var(--primary)', color: 'white', fontSize: 10, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, border: '2px solid var(--surface)' }}>
-                    {notifications.length}
+                    {notifications.filter(n => !n.isRead).length}
                   </span>
                 )}
               </button>

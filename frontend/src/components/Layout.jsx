@@ -3,7 +3,7 @@ import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { 
   LayoutDashboard, PlusCircle, List, Menu,
   FileSpreadsheet, Settings, LogOut, User, Users,
-  Sun, Moon, Monitor, ChevronLeft, Activity, Download, Bell, CalendarDays
+  Sun, Moon, Monitor, ChevronLeft, ChevronRight, ChevronDown, Activity, Download, Bell, CalendarDays
 } from 'lucide-react'
 import api from '../api'
 import { toast } from 'react-hot-toast'
@@ -165,7 +165,7 @@ export default function Layout() {
       {/* Sidebar */}
       <aside style={{
         width: isMobile ? 'var(--sidebar-w)' : (sidebarOpen ? 'var(--sidebar-w)' : 'var(--sidebar-mini-w)'),
-        background: 'var(--primary)',
+        background: 'var(--sidebar-bg)',
         display: 'flex',
         flexDirection: 'column',
         position: 'fixed',
@@ -188,20 +188,23 @@ export default function Layout() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{
               width: 38, height: 38, borderRadius: 6,
-              background: 'var(--white)',
+              background: 'transparent',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               flexShrink: 0
             }}>
-              <FileSpreadsheet size={20} color="var(--primary)" strokeWidth={2.5} />
+              {/* Clean abstract BDA logo text or SVG shape placeholder */}
+              <div style={{ color: 'var(--primary)', fontSize: 24, fontWeight: 900, fontFamily: 'var(--font-display)', letterSpacing: '-0.05em' }}>
+                BDA
+              </div>
             </div>
             {sidebarOpen && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                 <div style={{
                   fontFamily: 'var(--font-display)',
-                  fontSize: 19, fontWeight: 800,
-                  color: 'white', letterSpacing: '-0.02em',
-                  whiteSpace: 'nowrap'
-                }}>PaySlip<span style={{ color: 'var(--bg)' }}>Pro</span></div>
+                  fontSize: 12, fontWeight: 700,
+                  color: 'rgba(255,255,255,0.7)', letterSpacing: '0.1em',
+                  whiteSpace: 'nowrap', textTransform: 'uppercase'
+                }}>Technologies</div>
               </motion.div>
             )}
           </div>
@@ -256,7 +259,7 @@ export default function Layout() {
                 fontSize: 14,
                 fontWeight: isActive ? 600 : 500,
                 color: isActive ? 'white' : 'rgba(255,255,255,0.5)',
-                background: isActive ? 'rgba(255,255,255,0.08)' : 'transparent',
+                background: isActive ? 'var(--sidebar-active)' : 'transparent',
                 transition: 'all 0.2s ease',
                 whiteSpace: 'nowrap'
               })}
@@ -267,46 +270,42 @@ export default function Layout() {
           ))}
         </nav>
 
-        {/* User Profile Hook */}
-        <div style={{
-          padding: '20px 16px',
-          background: 'rgba(0,0,0,0.2)',
-          borderTop: '1px solid rgba(255,255,255,0.05)',
-        }}>
-          <div style={{ 
-            display: 'flex', alignItems: 'center', justifyContent: sidebarOpen ? 'flex-start' : 'center', gap: 12, 
-            padding: '12px', background: 'rgba(255,255,255,0.03)', 
-            borderRadius: 12, marginBottom: 12 
-          }}>
+        {/* Need Help Box */}
+        <div style={{ padding: '20px 16px', background: 'transparent' }}>
+          {sidebarOpen ? (
             <div style={{ 
-              width: 36, height: 36, borderRadius: 6, 
-              background: 'var(--bg)', border: '1px solid rgba(255,255,255,0.1)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexShrink: 0
+              background: 'rgba(255,255,255,0.05)', 
+              borderRadius: 12, 
+              padding: '16px',
+              border: '1px solid rgba(255,255,255,0.1)'
             }}>
-              <User size={16} color="var(--primary)" />
-            </div>
-            {sidebarOpen && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, color: 'white', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {user?.companyName || 'Corporate Account'}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                <div style={{ background: 'rgba(255,255,255,0.1)', padding: 6, borderRadius: 8 }}>
+                  <User size={16} color="white" />
                 </div>
-                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>Verified Workspace</div>
-              </motion.div>
-            )}
-          </div>
-          <button 
-            onClick={logout}
-            className="btn-secondary"
-            style={{ 
-              width: '100%', background: 'rgba(255,255,255,0.05)', color: 'white', 
-              border: '1px solid rgba(255,255,255,0.1)', padding: sidebarOpen ? '10px' : '10px 0',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10
-            }}
-            title={!sidebarOpen ? "Sign Out" : ""}
-          >
-            <LogOut size={16} /> {sidebarOpen && "Sign Out"}
-          </button>
+                <div style={{ color: 'white', fontWeight: 600, fontSize: 13 }}>Need Help?</div>
+              </div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', marginBottom: 12, lineHeight: 1.5 }}>
+                Our support team is here to assist you.
+              </div>
+              <button style={{
+                width: '100%', background: 'var(--primary)', color: 'white',
+                border: 'none', padding: '8px 12px', borderRadius: 8,
+                fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6
+              }}>
+                Contact Support <ChevronRight size={14} />
+              </button>
+            </div>
+          ) : (
+            <button style={{
+              width: '100%', background: 'rgba(255,255,255,0.05)', color: 'white',
+              border: '1px solid rgba(255,255,255,0.1)', padding: '10px 0',
+              borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center'
+            }}>
+              <User size={18} />
+            </button>
+          )}
         </div>
       </aside>
 
@@ -349,8 +348,13 @@ export default function Layout() {
                 <Menu size={20} />
               </button>
             )}
-            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--primary)', opacity: 0.9, letterSpacing: '-0.01em' }}>
-              Workspace Console
+            <div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.02em' }}>
+                Welcome back, {user?.companyName || 'Admin'}! 👋
+              </div>
+              <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                Here's an overview of your payroll dashboard.
+              </div>
             </div>
           </div>
 
@@ -384,7 +388,7 @@ export default function Layout() {
                 className="btn-hover"
               >
                 <Bell size={20} />
-                {notifications.length > 0 && (
+                {notifications.filter(n => !n.isRead).length > 0 && (
                   <span style={{
                     position: 'absolute', top: -4, right: -4,
                     width: 18, height: 18, background: 'var(--primary)', color: 'white',
@@ -392,7 +396,7 @@ export default function Layout() {
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     border: '2px solid var(--surface)'
                   }}>
-                    {notifications.length}
+                    {notifications.filter(n => !n.isRead).length}
                   </span>
                 )}
               </button>
@@ -491,6 +495,27 @@ export default function Layout() {
                 </button>
               ))}
             </div>
+
+            {/* User Profile / Logout */}
+            <button 
+              onClick={logout}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 10,
+                background: 'transparent', border: 'none', cursor: 'pointer',
+                padding: '4px 8px', borderRadius: 8
+              }}
+              className="btn-hover"
+            >
+              <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border)' }}>
+                <User size={18} color="var(--primary)" />
+              </div>
+              {!isMobile && (
+                <>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>Admin</span>
+                  <ChevronDown size={14} color="var(--text-muted)" />
+                </>
+              )}
+            </button>
           </div>
         </header>
 

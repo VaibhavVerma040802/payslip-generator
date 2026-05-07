@@ -1,13 +1,8 @@
 {
-  "outputDirectory": "dist",
-  "rewrites": [
+  "crons": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/index"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "path": "/api/attendance/cron/check-shifts",
+      "schedule": "0 * * * *"
     }
   ]
 }
