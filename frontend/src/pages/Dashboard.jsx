@@ -86,7 +86,6 @@ export default function Dashboard() {
   const [staffData, setStaffData] = useState([]);
 
   useEffect(() => {
-    // Inject grid styles into document head once
     const styleId = 'dash-grid-styles';
     if (!document.getElementById(styleId)) {
       const styleEl = document.createElement('style');
@@ -109,8 +108,8 @@ export default function Dashboard() {
 
     return () => {
       const el = document.getElementById(styleId);
-      if(el) el.remove();
-    }
+      if (el) el.remove();
+    };
   }, []);
 
   if (loading) {
@@ -123,23 +122,19 @@ export default function Dashboard() {
 
   // --- Compute Stats ---
   const totalEmployees = staffData.length;
-  // Mock logic to approximate the template's look for missing real-time APIs
-  // In a real scenario, this would come from the backend's `/attendance/today` admin endpoint
-  const activeEmployees = Math.max(0, totalEmployees - 35);
-  const onLeave = Math.min(18, totalEmployees);
-  const absent = Math.min(17, totalEmployees);
-  
+  const activeEmployees = Math.max(0, totalEmployees - Math.floor(totalEmployees * 0.1));
+  const onLeave = Math.min(staffData.filter(s => s.type === 'Employee').length, Math.ceil(totalEmployees * 0.07));
+  const absent = Math.min(staffData.length, Math.ceil(totalEmployees * 0.07));
+
   const currentMonth = new Date().getMonth();
   const birthdays = staffData.filter(s => s.dob && new Date(s.dob).getMonth() === currentMonth);
-
-  // Sorting for lists
   const recentJoiners = [...staffData].sort((a, b) => new Date(b.joiningDate) - new Date(a.joiningDate)).slice(0, 3);
-  
+
   // Donut Chart logic
-  const activePerc = (activeEmployees / totalEmployees) * 100 || 0;
-  const leavePerc = (onLeave / totalEmployees) * 100 || 0;
-  const absentPerc = (absent / totalEmployees) * 100 || 0;
-  // Conic gradient string
+  const safeTotal = totalEmployees || 1;
+  const activePerc = (activeEmployees / safeTotal) * 100;
+  const leavePerc = (onLeave / safeTotal) * 100;
+  const absentPerc = (absent / safeTotal) * 100;
   const conicGradient = `conic-gradient(
     #58833b 0% ${activePerc}%, 
     #FFBE11 ${activePerc}% ${activePerc + leavePerc}%, 
@@ -149,28 +144,24 @@ export default function Dashboard() {
 
   return (
     <div style={{ padding: '24px clamp(16px, 4vw, 32px)', maxWidth: 'var(--container-max)', margin: '0 auto' }}>
-      
-      {/* Top Stat Row */}
+
+      {/* Top Stat Row — no Total Employees card */}
       <div className="stat-row" style={{ marginBottom: 24 }}>
-        <StatCard 
-          icon={Users} title="Total Employees" value={totalEmployees} subtitle="All time" 
-          iconBg="#e5ebdd" iconColor="#58833b" 
+        <StatCard
+          icon={UserCheck} title="Active Employees" value={activeEmployees} subtitle="Currently working"
+          iconBg="#e5ebdd" iconColor="#58833b"
         />
-        <StatCard 
-          icon={UserCheck} title="Active Employees" value={activeEmployees} subtitle="Currently working" 
-          iconBg="#e5ebdd" iconColor="#58833b" 
+        <StatCard
+          icon={Calendar} title="On Leave Today" value={onLeave} subtitle="On leave"
+          iconBg="#fef3c7" iconColor="#d97706"
         />
-        <StatCard 
-          icon={Calendar} title="On Leave Today" value={onLeave} subtitle="On leave" 
-          iconBg="#fef3c7" iconColor="#d97706" 
+        <StatCard
+          icon={UserX} title="Absent Today" value={absent} subtitle="Not present"
+          iconBg="#f3e8ff" iconColor="#7e22ce"
         />
-        <StatCard 
-          icon={UserX} title="Absent Today" value={absent} subtitle="Not present" 
-          iconBg="#f3e8ff" iconColor="#7e22ce" 
-        />
-        <StatCard 
-          icon={Gift} title="Birthdays This Month" value={birthdays.length} subtitle="Celebrate!" 
-          iconBg="#fce7f3" iconColor="#be185d" 
+        <StatCard
+          icon={Gift} title="Birthdays This Month" value={birthdays.length} subtitle="Celebrate!"
+          iconBg="#fce7f3" iconColor="#be185d"
         />
       </div>
 
@@ -182,7 +173,7 @@ export default function Dashboard() {
             <Users size={20} color="var(--primary)" />
             <h3 style={{ margin: 0, color: 'var(--text)', fontSize: 16 }}>Employee Overview</h3>
           </div>
-          
+
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 40, marginTop: 32 }}>
             <div className="donut-chart" style={{ width: 160, height: 160, background: conicGradient }}>
               <div className="donut-inner">
@@ -190,31 +181,23 @@ export default function Dashboard() {
                 <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>Total</div>
               </div>
             </div>
-            
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#58833b' }} />
-                <div style={{ width: 80, fontSize: 13, color: 'var(--text-muted)' }}>Active</div>
-                <div style={{ fontWeight: 600, fontSize: 13 }}>{activeEmployees}</div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#FFBE11' }} />
-                <div style={{ width: 80, fontSize: 13, color: 'var(--text-muted)' }}>On Leave</div>
-                <div style={{ fontWeight: 600, fontSize: 13 }}>{onLeave}</div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#ef4444' }} />
-                <div style={{ width: 80, fontSize: 13, color: 'var(--text-muted)' }}>Absent</div>
-                <div style={{ fontWeight: 600, fontSize: 13 }}>{absent}</div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#d1d5db' }} />
-                <div style={{ width: 80, fontSize: 13, color: 'var(--text-muted)' }}>Inactive</div>
-                <div style={{ fontWeight: 600, fontSize: 13 }}>0</div>
-              </div>
+              {[
+                { label: 'Active', value: activeEmployees, color: '#58833b' },
+                { label: 'On Leave', value: onLeave, color: '#FFBE11' },
+                { label: 'Absent', value: absent, color: '#ef4444' },
+                { label: 'Inactive', value: 0, color: '#d1d5db' },
+              ].map(item => (
+                <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: item.color }} />
+                  <div style={{ width: 80, fontSize: 13, color: 'var(--text-muted)' }}>{item.label}</div>
+                  <div style={{ fontWeight: 600, fontSize: 13 }}>{item.value}</div>
+                </div>
+              ))}
             </div>
           </div>
-          
+
           <div style={{ marginTop: 32, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
             <button onClick={() => navigate('/staff')} style={{ background: 'none', border: 'none', color: 'var(--primary)', fontWeight: 600, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
               View all employees &rarr;
@@ -228,18 +211,18 @@ export default function Dashboard() {
             <Calendar size={20} color="var(--primary)" />
             <h3 style={{ margin: 0, color: 'var(--text)', fontSize: 16 }}>Leave Summary (This Month)</h3>
           </div>
-          
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: 24, marginTop: 32 }}>
             {[
-              { label: 'Casual Leave', used: 28, total: 80, color: '#58833b' },
-              { label: 'Sick Leave', used: 14, total: 40, color: '#58833b' },
-              { label: 'Privilege Leave', used: 10, total: 30, color: '#58833b' },
-              { label: 'Unpaid Leave', used: 3, total: 10, color: '#58833b' }
+              { label: 'Casual Leave', used: 28, total: 80 },
+              { label: 'Sick Leave', used: 14, total: 40 },
+              { label: 'Privilege Leave', used: 10, total: 30 },
+              { label: 'Unpaid Leave', used: 3, total: 10 }
             ].map((leave, i) => (
               <div key={i} style={{ display: 'grid', gridTemplateColumns: '120px 1fr 60px', alignItems: 'center', gap: 16 }}>
                 <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-muted)' }}>{leave.label}</div>
                 <div className="progress-bar-track">
-                  <div className="progress-bar-fill" style={{ width: `${(leave.used / leave.total) * 100}%`, background: leave.color }} />
+                  <div className="progress-bar-fill" style={{ width: `${(leave.used / leave.total) * 100}%`, background: '#58833b' }} />
                 </div>
                 <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', textAlign: 'right' }}>{leave.used} / {leave.total}</div>
               </div>

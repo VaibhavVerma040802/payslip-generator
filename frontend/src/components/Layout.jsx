@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react'
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { 
   LayoutDashboard, PlusCircle, List, Menu,
-  FileSpreadsheet, Settings, LogOut, User, Users,
-  Sun, Moon, Monitor, ChevronLeft, ChevronRight, ChevronDown, Activity, Download, Bell, CalendarDays
+  Settings, User, Users,
+  Sun, Moon, ChevronLeft, Send, Download, Bell, CalendarDays, Activity,
+  LogOut, UserPlus, Zap, AlertTriangle, Loader2
 } from 'lucide-react'
 import api from '../api'
 import { toast } from 'react-hot-toast'
@@ -17,7 +18,7 @@ const navItems = [
   { to: '/generate', label: 'Generate Payslip', icon: PlusCircle },
   { to: '/payslips', label: 'All Payslips', icon: List },
   { to: '/staff', label: 'Staff Management', icon: Users },
-  { to: '/leave-requests', label: 'Leave Requests', icon: Bell },
+  { to: '/leave-requests', label: 'Leave & Attendance', icon: CalendarDays },
   { to: '/audit-logs', label: 'Audit Logs', icon: Activity },
   { to: '/profile', label: 'Company Profile', icon: Settings },
 ]
@@ -44,11 +45,15 @@ export default function Layout() {
   const [deferredPrompt, setDeferredPrompt] = useState(null)
   const [notifications, setNotifications] = useState([])
   const [notifOpen, setNotifOpen] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(null)
+  const [pendingShifts, setPendingShifts] = useState([])
+  const [showForcePunchModal, setShowForcePunchModal] = useState(false)
 
   useEffect(() => {
     if (user) {
       fetchNotifications()
-      const interval = setInterval(fetchNotifications, 60000) // Poll every 60s
+      fetchPendingShifts()
+      const interval = setInterval(() => { fetchNotifications(); fetchPendingShifts(); }, 60000)
       return () => clearInterval(interval)
     }
   }, [user])
@@ -59,6 +64,15 @@ export default function Layout() {
       setNotifications(res.data.data)
     } catch (err) {
       console.error('Failed to fetch notifications')
+    }
+  }
+
+  const fetchPendingShifts = async () => {
+    try {
+      const res = await api.get('/attendance/admin/pending')
+      setPendingShifts(res.data?.data || [])
+    } catch (err) {
+      console.error('Failed to fetch pending shifts')
     }
   }
 
@@ -99,6 +113,40 @@ export default function Layout() {
     } catch (err) {
       toast.error('Action failed')
     }
+  }
+
+  const handleBulkEmail = async () => {
+    const month = new Date().toLocaleString('en-US', { month: 'long' })
+    const year = new Date().getFullYear()
+    if (!window.confirm(`Email all unsent payslips for ${month} ${year}?`)) return
+    setIsProcessing('email')
+    try {
+      const res = await api.post('/payslips/bulk-email-month', { month, year })
+      toast.success(res.data.message)
+    } catch { toast.error('Bulk email failed') } finally { setIsProcessing(null) }
+  }
+
+  const handleExportAttendance = async () => {
+    setIsProcessing('export')
+    try {
+      const response = await api.get('/attendance/admin/export-csv', { responseType: 'blob' })
+      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', `Attendance_${new Date().toISOString().split('T')[0]}.csv`)
+      document.body.appendChild(link); link.click(); link.remove()
+      toast.success('Attendance report downloaded')
+    } catch { toast.error('Export failed') } finally { setIsProcessing(null) }
+  }
+
+  const handleForcePunchOut = async () => {
+    setIsProcessing('punch')
+    try {
+      const res = await api.post('/attendance/admin/force-punch-out')
+      toast.success(res.data.message)
+      setShowForcePunchModal(false)
+      fetchPendingShifts()
+    } catch { toast.error('Force punch-out failed') } finally { setIsProcessing(null) }
   }
 
   useEffect(() => {
@@ -270,42 +318,56 @@ export default function Layout() {
           ))}
         </nav>
 
-        {/* Need Help Box */}
-        <div style={{ padding: '20px 16px', background: 'transparent' }}>
-          {sidebarOpen ? (
-            <div style={{ 
-              background: 'rgba(255,255,255,0.05)', 
-              borderRadius: 12, 
-              padding: '16px',
-              border: '1px solid rgba(255,255,255,0.1)'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                <div style={{ background: 'rgba(255,255,255,0.1)', padding: 6, borderRadius: 8 }}>
-                  <User size={16} color="white" />
-                </div>
-                <div style={{ color: 'white', fontWeight: 600, fontSize: 13 }}>Need Help?</div>
-              </div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', marginBottom: 12, lineHeight: 1.5 }}>
-                Our support team is here to assist you.
-              </div>
-              <button style={{
-                width: '100%', background: 'var(--primary)', color: 'white',
-                border: 'none', padding: '8px 12px', borderRadius: 8,
-                fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6
-              }}>
-                Contact Support <ChevronRight size={14} />
-              </button>
+        {/* Quick Actions Sidebar Section */}
+        <div style={{ padding: '0 16px 16px' }}>
+          {sidebarOpen && (
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em', padding: '0 12px 12px', textTransform: 'uppercase' }}>
+              Quick Actions
             </div>
-          ) : (
-            <button style={{
-              width: '100%', background: 'rgba(255,255,255,0.05)', color: 'white',
-              border: '1px solid rgba(255,255,255,0.1)', padding: '10px 0',
-              borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center'
-            }}>
-              <User size={18} />
-            </button>
           )}
+          {[
+            { id: 'email', icon: Send, label: 'Bulk Email Slips', action: handleBulkEmail },
+            { id: 'export', icon: Download, label: 'Export Attendance', action: handleExportAttendance },
+            { id: 'punch', icon: LogOut, label: 'Force Punch-Out', action: () => { fetchPendingShifts(); setShowForcePunchModal(true); } },
+            { id: 'staff', icon: UserPlus, label: 'Add New Staff', action: () => navigate('/staff') },
+          ].map(({ id, icon: Icon, label, action }) => (
+            <button
+              key={id}
+              onClick={action}
+              disabled={isProcessing !== null}
+              title={!sidebarOpen ? label : ''}
+              style={{
+                width: '100%', background: 'rgba(255,255,255,0.05)', color: isProcessing === id ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.75)',
+                border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8,
+                padding: sidebarOpen ? '10px 14px' : '10px 0',
+                marginBottom: 6, cursor: 'pointer',
+                display: 'flex', alignItems: 'center',
+                justifyContent: sidebarOpen ? 'flex-start' : 'center',
+                gap: 10, fontSize: 13, fontWeight: 500,
+                transition: 'all 0.2s'
+              }}
+            >
+              {isProcessing === id ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite', flexShrink: 0 }} /> : <Icon size={16} style={{ flexShrink: 0 }} />}
+              {sidebarOpen && label}
+            </button>
+          ))}
+
+          {/* Logout button */}
+          <button
+            onClick={logout}
+            title={!sidebarOpen ? 'Sign Out' : ''}
+            style={{
+              width: '100%', background: 'transparent', color: 'rgba(255,255,255,0.4)',
+              border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8,
+              padding: sidebarOpen ? '10px 14px' : '10px 0', marginTop: 4,
+              cursor: 'pointer', display: 'flex', alignItems: 'center',
+              justifyContent: sidebarOpen ? 'flex-start' : 'center',
+              gap: 10, fontSize: 13, fontWeight: 500, transition: 'all 0.2s'
+            }}
+          >
+            <LogOut size={16} style={{ flexShrink: 0 }} />
+            {sidebarOpen && 'Sign Out'}
+          </button>
         </div>
       </aside>
 
@@ -496,26 +558,7 @@ export default function Layout() {
               ))}
             </div>
 
-            {/* User Profile / Logout */}
-            <button 
-              onClick={logout}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 10,
-                background: 'transparent', border: 'none', cursor: 'pointer',
-                padding: '4px 8px', borderRadius: 8
-              }}
-              className="btn-hover"
-            >
-              <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border)' }}>
-                <User size={18} color="var(--primary)" />
-              </div>
-              {!isMobile && (
-                <>
-                  <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>Admin</span>
-                  <ChevronDown size={14} color="var(--text-muted)" />
-                </>
-              )}
-            </button>
+            {/* Removed Admin profile button per user request */}
           </div>
         </header>
 
@@ -527,6 +570,67 @@ export default function Layout() {
           </AnimatePresence>
         </div>
       </main>
+
+      {/* Force Punch-Out Modal */}
+      {showForcePunchModal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }} onClick={() => setShowForcePunchModal(false)} />
+          <div style={{ background: 'var(--surface)', borderRadius: 16, width: '100%', maxWidth: 520, position: 'relative', zIndex: 1, overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
+            <div style={{ padding: '24px 28px', borderBottom: '1px solid var(--border)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 10, background: '#fee2e2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <LogOut size={20} color="#dc2626" />
+                </div>
+                <div>
+                  <div style={{ fontWeight: 800, fontSize: 16, color: 'var(--text)' }}>Force Punch-Out</div>
+                  <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Close all stale open shifts from previous days</div>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ padding: '20px 28px', maxHeight: 320, overflowY: 'auto' }}>
+              {pendingShifts.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '20px 0', color: 'var(--text-muted)', fontSize: 14 }}>
+                  <AlertTriangle size={32} color="#d97706" style={{ marginBottom: 8 }} />
+                  <div>No stale open shifts found. All employees have punched out.</div>
+                </div>
+              ) : (
+                <>
+                  <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>The following {pendingShifts.length} employee shift(s) will be force-closed:</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {pendingShifts.map(shift => (
+                      <div key={shift._id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: 'var(--bg)', borderRadius: 10, border: '1px solid var(--border)' }}>
+                        <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#fee2e2', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: '#dc2626', flexShrink: 0 }}>
+                          {shift.staff?.fullName?.charAt(0) || '?'}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontWeight: 600, color: 'var(--text)', fontSize: 14 }}>{shift.staff?.fullName || 'Unknown'}</div>
+                          <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{shift.staff?.employeeId} · Punched in: {shift.punchIn ? new Date(shift.punchIn).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'N/A'}</div>
+                        </div>
+                        <span style={{ padding: '4px 10px', background: '#fee2e2', color: '#dc2626', borderRadius: 20, fontSize: 11, fontWeight: 700 }}>Open</span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div style={{ padding: '20px 28px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+              <button onClick={() => setShowForcePunchModal(false)} style={{ padding: '10px 24px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+              {pendingShifts.length > 0 && (
+                <button
+                  onClick={handleForcePunchOut}
+                  disabled={isProcessing === 'punch'}
+                  style={{ padding: '10px 24px', borderRadius: 10, border: 'none', background: '#dc2626', color: 'white', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
+                >
+                  {isProcessing === 'punch' ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <LogOut size={16} />}
+                  Confirm Force Punch-Out
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

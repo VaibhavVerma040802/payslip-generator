@@ -53,8 +53,8 @@ export default function LeaveRequests() {
   return (
     <div style={{ padding: 'clamp(24px, 5vw, 48px)', maxWidth: 1200, margin: '0 auto' }}>
       <header style={{ marginBottom: 40 }}>
-        <h1 style={{ fontSize: 32, color: 'var(--primary)', marginBottom: 8, letterSpacing: '-0.02em' }}>Leave Management</h1>
-        <p style={{ color: 'var(--text-muted)', fontWeight: 500 }}>Review and respond to staff leave applications.</p>
+        <h1 style={{ fontSize: 32, color: 'var(--primary)', marginBottom: 8, letterSpacing: '-0.02em' }}>Leave & Attendance</h1>
+        <p style={{ color: 'var(--text-muted)', fontWeight: 500 }}>Review and respond to staff leave applications and attendance records.</p>
       </header>
 
       <div style={{ display: 'flex', gap: 16, marginBottom: 32, flexWrap: 'wrap', alignItems: 'center' }}>

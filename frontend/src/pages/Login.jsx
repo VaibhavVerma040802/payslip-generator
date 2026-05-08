@@ -18,10 +18,10 @@ export default function Login() {
     try {
       const res = await api.post('/auth/login', form)
       login(res.data.token, res.data.user)
-      toast.success('Enterprise session established.')
+      toast.success('Welcome back!')
       navigate('/')
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Authentication failed.')
+      toast.error(err.message || 'Authentication failed.')
     } finally {
       setLoading(false)
     }

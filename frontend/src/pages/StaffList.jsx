@@ -40,7 +40,7 @@ export default function StaffList() {
 
   const [formData, setFormData] = useState({
     fullName: '', employeeId: '', email: '', phone: '', designation: '', department: '',
-    type: 'Employee', joiningDate: '', panNumber: '', pfNumber: '', bankName: '',
+    type: 'Employee', joiningDate: '', dob: '', panNumber: '', pfNumber: '', bankName: '',
     accountNumber: '', ifscCode: '', annualCTC: '', baseSalary: ''
   })
 
@@ -105,7 +105,7 @@ export default function StaffList() {
   const resetForm = () => {
     setFormData({
       fullName: '', employeeId: '', email: '', phone: '', designation: '', department: '',
-      type: 'Employee', joiningDate: '', panNumber: '', pfNumber: '', bankName: '',
+      type: 'Employee', joiningDate: '', dob: '', panNumber: '', pfNumber: '', bankName: '',
       accountNumber: '', ifscCode: '', annualCTC: '', baseSalary: ''
     })
   }
@@ -122,6 +122,7 @@ export default function StaffList() {
       department: person.department || '',
       type: person.type || 'Employee',
       joiningDate: person.joiningDate ? person.joiningDate.split('T')[0] : '',
+      dob: person.dob ? person.dob.split('T')[0] : '',
       panNumber: person.financials?.panNumber || '',
       pfNumber: person.pfNumber || '',
       bankName: person.financials?.bankName || '',
@@ -424,6 +425,7 @@ export default function StaffList() {
                     <InputField label="Email Address" type="email" name="email" value={formData.email} onChange={handleInputChange} required />
                     <InputField label="Phone Number" name="phone" value={formData.phone} onChange={handleInputChange} required />
                     <InputField label="Joining Date" type="date" name="joiningDate" value={formData.joiningDate} onChange={handleInputChange} required />
+                    <InputField label="Date of Birth" type="date" name="dob" value={formData.dob} onChange={handleInputChange} />
                     <InputField label="Designation" name="designation" value={formData.designation} onChange={handleInputChange} required />
                     <InputField label="Department" name="department" value={formData.department} onChange={handleInputChange} required />
                     <InputField label="PF Number" name="pfNumber" value={formData.pfNumber} onChange={handleInputChange} placeholder="XX/XXX/0000000" />
