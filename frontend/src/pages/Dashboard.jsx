@@ -84,6 +84,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [staffData, setStaffData] = useState([]);
+  const [activeEmployees, setActiveEmployees] = useState(0);
 
   useEffect(() => {
     const styleId = 'dash-grid-styles';
@@ -96,8 +97,12 @@ export default function Dashboard() {
 
     const fetchData = async () => {
       try {
-        const res = await api.get('/staff');
-        setStaffData(res.data.data || []);
+        const [staffRes, activeRes] = await Promise.all([
+          api.get('/staff'),
+          api.get('/attendance/admin/active')
+        ]);
+        setStaffData(staffRes.data.data || []);
+        setActiveEmployees(activeRes.data?.activeCount || 0);
       } catch (err) {
         console.error('Failed to load dashboard data');
       } finally {
@@ -122,17 +127,39 @@ export default function Dashboard() {
 
   // --- Compute Stats ---
   const totalEmployees = staffData.length;
-  const activeEmployees = Math.max(0, totalEmployees - Math.floor(totalEmployees * 0.1));
+  const safeActiveEmployees = Math.min(Math.max(activeEmployees, 0), totalEmployees);
   const onLeave = Math.min(staffData.filter(s => s.type === 'Employee').length, Math.ceil(totalEmployees * 0.07));
   const absent = Math.min(staffData.length, Math.ceil(totalEmployees * 0.07));
 
-  const currentMonth = new Date().getMonth();
-  const birthdays = staffData.filter(s => s.dob && new Date(s.dob).getMonth() === currentMonth);
-  const recentJoiners = [...staffData].sort((a, b) => new Date(b.joiningDate) - new Date(a.joiningDate)).slice(0, 3);
+  const today = new Date();
+  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const upcomingWindowDays = 30;
+  const birthdays = staffData
+    .filter(s => s.dob)
+    .map(person => {
+      const dobDate = new Date(person.dob);
+      if (Number.isNaN(dobDate.getTime())) return null;
+      let nextBirthday = new Date(startOfToday.getFullYear(), dobDate.getMonth(), dobDate.getDate());
+      if (nextBirthday < startOfToday) {
+        nextBirthday = new Date(startOfToday.getFullYear() + 1, dobDate.getMonth(), dobDate.getDate());
+      }
+      const diffDays = Math.ceil((nextBirthday - startOfToday) / (1000 * 60 * 60 * 24));
+      if (diffDays < 0 || diffDays > upcomingWindowDays) return null;
+      return { ...person, nextBirthday };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.nextBirthday - b.nextBirthday);
+  const recentJoiners = [...staffData]
+    .sort((a, b) => {
+      const aDate = new Date(a.joiningDate || a.createdAt || 0).getTime();
+      const bDate = new Date(b.joiningDate || b.createdAt || 0).getTime();
+      return bDate - aDate;
+    })
+    .slice(0, 3);
 
   // Donut Chart logic
   const safeTotal = totalEmployees || 1;
-  const activePerc = (activeEmployees / safeTotal) * 100;
+  const activePerc = (safeActiveEmployees / safeTotal) * 100;
   const leavePerc = (onLeave / safeTotal) * 100;
   const absentPerc = (absent / safeTotal) * 100;
   const conicGradient = `conic-gradient(
@@ -148,7 +175,7 @@ export default function Dashboard() {
       {/* Top Stat Row — no Total Employees card */}
       <div className="stat-row" style={{ marginBottom: 24 }}>
         <StatCard
-          icon={UserCheck} title="Active Employees" value={activeEmployees} subtitle="Currently working"
+          icon={UserCheck} title="Active Employees" value={safeActiveEmployees} subtitle="Currently working"
           iconBg="#e5ebdd" iconColor="#58833b"
         />
         <StatCard
@@ -184,7 +211,7 @@ export default function Dashboard() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {[
-                { label: 'Active', value: activeEmployees, color: '#58833b' },
+                { label: 'Active', value: safeActiveEmployees, color: '#58833b' },
                 { label: 'On Leave', value: onLeave, color: '#FFBE11' },
                 { label: 'Absent', value: absent, color: '#ef4444' },
                 { label: 'Inactive', value: 0, color: '#d1d5db' },
@@ -284,7 +311,7 @@ export default function Dashboard() {
                 <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>{person.fullName}</div>
                 <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{person.designation || 'Staff'}</div>
                 <div style={{ fontSize: 13, color: 'var(--text-light)', textAlign: 'right' }}>
-                  {new Date(person.dob).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                  {person.nextBirthday.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
                 </div>
               </div>
             )) : (

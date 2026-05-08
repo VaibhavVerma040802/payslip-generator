@@ -1,9 +1,41 @@
 const express = require('express');
 const router = express.Router();
 const Staff = require('../models/Staff');
+const Notification = require('../models/Notification');
 const { auth: protect } = require('./auth');
 const crypto = require('crypto');
 const emailService = require('../utils/emailService');
+
+const EMPLOYEE_ID_FORMATS = {
+  Employee: { prefix: 'BDA-EMP-', pad: 4 },
+  Intern: { prefix: 'BDA-INT-', pad: 3 }
+};
+
+const generateEmployeeId = async (userId, type) => {
+  const format = EMPLOYEE_ID_FORMATS[type] || EMPLOYEE_ID_FORMATS.Employee;
+  const regex = new RegExp(`^${format.prefix}\\d{${format.pad}}$`);
+
+  const latest = await Staff.findOne({ user: userId, employeeId: { $regex: regex } })
+    .sort({ employeeId: -1 })
+    .select('employeeId')
+    .lean();
+
+  let nextNumber = 1;
+  if (latest?.employeeId) {
+    const parsed = parseInt(latest.employeeId.slice(format.prefix.length), 10);
+    if (!Number.isNaN(parsed)) {
+      nextNumber = parsed + 1;
+    }
+  }
+
+  let candidate = `${format.prefix}${String(nextNumber).padStart(format.pad, '0')}`;
+  while (await Staff.exists({ user: userId, employeeId: candidate })) {
+    nextNumber += 1;
+    candidate = `${format.prefix}${String(nextNumber).padStart(format.pad, '0')}`;
+  }
+
+  return candidate;
+};
 const { logActivity } = require('../utils/logger');
 router.get('/', protect, async (req, res) => {
   try {
@@ -17,13 +49,27 @@ router.get('/', protect, async (req, res) => {
 // Add new staff
 router.post('/', protect, async (req, res) => {
   try {
+    const requestedId = (req.body.employeeId || '').trim();
+    const staffType = req.body.type === 'Intern' ? 'Intern' : 'Employee';
+    const employeeId = requestedId || await generateEmployeeId(req.user._id, staffType);
+
     const staff = new Staff({
       ...req.body,
+      employeeId,
       user: req.user._id,
     });
     await staff.save();
 
     await logActivity(req.user._id, 'STAFF_CREATED', `Added new staff: ${staff.fullName} (${staff.employeeId})`, { staffId: staff._id });
+
+    await new Notification({
+      admin: req.user._id,
+      staff: staff._id,
+      recipientType: 'admin',
+      type: 'STAFF_CREATED',
+      referenceId: staff._id,
+      message: `New staff added: ${staff.fullName} (${staff.employeeId}) — ${staff.designation || 'N/A'}`
+    }).save();
 
     res.status(201).json({ success: true, data: staff });
   } catch (err) {

@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom'
-import { 
+import {
   LayoutDashboard, PlusCircle, List, Menu,
   Settings, User, Users,
-  Sun, Moon, ChevronLeft, Send, Download, Bell, CalendarDays, Activity,
-  LogOut, UserPlus, Zap, AlertTriangle, Loader2
+  Sun, Moon, ChevronLeft, ChevronRight, Send, Download, Bell, CalendarDays, Activity,
+  LogOut, UserPlus, AlertTriangle, Loader2, FileText, UserCheck, CheckCheck
 } from 'lucide-react'
 import api from '../api'
 import { toast } from 'react-hot-toast'
@@ -60,7 +60,7 @@ export default function Layout() {
 
   const fetchNotifications = async () => {
     try {
-      const res = await api.get('/leaves/admin/notifications')
+      const res = await api.get('/notifications/admin')
       setNotifications(res.data.data)
     } catch (err) {
       console.error('Failed to fetch notifications')
@@ -78,7 +78,7 @@ export default function Layout() {
 
   const markAsRead = async (id) => {
     try {
-      await api.put(`/leaves/notifications/${id}/read`)
+      await api.put(`/notifications/${id}/read`)
       fetchNotifications()
     } catch (err) {
       console.error('Failed to mark as read')
@@ -87,7 +87,7 @@ export default function Layout() {
 
   const archiveNotification = async (id) => {
     try {
-      await api.put(`/leaves/notifications/${id}/archive`)
+      await api.put(`/notifications/${id}/archive`)
       fetchNotifications()
       toast.success('Notification archived')
     } catch (err) {
@@ -97,7 +97,7 @@ export default function Layout() {
 
   const markAllAsRead = async () => {
     try {
-      await api.post('/leaves/admin/mark-as-read')
+      await api.post('/notifications/admin/mark-all-read')
       fetchNotifications()
       toast.success('All marked as read')
     } catch (err) {
@@ -227,10 +227,11 @@ export default function Layout() {
         {/* Brand Header */}
         <div style={{
           height: 'var(--header-h)',
-          padding: '0 24px',
+          padding: sidebarOpen ? '0 24px' : '0 12px',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: sidebarOpen ? 'space-between' : 'center',
+          justifyContent: 'space-between',
+          gap: 8,
           borderBottom: '1px solid rgba(255,255,255,0.05)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -265,10 +266,10 @@ export default function Layout() {
                 cursor: 'pointer', padding: 6, borderRadius: 8,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 transition: 'all 0.2s',
-                marginLeft: sidebarOpen ? 0 : -4
+                marginLeft: 0
               }}
             >
-              {sidebarOpen ? <ChevronLeft size={20} /> : <Menu size={20} />}
+              {sidebarOpen ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
             </button>
           )}
 
@@ -319,9 +320,9 @@ export default function Layout() {
         </nav>
 
         {/* Quick Actions Sidebar Section */}
-        <div style={{ padding: '0 16px 16px' }}>
+        <div style={{ padding: '0 14px 12px' }}>
           {sidebarOpen && (
-            <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em', padding: '0 12px 12px', textTransform: 'uppercase' }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.08em', padding: '0 10px 8px', textTransform: 'uppercase' }}>
               Quick Actions
             </div>
           )}
@@ -339,15 +340,15 @@ export default function Layout() {
               style={{
                 width: '100%', background: 'rgba(255,255,255,0.05)', color: isProcessing === id ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.75)',
                 border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8,
-                padding: sidebarOpen ? '10px 14px' : '10px 0',
-                marginBottom: 6, cursor: 'pointer',
+                padding: sidebarOpen ? '8px 12px' : '8px 0',
+                marginBottom: 4, cursor: 'pointer',
                 display: 'flex', alignItems: 'center',
                 justifyContent: sidebarOpen ? 'flex-start' : 'center',
-                gap: 10, fontSize: 13, fontWeight: 500,
+                gap: 8, fontSize: 12, fontWeight: 600,
                 transition: 'all 0.2s'
               }}
             >
-              {isProcessing === id ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite', flexShrink: 0 }} /> : <Icon size={16} style={{ flexShrink: 0 }} />}
+              {isProcessing === id ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite', flexShrink: 0 }} /> : <Icon size={14} style={{ flexShrink: 0 }} />}
               {sidebarOpen && label}
             </button>
           ))}
@@ -359,13 +360,13 @@ export default function Layout() {
             style={{
               width: '100%', background: 'transparent', color: 'rgba(255,255,255,0.4)',
               border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8,
-              padding: sidebarOpen ? '10px 14px' : '10px 0', marginTop: 4,
+              padding: sidebarOpen ? '8px 12px' : '8px 0', marginTop: 4,
               cursor: 'pointer', display: 'flex', alignItems: 'center',
               justifyContent: sidebarOpen ? 'flex-start' : 'center',
-              gap: 10, fontSize: 13, fontWeight: 500, transition: 'all 0.2s'
+              gap: 8, fontSize: 12, fontWeight: 600, transition: 'all 0.2s'
             }}
           >
-            <LogOut size={16} style={{ flexShrink: 0 }} />
+            <LogOut size={14} style={{ flexShrink: 0 }} />
             {sidebarOpen && 'Sign Out'}
           </button>
         </div>
@@ -464,71 +465,85 @@ export default function Layout() {
               </button>
 
               {notifOpen && (
-                <div style={{
-                  position: 'absolute', top: 50, right: 0, width: 360,
-                  background: 'var(--surface)', borderRadius: 12,
-                  boxShadow: '0 20px 40px rgba(0,0,0,0.15)', border: '1px solid var(--border)',
-                  zIndex: 200, padding: 0, overflow: 'hidden'
-                }}>
-                  <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--primary)' }}>Notifications</div>
-                    <button 
-                      onClick={markAllAsRead}
-                      style={{ fontSize: 11, fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', background: 'none', border: 'none', cursor: 'pointer' }}
-                    >
-                      Mark all as read
-                    </button>
-                  </div>
-                  <div style={{ maxHeight: 400, overflowY: 'auto' }}>
-                    {notifications.length === 0 ? (
-                      <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
-                        No pending notifications
+                <>
+                  <div style={{ position: 'fixed', inset: 0, zIndex: 190 }} onClick={() => setNotifOpen(false)} />
+                  <div style={{
+                    position: 'absolute', top: 50, right: 0, width: 380,
+                    background: 'var(--surface)', borderRadius: 14,
+                    boxShadow: '0 20px 40px rgba(0,0,0,0.18)', border: '1px solid var(--border)',
+                    zIndex: 200, overflow: 'hidden'
+                  }}>
+                    <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <Bell size={16} color="var(--primary)" />
+                        <span style={{ fontWeight: 800, fontSize: 14, color: 'var(--primary)' }}>Notifications</span>
+                        {notifications.filter(n => !n.isRead).length > 0 && (
+                          <span style={{ background: 'var(--primary)', color: 'white', borderRadius: 20, fontSize: 10, fontWeight: 800, padding: '2px 7px' }}>
+                            {notifications.filter(n => !n.isRead).length} new
+                          </span>
+                        )}
                       </div>
-                    ) : (
-                      notifications.map(n => (
-                        <div key={n._id} style={{ padding: 20, borderBottom: '1px solid var(--border)', background: n.isRead ? 'var(--surface)' : 'var(--bg-alt)', opacity: n.isRead ? 0.7 : 1 }}>
-                          <div 
-                            onClick={() => {
-                              markAsRead(n._id)
-                              navigate('/leave-requests')
-                              setNotifOpen(false)
-                            }}
-                            style={{ display: 'flex', gap: 12, marginBottom: 16, cursor: 'pointer' }}
-                          >
-                            <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', flexShrink: 0 }}>
-                              <User size={18} />
-                            </div>
-                            <div>
-                              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--primary)' }}>{n.staff?.fullName || 'Employee'}</div>
-                              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{n.message}</div>
-                              <div style={{ fontSize: 10, color: 'var(--text-light)', marginTop: 4 }}>{new Date(n.createdAt).toLocaleString()}</div>
-                            </div>
-                          </div>
-                          <div style={{ display: 'flex', gap: 8 }}>
-                            <button 
-                              onClick={() => handleLeaveAction(n.referenceId, 'Approved')}
-                              style={{ flex: 1, padding: '8px', borderRadius: 8, background: 'var(--primary)', color: 'white', border: 'none', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
-                            >
-                              Approve
-                            </button>
-                            <button 
-                              onClick={() => handleLeaveAction(n.referenceId, 'Rejected')}
-                              style={{ flex: 1, padding: '8px', borderRadius: 8, background: 'var(--bg)', color: 'var(--primary)', border: '1px solid var(--primary)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
-                            >
-                              Deny
-                            </button>
-                            <button 
-                              onClick={() => archiveNotification(n._id)}
-                              style={{ padding: '8px 12px', borderRadius: 8, background: 'var(--bg)', color: 'var(--text-muted)', border: '1px solid var(--border)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
-                            >
-                              Archive
-                            </button>
-                          </div>
+                      <button onClick={markAllAsRead} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer' }}>
+                        <CheckCheck size={13} /> Mark all read
+                      </button>
+                    </div>
+                    <div style={{ maxHeight: 440, overflowY: 'auto' }}>
+                      {notifications.length === 0 ? (
+                        <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
+                          <Bell size={28} style={{ opacity: 0.3, marginBottom: 8, display: 'block', margin: '0 auto 8px' }} />
+                          No notifications yet
                         </div>
-                      ))
-                    )}
+                      ) : (
+                        notifications.map(n => {
+                          const typeMap = {
+                            LEAVE_REQUEST:   { icon: CalendarDays, bg: '#e0f2fe', color: '#0369a1', nav: '/leave-requests' },
+                            STAFF_CREATED:   { icon: UserCheck,    bg: '#dcfce7', color: '#15803d', nav: '/staff' },
+                            PAYSLIP_PUSHED:  { icon: FileText,     bg: '#fef3c7', color: '#b45309', nav: '/payslips' },
+                            PROFILE_UPDATE:  { icon: User,         bg: '#f3e8ff', color: '#7e22ce', nav: '/staff' },
+                            ATTENDANCE_ALERT:{ icon: AlertTriangle, bg: '#fee2e2', color: '#dc2626', nav: '/leave-requests' },
+                            OTHER:           { icon: Bell,         bg: 'var(--bg)', color: 'var(--text-muted)', nav: '/' },
+                          }
+                          const { icon: Icon, bg, color, nav } = typeMap[n.type] || typeMap.OTHER
+                          return (
+                            <div key={n._id} style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)', background: n.isRead ? 'var(--surface)' : 'var(--bg-alt)' }}>
+                              <div
+                                onClick={() => { markAsRead(n._id); navigate(nav); setNotifOpen(false) }}
+                                style={{ display: 'flex', gap: 12, cursor: 'pointer', marginBottom: n.type === 'LEAVE_REQUEST' && !n.isRead ? 10 : 0 }}
+                              >
+                                <div style={{ width: 38, height: 38, borderRadius: 10, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                  <Icon size={17} color={color} />
+                                </div>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  {n.staff?.fullName && (
+                                    <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)', marginBottom: 2 }}>{n.staff.fullName}</div>
+                                  )}
+                                  <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.45 }}>{n.message}</div>
+                                  <div style={{ fontSize: 10, color: 'var(--text-light)', marginTop: 4 }}>
+                                    {new Date(n.createdAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                  </div>
+                                </div>
+                                {!n.isRead && <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--primary)', flexShrink: 0, marginTop: 4 }} />}
+                              </div>
+                              {n.type === 'LEAVE_REQUEST' && !n.isRead && (
+                                <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                                  <button onClick={() => handleLeaveAction(n.referenceId, 'Approved')} style={{ flex: 1, padding: '7px', borderRadius: 8, background: 'var(--primary)', color: 'white', border: 'none', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                                    Approve
+                                  </button>
+                                  <button onClick={() => handleLeaveAction(n.referenceId, 'Rejected')} style={{ flex: 1, padding: '7px', borderRadius: 8, background: 'var(--bg)', color: 'var(--primary)', border: '1px solid var(--primary)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                                    Deny
+                                  </button>
+                                  <button onClick={() => archiveNotification(n._id)} style={{ padding: '7px 10px', borderRadius: 8, background: 'var(--bg)', color: 'var(--text-muted)', border: '1px solid var(--border)', fontSize: 11, cursor: 'pointer' }}>
+                                    Archive
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          )
+                        })
+                      )}
+                    </div>
                   </div>
-                </div>
+                </>
               )}
             </div>
 

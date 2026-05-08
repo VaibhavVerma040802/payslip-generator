@@ -18,6 +18,27 @@ const getStartOfDay = (dateString = null) => {
 // STAFF ENDPOINTS (Using authStaff middleware)
 // ─────────────────────────────────────────────────────────────
 
+// ─────────────────────────────────────────────────────────────
+// ADMIN ENDPOINTS (Using authAdmin middleware)
+// ─────────────────────────────────────────────────────────────
+
+// GET /api/attendance/admin/active — Count of staff currently punched in today
+router.get('/admin/active', authAdmin, async (req, res) => {
+  try {
+    const today = getStartOfDay();
+    const activeCount = await Attendance.countDocuments({
+      admin: req.user._id,
+      date: today,
+      punchOut: { $exists: false }
+    });
+
+    res.json({ success: true, activeCount });
+  } catch (err) {
+    console.error('Active staff count error:', err);
+    res.status(500).json({ success: false, message: 'Failed to fetch active staff count' });
+  }
+});
+
 // POST /api/attendance/punch-in
 router.post('/punch-in', authStaff, async (req, res) => {
   try {

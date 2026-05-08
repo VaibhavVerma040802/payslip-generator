@@ -6,7 +6,20 @@ import toast from 'react-hot-toast'
 import api from '../api'
 import { useTheme } from '../context/ThemeContext'
 
-function InputField({ label, name, value, onChange, type = 'text', placeholder, required }) {
+function InputField({
+  label,
+  name,
+  value,
+  onChange,
+  type = 'text',
+  placeholder,
+  required,
+  readOnly = false,
+  hint,
+  pattern,
+  inputMode,
+  maxLength
+}) {
   return (
     <div style={{ marginBottom: 16 }}>
       <label className="label">
@@ -19,9 +32,16 @@ function InputField({ label, name, value, onChange, type = 'text', placeholder, 
         onChange={onChange}
         placeholder={placeholder}
         required={required}
+        readOnly={readOnly}
+        pattern={pattern}
+        inputMode={inputMode}
+        maxLength={maxLength}
         className="input-field"
-        style={{ width: '100%' }}
+        style={{ width: '100%', background: readOnly ? 'var(--bg)' : 'var(--surface)', cursor: readOnly ? 'not-allowed' : 'text' }}
       />
+      {hint && (
+        <div style={{ marginTop: 6, fontSize: 12, color: 'var(--text-muted)' }}>{hint}</div>
+      )}
     </div>
   )
 }
@@ -62,7 +82,26 @@ export default function StaffList() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
+    const nextValue = name === 'email' ? value : value.toUpperCase()
+    setFormData(prev => ({ ...prev, [name]: nextValue }))
+  }
+
+  const handlePanChange = (e) => {
+    const { name, value } = e.target
+    const sanitized = value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10)
+    setFormData(prev => ({ ...prev, [name]: sanitized }))
+  }
+
+  const handleAccountNumberChange = (e) => {
+    const { name, value } = e.target
+    const sanitized = value.replace(/\D/g, '')
+    setFormData(prev => ({ ...prev, [name]: sanitized }))
+  }
+
+  const handlePhoneChange = (e) => {
+    const { name, value } = e.target
+    const sanitized = value.replace(/\D/g, '').slice(0, 10)
+    setFormData(prev => ({ ...prev, [name]: sanitized }))
   }
 
   const handleSubmit = async (e) => {
@@ -239,7 +278,7 @@ export default function StaffList() {
             <thead>
               <tr style={{ textAlign: 'left' }}>
                 <th style={{ padding: '0 12px', fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Employee</th>
-                <th style={{ padding: '0 12px', fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Role / Dept</th>
+                <th style={{ padding: '0 12px', fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Role</th>
                 <th style={{ padding: '0 12px', fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Type</th>
                 <th style={{ padding: '0 12px', fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Compensation</th>
                 <th style={{ padding: '0 12px', fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>OT</th>
@@ -281,14 +320,14 @@ export default function StaffList() {
                       </div>
                       <div>
                         <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--text)' }}>{person.fullName}</div>
-                        <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{person.employeeId} · {person.department || 'N/A'}</div>
+                        <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{person.employeeId}</div>
                       </div>
                     </div>
                   </td>
 
-                  {/* Role / Dept */}
+                  {/* Role */}
                   <td style={{ padding: '12px' }}>
-                    <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text)', marginBottom: 2 }}>{person.designation || 'No Designation'}</div>
+                    <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text)' }}>{person.designation || 'No Designation'}</div>
                     <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500 }}>{person.department || 'N/A'}</div>
                   </td>
 
@@ -421,9 +460,27 @@ export default function StaffList() {
                   <h4 style={{ color: 'var(--primary)', marginBottom: 16 }}>Professional Details</h4>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                     <InputField label="Full Name" name="fullName" value={formData.fullName} onChange={handleInputChange} required />
-                    <InputField label="Employee ID / Code" name="employeeId" value={formData.employeeId} onChange={handleInputChange} required />
+                    <InputField
+                      label="Employee ID / Code"
+                      name="employeeId"
+                      value={formData.employeeId}
+                      onChange={handleInputChange}
+                      placeholder={formData.type === 'Intern' ? 'BDA-INT-001' : 'BDA-EMP-0001'}
+                      readOnly
+                      hint="Auto-generated when you save."
+                    />
                     <InputField label="Email Address" type="email" name="email" value={formData.email} onChange={handleInputChange} required />
-                    <InputField label="Phone Number" name="phone" value={formData.phone} onChange={handleInputChange} required />
+                    <InputField
+                      label="Phone Number"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handlePhoneChange}
+                      required
+                      inputMode="numeric"
+                      pattern="[0-9]{10}"
+                      maxLength={10}
+                      hint="Enter 10-digit number"
+                    />
                     <InputField label="Joining Date" type="date" name="joiningDate" value={formData.joiningDate} onChange={handleInputChange} required />
                     <InputField label="Date of Birth" type="date" name="dob" value={formData.dob} onChange={handleInputChange} />
                     <InputField label="Designation" name="designation" value={formData.designation} onChange={handleInputChange} required />
@@ -433,9 +490,26 @@ export default function StaffList() {
 
                   <h4 style={{ color: 'var(--primary)', marginTop: 24, marginBottom: 16 }}>Financial Information</h4>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                    <InputField label="PAN Number" name="panNumber" value={formData.panNumber} onChange={handleInputChange} required />
+                    <InputField
+                      label="PAN Number"
+                      name="panNumber"
+                      value={formData.panNumber}
+                      onChange={handlePanChange}
+                      required
+                      pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}"
+                      maxLength={10}
+                      hint="Format: ABCDE1234F"
+                    />
                     <InputField label="Bank Name" name="bankName" value={formData.bankName} onChange={handleInputChange} required />
-                    <InputField label="Account Number" name="accountNumber" value={formData.accountNumber} onChange={handleInputChange} required />
+                    <InputField
+                      label="Account Number"
+                      name="accountNumber"
+                      value={formData.accountNumber}
+                      onChange={handleAccountNumberChange}
+                      required
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                    />
                     <InputField label="IFSC Code" name="ifscCode" value={formData.ifscCode} onChange={handleInputChange} required />
                   </div>
 

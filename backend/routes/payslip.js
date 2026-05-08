@@ -6,6 +6,7 @@ const { sendPayslipEmail } = require('../utils/emailService');
 const { authCombined } = require('../utils/authMiddleware');
 const Staff = require('../models/Staff');
 const Attendance = require('../models/Attendance');
+const Notification = require('../models/Notification');
 const { logActivity } = require('../utils/logger');
 
 // Apply auth middleware to all routes
@@ -372,6 +373,20 @@ router.post('/:id/push', async (req, res) => {
 
     const action = payslip.isPushedToPortal ? 'Pushed to portal' : 'Removed from portal';
     await logActivity(req.user._id, 'PAYSLIP_PUSHED', `${action}: ${payslip.employeeName} (${payslip.month} ${payslip.year})`, { payslipId: payslip._id });
+
+    if (payslip.isPushedToPortal) {
+      const staff = await Staff.findOne({ user: req.user._id, employeeId: payslip.employeeId });
+      if (staff) {
+        await new Notification({
+          admin: req.user._id,
+          staff: staff._id,
+          recipientType: 'staff',
+          type: 'PAYSLIP_PUSHED',
+          referenceId: payslip._id,
+          message: `Your payslip for ${payslip.month} ${payslip.year} is now available. Check My Payslips.`
+        }).save();
+      }
+    }
 
     res.json({ success: true, message: action, isPushed: payslip.isPushedToPortal });
   } catch (err) {

@@ -10,9 +10,10 @@ const { router: staffPortalRoutes } = require('./routes/staffPortal');
 const attendanceRoutes = require('./routes/attendance');
 const activitiesRoutes = require('./routes/activities');
 const leavesRoutes = require('./routes/leaves');
+const notificationsRoutes = require('./routes/notifications');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 // Middleware
 app.use(cors({ origin: true, credentials: true }));
@@ -27,6 +28,7 @@ app.use('/api/portal', staffPortalRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/activities', activitiesRoutes);
 app.use('/api/leaves', leavesRoutes);
+app.use('/api/notifications', notificationsRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

@@ -10,8 +10,7 @@ const notificationSchema = new mongoose.Schema(
     },
     staff: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Staff',
-      required: true
+      ref: 'Staff'
     },
     recipientType: {
       type: String,
@@ -20,12 +19,11 @@ const notificationSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ['LEAVE_REQUEST', 'PROFILE_UPDATE', 'ATTENDANCE_ALERT', 'OTHER'],
+      enum: ['LEAVE_REQUEST', 'PROFILE_UPDATE', 'ATTENDANCE_ALERT', 'PAYSLIP_PUSHED', 'STAFF_CREATED', 'OTHER'],
       default: 'LEAVE_REQUEST'
     },
     referenceId: {
-      type: mongoose.Schema.Types.ObjectId,
-      required: true
+      type: mongoose.Schema.Types.ObjectId
     },
     message: {
       type: String,

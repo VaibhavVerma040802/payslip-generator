@@ -15,12 +15,13 @@ export default function LeaveRequests() {
 
   useEffect(() => {
     fetchRequests()
-  }, [])
+  }, [filterStatus])
 
   const fetchRequests = async () => {
     try {
       setLoading(true)
-      const res = await api.get('/leaves/admin/pending')
+      const statusParam = filterStatus !== 'All' ? { status: filterStatus } : {}
+      const res = await api.get('/leaves/admin/pending', { params: statusParam })
       setRequests(res.data.data)
     } catch (err) {
       toast.error('Failed to fetch requests')
@@ -45,8 +46,9 @@ export default function LeaveRequests() {
   }
 
   const filteredRequests = requests.filter(r => {
-    const matchesSearch = r.staff?.fullName?.toLowerCase().includes(search.toLowerCase()) || 
-                          r.staff?.employeeId?.toLowerCase().includes(search.toLowerCase())
+    const query = search.toLowerCase()
+    const matchesSearch = r.staff?.fullName?.toLowerCase().includes(query) || 
+                          r.staff?.employeeId?.toLowerCase().includes(query)
     return matchesSearch
   })
 
@@ -58,7 +60,7 @@ export default function LeaveRequests() {
       </header>
 
       <div style={{ display: 'flex', gap: 16, marginBottom: 32, flexWrap: 'wrap', alignItems: 'center' }}>
-        <div style={{ flex: '1 1 300px', position: 'relative' }}>
+        <div style={{ flex: '1 1 320px', position: 'relative' }}>
           <Search size={18} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-light)' }} />
           <input 
             type="text" placeholder="Search by name or ID..." 
@@ -66,6 +68,28 @@ export default function LeaveRequests() {
             className="input-field"
             style={{ width: '100%', paddingLeft: 44 }}
           />
+        </div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {['All', 'Pending', 'Approved', 'Rejected'].map(status => (
+            <button
+              key={status}
+              onClick={() => setFilterStatus(status)}
+              style={{
+                padding: '8px 14px',
+                borderRadius: 999,
+                border: '1px solid var(--border)',
+                background: filterStatus === status ? 'var(--primary)' : 'var(--surface)',
+                color: filterStatus === status ? '#ffffff' : 'var(--text-muted)',
+                fontSize: 12,
+                fontWeight: 700,
+                letterSpacing: '0.02em',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+            >
+              {status}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -78,48 +102,58 @@ export default function LeaveRequests() {
           <p style={{ color: 'var(--text-muted)' }}>All caught up! New requests will appear here.</p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gap: 20 }}>
+        <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr 2fr 1fr auto', gap: 16, padding: '14px 20px', background: 'var(--bg)', borderBottom: '1px solid var(--border)', fontSize: 11, fontWeight: 800, color: 'var(--text-light)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            <div>Employee</div>
+            <div>Dates</div>
+            <div>Reason</div>
+            <div>Balances</div>
+            <div style={{ textAlign: 'right' }}>Action</div>
+          </div>
           {filteredRequests.map((req) => (
             <motion.div
               key={req._id}
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              className="card"
-              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 24 }}
+              style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr 2fr 1fr auto', gap: 16, padding: '16px 20px', alignItems: 'center', borderBottom: '1px solid var(--border)' }}
             >
-              <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
-                <div style={{ width: 56, height: 56, borderRadius: 6, background: 'var(--primary)', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 600 }}>
+              <div style={{ display: 'flex', gap: 14, alignItems: 'center', minWidth: 0 }}>
+                <div style={{ width: 44, height: 44, borderRadius: 10, background: 'var(--primary)', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 700, flexShrink: 0 }}>
                   {req.staff?.fullName?.charAt(0).toUpperCase()}
                 </div>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <h3 style={{ margin: 0, fontSize: 18, color: 'var(--primary)', fontWeight: 800 }}>{req.staff?.fullName}</h3>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    <div style={{ fontSize: 15, color: 'var(--text)', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{req.staff?.fullName}</div>
                     <span className="badge badge-emerald" style={{ fontSize: 10 }}>{req.type} LEAVE</span>
                   </div>
-                  <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4, fontWeight: 500 }}>
-                    {new Date(req.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} — {new Date(req.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>{req.staff?.employeeId || '—'}</div>
                 </div>
               </div>
 
-              <div style={{ flex: 1, minWidth: 300, padding: '0 24px' }}>
-                <div style={{ display: 'flex', gap: 8, color: 'var(--text-muted)', fontSize: 13, marginBottom: 6 }}>
-                  <MessageSquare size={14} /> <span style={{ fontWeight: 600 }}>Reason:</span>
-                </div>
-                <p style={{ margin: 0, fontSize: 14, color: 'var(--text)', lineHeight: 1.5 }}>{req.reason}</p>
-                <div style={{ marginTop: 12, display: 'flex', gap: 16 }}>
-                  <div style={{ fontSize: 11, color: 'var(--text-light)', fontWeight: 700 }}>CASUAL BAL: <span style={{ color: 'var(--primary)' }}>{req.staff?.leaveBalance?.casual || 0}d</span></div>
-                  <div style={{ fontSize: 11, color: 'var(--text-light)', fontWeight: 700 }}>SICK BAL: <span style={{ color: 'var(--primary)' }}>{req.staff?.leaveBalance?.sick || 0}d</span></div>
-                </div>
+              <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                <div style={{ fontWeight: 600, color: 'var(--text)' }}>{new Date(req.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</div>
+                <div>{new Date(req.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
               </div>
 
-              <div style={{ display: 'flex', gap: 12 }}>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ display: 'flex', gap: 8, color: 'var(--text-muted)', fontSize: 12, marginBottom: 6, alignItems: 'center' }}>
+                  <MessageSquare size={14} /> <span style={{ fontWeight: 600 }}>Reason</span>
+                </div>
+                <p style={{ margin: 0, fontSize: 13, color: 'var(--text)', lineHeight: 1.45, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{req.reason}</p>
+              </div>
+
+              <div style={{ display: 'grid', gap: 6, fontSize: 11, color: 'var(--text-light)', fontWeight: 700 }}>
+                <div>CASUAL: <span style={{ color: 'var(--primary)' }}>{req.staff?.leaveBalance?.casual || 0}d</span></div>
+                <div>SICK: <span style={{ color: 'var(--primary)' }}>{req.staff?.leaveBalance?.sick || 0}d</span></div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                 <button
                   onClick={() => setNoteModal(req._id)}
                   className="btn-primary"
-                  style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', fontSize: 13 }}
                 >
-                  Review & Respond
+                  Review
                 </button>
               </div>
             </motion.div>

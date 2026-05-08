@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Outlet, NavLink, useLocation } from 'react-router-dom'
-import { 
-  LayoutDashboard, LogOut, User, Clock, 
-  CalendarDays, Menu, ChevronLeft, Sun, Moon, Monitor, FileText, Bell, X, Loader2
+import {
+  LayoutDashboard, LogOut, User, Clock,
+  CalendarDays, Menu, ChevronLeft, ChevronRight, Sun, Moon, Monitor, FileText, Bell, Loader2, CheckCheck, AlertTriangle
 } from 'lucide-react'
 import { useStaffPortal } from '../context/StaffPortalContext'
 import { useTheme } from '../context/ThemeContext'
@@ -54,7 +54,7 @@ export default function PortalLayout() {
   const fetchNotifications = async () => {
     setNotifLoading(true)
     try {
-      const res = await api.get('/leaves/notifications')
+      const res = await api.get('/notifications/staff')
       setNotifications(res.data.data)
     } catch (err) {
       console.error('Notif error:', err)
@@ -65,7 +65,7 @@ export default function PortalLayout() {
 
   const markAsRead = async (id) => {
     try {
-      await api.put(`/leaves/notifications/${id}/read`)
+      await api.put(`/notifications/${id}/read`)
       fetchNotifications()
     } catch (err) {
       console.error('Failed to mark as read')
@@ -74,7 +74,7 @@ export default function PortalLayout() {
 
   const markAllAsRead = async () => {
     try {
-      await api.post('/leaves/mark-as-read')
+      await api.post('/notifications/staff/mark-all-read')
       fetchNotifications()
     } catch (err) {
       console.error('Failed to mark all as read')
@@ -139,7 +139,7 @@ export default function PortalLayout() {
       {/* Sidebar */}
       <aside style={{
         width: isMobile ? 'var(--sidebar-w)' : (sidebarOpen ? 'var(--sidebar-w)' : 'var(--sidebar-mini-w)'),
-        background: 'var(--primary)',
+        background: 'var(--sidebar-bg)',
         display: 'flex',
         flexDirection: 'column',
         position: 'fixed',
@@ -153,29 +153,32 @@ export default function PortalLayout() {
         {/* Brand Header */}
         <div style={{
           height: 'var(--header-h)',
-          padding: '0 24px',
+          padding: sidebarOpen ? '0 24px' : '0 12px',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: sidebarOpen ? 'space-between' : 'center',
-          borderBottom: '1px solid rgba(255,255,255,0.1)',
+          justifyContent: 'space-between',
+          gap: 8,
+          borderBottom: '1px solid rgba(255,255,255,0.05)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{
               width: 38, height: 38, borderRadius: 6,
-              background: 'var(--white)',
+              background: 'transparent',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               flexShrink: 0
             }}>
-              <Clock size={20} color="var(--primary)" strokeWidth={2.5} />
+              <div style={{ color: 'var(--primary)', fontSize: 24, fontWeight: 900, fontFamily: 'var(--font-display)', letterSpacing: '-0.05em' }}>
+                BDA
+              </div>
             </div>
             {sidebarOpen && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                 <div style={{
                   fontFamily: 'var(--font-display)',
-                  fontSize: 19, fontWeight: 800,
-                  color: 'white', letterSpacing: '-0.02em',
-                  whiteSpace: 'nowrap'
-                }}>Staff<span style={{ color: 'var(--bg)' }}>Portal</span></div>
+                  fontSize: 12, fontWeight: 700,
+                  color: 'rgba(255,255,255,0.7)', letterSpacing: '0.1em',
+                  whiteSpace: 'nowrap', textTransform: 'uppercase'
+                }}>Staff Portal</div>
               </motion.div>
             )}
           </div>
@@ -188,10 +191,10 @@ export default function PortalLayout() {
                 cursor: 'pointer', padding: 6, borderRadius: 8,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 transition: 'all 0.2s',
-                marginLeft: sidebarOpen ? 0 : -4
+                marginLeft: 0
               }}
             >
-              {sidebarOpen ? <ChevronLeft size={20} /> : <Menu size={20} />}
+              {sidebarOpen ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
             </button>
           )}
 
@@ -228,8 +231,8 @@ export default function PortalLayout() {
                 textDecoration: 'none',
                 fontSize: 14,
                 fontWeight: isActive ? 600 : 500,
-                color: isActive ? 'white' : 'rgba(255,255,255,0.5)',
-                background: isActive ? 'rgba(255,255,255,0.08)' : 'transparent',
+                color: isActive ? 'white' : 'rgba(255,255,255,0.55)',
+                background: isActive ? 'var(--sidebar-active)' : 'transparent',
                 transition: 'all 0.2s ease',
                 whiteSpace: 'nowrap'
               })}
@@ -253,11 +256,11 @@ export default function PortalLayout() {
           }}>
             <div style={{ 
               width: 36, height: 36, borderRadius: 10, 
-              background: 'var(--bg)', border: '1px solid rgba(255,255,255,0.1)',
+              background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               flexShrink: 0
             }}>
-              <User size={16} color="white" />
+              <User size={16} color="var(--primary)" />
             </div>
             {sidebarOpen && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ flex: 1, minWidth: 0 }}>
@@ -362,42 +365,64 @@ export default function PortalLayout() {
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
                       style={{
                         position: 'absolute', top: '100%', right: 0, marginTop: 12,
-                        width: 320, background: 'var(--surface)', borderRadius: 12,
-                        border: '1px solid var(--border)', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)',
+                        width: 340, background: 'var(--surface)', borderRadius: 14,
+                        border: '1px solid var(--border)', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.12)',
                         zIndex: 100, overflow: 'hidden'
                       }}
                     >
-                      <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg)' }}>
-                        <h4 style={{ margin: 0, fontSize: 14, color: 'var(--primary)', fontWeight: 800 }}>Notifications</h4>
-                        <button 
-                          onClick={markAllAsRead}
-                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', fontSize: 11, fontWeight: 700 }}
-                        >
-                          Mark all read
+                      <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <Bell size={15} color="var(--primary)" />
+                          <span style={{ fontWeight: 800, fontSize: 13, color: 'var(--primary)' }}>Notifications</span>
+                          {notifications.filter(n => !n.isRead).length > 0 && (
+                            <span style={{ background: 'var(--primary)', color: 'white', borderRadius: 20, fontSize: 10, fontWeight: 800, padding: '2px 7px' }}>
+                              {notifications.filter(n => !n.isRead).length}
+                            </span>
+                          )}
+                        </div>
+                        <button onClick={markAllAsRead} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', fontSize: 11, fontWeight: 700 }}>
+                          <CheckCheck size={12} /> Mark all read
                         </button>
                       </div>
-                      <div style={{ maxHeight: 360, overflowY: 'auto' }}>
+                      <div style={{ maxHeight: 380, overflowY: 'auto' }}>
                         {notifLoading ? (
-                          <div style={{ padding: 40, textAlign: 'center' }}><Loader2 size={24} className="animate-spin text-muted" /></div>
+                          <div style={{ padding: 40, textAlign: 'center' }}>
+                            <Loader2 size={22} style={{ animation: 'spin 1s linear infinite', color: 'var(--text-muted)' }} />
+                          </div>
                         ) : notifications.length === 0 ? (
-                          <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>No new notifications</div>
+                          <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
+                            <Bell size={26} style={{ opacity: 0.3, display: 'block', margin: '0 auto 8px' }} />
+                            No notifications yet
+                          </div>
                         ) : (
-                          notifications.map((n) => (
-                            <div key={n._id} style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', background: n.isRead ? 'var(--surface)' : 'var(--bg-alt)', opacity: n.isRead ? 0.7 : 1 }}>
-                              <div style={{ fontSize: 13, color: 'var(--text)', lineHeight: 1.5, marginBottom: 6 }}>{n.message}</div>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <div style={{ fontSize: 11, color: 'var(--text-light)', fontWeight: 600 }}>{new Date(n.createdAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</div>
-                                {!n.isRead && (
-                                  <button 
-                                    onClick={() => markAsRead(n._id)}
-                                    style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: 10, fontWeight: 700, cursor: 'pointer' }}
-                                  >
-                                    Mark as read
-                                  </button>
-                                )}
+                          notifications.map((n) => {
+                            const typeMap = {
+                              LEAVE_REQUEST:  { icon: CalendarDays, bg: '#e0f2fe', color: '#0369a1' },
+                              PAYSLIP_PUSHED: { icon: FileText,     bg: '#dcfce7', color: '#15803d' },
+                              PROFILE_UPDATE: { icon: User,         bg: '#f3e8ff', color: '#7e22ce' },
+                              ATTENDANCE_ALERT:{ icon: AlertTriangle, bg: '#fee2e2', color: '#dc2626' },
+                              OTHER:          { icon: Bell,         bg: 'var(--bg)', color: 'var(--text-muted)' },
+                            }
+                            const { icon: Icon, bg, color } = typeMap[n.type] || typeMap.OTHER
+                            return (
+                              <div
+                                key={n._id}
+                                onClick={() => !n.isRead && markAsRead(n._id)}
+                                style={{ padding: '14px 18px', borderBottom: '1px solid var(--border)', background: n.isRead ? 'var(--surface)' : 'var(--bg-alt)', cursor: n.isRead ? 'default' : 'pointer', display: 'flex', gap: 12, alignItems: 'flex-start' }}
+                              >
+                                <div style={{ width: 36, height: 36, borderRadius: 9, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                  <Icon size={16} color={color} />
+                                </div>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div style={{ fontSize: 12, color: 'var(--text)', lineHeight: 1.5 }}>{n.message}</div>
+                                  <div style={{ fontSize: 10, color: 'var(--text-light)', marginTop: 4, fontWeight: 600 }}>
+                                    {new Date(n.createdAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                  </div>
+                                </div>
+                                {!n.isRead && <div style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--primary)', flexShrink: 0, marginTop: 5 }} />}
                               </div>
-                            </div>
-                          ))
+                            )
+                          })
                         )}
                       </div>
                     </motion.div>

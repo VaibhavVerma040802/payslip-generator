@@ -30,13 +30,16 @@ const INITIAL = {
 }
 
 function StepLabel({ num, label, active, completed }) {
+  const isInactive = !active && !completed
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, opacity: active || completed ? 1 : 0.4 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, opacity: active || completed ? 1 : 0.75 }}>
       <div style={{
         width: 32, height: 32, borderRadius: 6,
-        background: completed ? 'var(--primary)' : active ? 'var(--primary)' : 'var(--border)',
+        background: completed || active ? 'var(--primary)' : 'var(--bg)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        color: '#ffffff', fontSize: 14, fontWeight: 600, transition: 'all 0.3s'
+        color: completed || active ? '#ffffff' : 'var(--text-muted)',
+        border: isInactive ? '1px solid var(--border)' : '1px solid transparent',
+        fontSize: 14, fontWeight: 600, transition: 'all 0.3s'
       }}>
         {completed ? <CheckCircle2 size={18} /> : num}
       </div>

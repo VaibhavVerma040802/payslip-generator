@@ -29,7 +29,10 @@ export default function Login() {
 
   return (
     <div style={{
-      minHeight: '100vh', display: 'flex', background: 'var(--bg)', overflow: 'hidden'
+      minHeight: '100vh',
+      display: 'flex',
+      background: 'radial-gradient(900px 500px at 10% -10%, rgba(88,131,59,0.08), transparent 60%), radial-gradient(700px 400px at 90% 110%, rgba(11,26,43,0.08), transparent 55%), var(--bg)',
+      overflow: 'hidden',
     }}>
       {/* LEFT: Branding/Hero Sidebar */}
       <motion.div 
@@ -37,9 +40,9 @@ export default function Login() {
         animate={{ x: 0 }}
         transition={{ type: 'spring', damping: 25, stiffness: 120 }}
         style={{
-          flex: '0 0 45%', background: 'var(--navy-dark)', padding: '60px',
+          flex: '0 0 45%', background: 'linear-gradient(160deg, var(--navy-dark) 0%, #0f2b4d 80%)', padding: '60px',
           display: 'flex', flexDirection: 'column', position: 'relative',
-          color: 'white', borderRight: '1px solid rgba(255,255,255,0.05)',
+          color: 'white',
           boxShadow: '20px 0 50px rgba(0,0,0,0.2)',
           zIndex: 10,
         }}
@@ -66,7 +69,7 @@ export default function Login() {
             <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(2.5rem, 5vw, 3.5rem)', fontWeight: 900, marginBottom: 20, lineHeight: 1, letterSpacing: '-0.04em' }}>
               Precision in <span style={{ color: 'var(--primary)' }}>Payroll.</span>
             </h1>
-            <p style={{ fontSize: 18, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, marginBottom: 48, fontWeight: 500 }}>
+            <p style={{ fontSize: 18, color: 'rgba(255,255,255,0.72)', lineHeight: 1.6, marginBottom: 48, fontWeight: 500 }}>
               The definitive statutory engine for modern Indian enterprises. Fully compliant with 2026 Labour Codes.
             </p>
             
@@ -76,13 +79,13 @@ export default function Login() {
                 <div style={{ color: 'white', fontWeight: 800, fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Statutory Lock</div>
               </div>
               <div style={{ background: 'rgba(255,255,255,0.03)', padding: '24px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)' }}>
-                <Zap size={28} color="var(--emerald)" style={{ marginBottom: 12 }} />
+                <Zap size={28} color="var(--primary)" style={{ marginBottom: 12 }} />
                 <div style={{ color: 'white', fontWeight: 800, fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Instant Pushes</div>
               </div>
             </div>
           </motion.div>
         </div>
-        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', fontWeight: 500 }}>
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>
           Professional Statutory Artifacts &copy; {new Date().getFullYear()} PaySlip Pro Enterprise
         </div>
       </motion.div>
@@ -95,9 +98,10 @@ export default function Login() {
           transition={{ delay: 0.1, duration: 0.4 }}
           style={{
             width: '100%', maxWidth: 440,
-            borderRadius: 12, padding: 'clamp(32px, 5vw, 60px)',
+            borderRadius: 16,
+            padding: 'clamp(32px, 5vw, 60px)',
           }}
-          className="card"
+          className="card auth-card"
         >
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
             <h2 style={{ fontSize: 32, color: 'var(--primary)', marginBottom: 12 }}>Corporate Portal</h2>
@@ -117,11 +121,11 @@ export default function Login() {
                   onChange={e => setForm({ ...form, email: e.target.value })}
                   placeholder="hr@acme.com"
                   style={{
-                    width: '100%', padding: '16px 16px 16px 50px', background: 'var(--bg)',
-                    border: '2px solid var(--border)', borderRadius: 12, outline: 'none', fontSize: 15,
-                    color: 'var(--text)', transition: 'all 0.2s', fontWeight: 600
+                    width: '100%', padding: '16px 16px 16px 50px',
+                    borderRadius: 12, outline: 'none', fontSize: 15,
+                    color: 'var(--text)', fontWeight: 600
                   }}
-                  className="btn-hover"
+                  className="btn-hover auth-input"
                 />
               </div>
             </div>
@@ -139,11 +143,11 @@ export default function Login() {
                   onChange={e => setForm({ ...form, password: e.target.value })}
                   placeholder="••••••••"
                   style={{
-                    width: '100%', padding: '16px 16px 16px 50px', background: 'var(--bg)',
-                    border: '2px solid var(--border)', borderRadius: 12, outline: 'none', fontSize: 15,
-                    color: 'var(--text)', transition: 'all 0.2s', fontWeight: 600
+                    width: '100%', padding: '16px 16px 16px 50px',
+                    borderRadius: 12, outline: 'none', fontSize: 15,
+                    color: 'var(--text)', fontWeight: 600
                   }}
-                  className="btn-hover"
+                  className="btn-hover auth-input"
                 />
               </div>
             </div>
@@ -153,11 +157,11 @@ export default function Login() {
               whileTap={{ scale: 0.98 }}
               type="submit" disabled={loading}
               style={{
-                width: '100%', height: 60, background: 'var(--primary)', color: 'white',
+                width: '100%', height: 60, color: 'white',
                 border: 'none', borderRadius: 12, fontWeight: 800, fontSize: 16, cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-                boxShadow: '0 15px 30px -10px rgba(15,23,42,0.4)', transition: 'all 0.3s'
               }}
+              className="auth-button"
             >
               {loading ? <Loader2 size={24} className="animate-spin" /> : <>Initiate Login <ArrowRight size={20} /></>}
             </motion.button>

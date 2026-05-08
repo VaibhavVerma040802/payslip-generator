@@ -71,7 +71,12 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
 
-    if (!user.isVerified) {
+    const isProduction = process.env.NODE_ENV === 'production';
+    const skipEmailVerification =
+      process.env.SKIP_EMAIL_VERIFICATION === 'true' ||
+      !isProduction;
+
+    if (!user.isVerified && !skipEmailVerification) {
       return res.status(403).json({ success: false, message: 'Please verify your email address before logging in.' });
     }
 
