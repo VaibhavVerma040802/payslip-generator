@@ -465,7 +465,7 @@ export default function StaffList() {
                       name="employeeId"
                       value={formData.employeeId}
                       onChange={handleInputChange}
-                      placeholder={formData.type === 'Intern' ? 'BDA-INT-001' : 'BDA-EMP-0001'}
+                      placeholder={formData.type === 'Intern' ? 'Eg:-BDA-INT-001' : 'Eg:-BDA-EMP-0001'}
                       readOnly
                       hint="Auto-generated when you save."
                     />

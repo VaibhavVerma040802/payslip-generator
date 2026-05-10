@@ -39,6 +39,48 @@ router.get('/admin/active', authAdmin, async (req, res) => {
   }
 });
 
+// GET /api/attendance/admin/monthly?month=&year= — All records for a month across all staff
+router.get('/admin/monthly', authAdmin, async (req, res) => {
+  try {
+    const m = parseInt(req.query.month) || (new Date().getMonth() + 1);
+    const y = parseInt(req.query.year)  || new Date().getFullYear();
+    const startDate = new Date(Date.UTC(y, m - 1, 1));
+    const endDate   = new Date(Date.UTC(y, m, 1));
+
+    const records = await Attendance.find({
+      admin: req.user._id,
+      date: { $gte: startDate, $lt: endDate }
+    })
+      .populate('staff', 'fullName employeeId designation department')
+      .sort({ date: -1 })
+      .lean();
+
+    res.json({ success: true, data: records });
+  } catch (err) {
+    console.error('Monthly attendance error:', err);
+    res.status(500).json({ success: false, message: 'Failed to fetch monthly attendance' });
+  }
+});
+
+// GET /api/attendance/admin/today-punchins — All today's punch-in records with staff details
+router.get('/admin/today-punchins', authAdmin, async (req, res) => {
+  try {
+    const today = getStartOfDay();
+    const records = await Attendance.find({
+      admin: req.user._id,
+      date: today
+    })
+      .populate('staff', 'fullName employeeId designation department')
+      .sort({ punchIn: -1 })
+      .lean();
+
+    res.json({ success: true, data: records });
+  } catch (err) {
+    console.error('Today punch-ins error:', err);
+    res.status(500).json({ success: false, message: 'Failed to fetch today\'s punch-ins' });
+  }
+});
+
 // POST /api/attendance/punch-in
 router.post('/punch-in', authStaff, async (req, res) => {
   try {
