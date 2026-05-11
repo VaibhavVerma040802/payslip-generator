@@ -346,7 +346,7 @@ export default function GeneratePayslip() {
                       }}
                       className="btn-hover" style={{ width: '100%', padding: '12px 14px', border: '2px solid var(--border)', borderRadius: 12, fontSize: 14, fontWeight: 600, color: 'var(--text)', background: 'var(--surface)', outline: 'none' }}
                     >
-                      <option value="">-- Select Staff Member (Optional) --</option>
+                      <option value="">-- Select Staff Member --</option>
                       {staffList.filter(s => {
                         const type = s.type?.toLowerCase();
                         const current = form.employmentType?.toLowerCase();
@@ -371,7 +371,7 @@ export default function GeneratePayslip() {
                   <InputField label="Employee Email" required type="email" value={form.employeeEmail} onChange={e => setForm({...form, employeeEmail: e.target.value})} placeholder="email@company.com" icon={Send} />
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
                     <InputField label="PAN Number" required value={form.panNumber} onChange={e => setForm({...form, panNumber: e.target.value})} placeholder="ABCDE1234F" />
-                    <InputField label="PF Number" required value={form.pfNumber} onChange={e => setForm({...form, pfNumber: e.target.value})} placeholder="XX/XXX/0000000" />
+                    <InputField label="PF Number" required={form.employmentType === 'regular'} value={form.pfNumber} onChange={e => setForm({...form, pfNumber: e.target.value})} placeholder="XX/XXX/0000000" />
                   </div>
                 </motion.div>
               )}

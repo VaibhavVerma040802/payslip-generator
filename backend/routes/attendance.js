@@ -14,6 +14,13 @@ const getStartOfDay = (dateString = null) => {
   return date;
 };
 
+const formatDuration = (start, end = new Date()) => {
+  const diffMs = Math.max(0, new Date(end) - new Date(start));
+  const h = Math.floor(diffMs / 3600000);
+  const m = Math.floor((diffMs % 3600000) / 60000);
+  return `${h}h ${String(m).padStart(2, '0')}m`;
+};
+
 // ─────────────────────────────────────────────────────────────
 // STAFF ENDPOINTS (Using authStaff middleware)
 // ─────────────────────────────────────────────────────────────
@@ -476,6 +483,7 @@ router.get('/cron/check-shifts', async (req, res) => {
     }).populate('staff');
 
     for (const shift of overdueShifts) {
+      const shiftDurationAtClose = formatDuration(shift.punchIn, new Date());
       shift.punchOut = new Date(shift.punchIn.getTime() + 10 * 60 * 60 * 1000);
       shift.totalHours = 10;
       shift.overtimeHours = 1.5;
@@ -495,6 +503,19 @@ router.get('/cron/check-shifts', async (req, res) => {
           message: `Your shift on ${shift.date.toLocaleDateString()} was automatically closed after 10 hours. Please review your attendance.`
         });
         await notif.save();
+
+        // Email only for OT-enabled staff with active portal login identity
+        if (shift.staff.overtimeEligible && shift.staff.email) {
+          const loginUrl = process.env.FRONTEND_URL || 'https://payslip-gen-rouge.vercel.app';
+          await sendPunchOutReminderEmail(shift.staff, loginUrl, {
+            loginTime: new Date(shift.punchIn).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }),
+            shiftDate: new Date(shift.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+            duration: shiftDurationAtClose,
+            workStatus: 'Auto Closed / Flagged',
+            reason: 'Your shift remained punched-in for too long and crossed the 10-hour auto-close limit.',
+            autoClosed: true
+          }).catch(console.error);
+        }
       }
     }
 
@@ -507,6 +528,8 @@ router.get('/cron/check-shifts', async (req, res) => {
     }).populate('staff');
 
     for (const shift of reminderShifts) {
+      if (!shift.staff?.overtimeEligible) continue;
+
       // Check if we already reminded them for this shift
       const existingReminder = await Notification.findOne({
         staff: shift.staff._id,
@@ -517,7 +540,13 @@ router.get('/cron/check-shifts', async (req, res) => {
       if (!existingReminder && shift.staff && shift.staff.email) {
         // Send email
         const loginUrl = process.env.FRONTEND_URL || 'https://payslip-gen-rouge.vercel.app';
-        await sendPunchOutReminderEmail(shift.staff, loginUrl).catch(console.error);
+        await sendPunchOutReminderEmail(shift.staff, loginUrl, {
+          loginTime: new Date(shift.punchIn).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }),
+          shiftDate: new Date(shift.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+          duration: formatDuration(shift.punchIn, new Date()),
+          workStatus: 'Punched In',
+          reason: 'You are still punched in after 8.5+ hours. Please punch out if your workday is complete.'
+        }).catch(console.error);
 
         // Create notification
         const notif = new Notification({

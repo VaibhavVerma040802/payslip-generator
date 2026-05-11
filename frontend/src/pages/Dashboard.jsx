@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Users, UserCheck, Calendar, ClipboardList, Loader2, Clock, AlertTriangle, TrendingUp, ArrowRight } from 'lucide-react'
+import { Users, UserCheck, UserX, Calendar, ClipboardList, Loader2, Clock, AlertTriangle, TrendingUp, ArrowRight, X } from 'lucide-react'
 import api from '../api'
 
 const dashStyles = `
@@ -61,6 +61,17 @@ const dashStyles = `
     border-radius: 14px;
     overflow: hidden;
   }
+  .dash-panel {
+    height: 350px;
+    display: flex;
+    flex-direction: column;
+  }
+  .dash-panel .panel-head { padding: 14px 20px; }
+  .dash-panel .panel-subhead { padding: 8px 20px; }
+  .dash-panel .att-table-head { padding: 8px 20px; }
+  .dash-panel .att-row { padding: 10px 20px; }
+  .dash-panel .avg-bar { margin: 0 16px 10px; }
+  .att-panel .scroll-list { flex: 1; }
   .panel-head {
     padding: 16px 22px;
     border-bottom: 1px solid var(--border);
@@ -138,7 +149,8 @@ const dashStyles = `
   .pill-blue   { background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; }
   .pill-red    { background:#fef2f2; color:#991b1b; border:1px solid #fecaca; }
   /* Scroll containers */
-  .scroll-list { max-height: 320px; overflow-y: auto; }
+  .scroll-list { max-height: 320px; min-height: 320px; overflow-y: auto; overflow-x: hidden; }
+  .scroll-list.att-scroll { max-height: 186px; min-height: 186px; }
   .scroll-list::-webkit-scrollbar { width: 4px; }
   .scroll-list::-webkit-scrollbar-track { background: transparent; }
   .scroll-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
@@ -169,20 +181,72 @@ const dashStyles = `
     align-items: center;
     gap: 10px;
   }
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(9, 12, 16, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 50;
+  }
+  .modal-card {
+    width: min(900px, 96vw);
+    max-height: 84vh;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.25);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .modal-head {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .modal-body {
+    padding: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .modal-scroll {
+    overflow: auto;
+  }
 `;
 
 // ── Helpers ────────────────────────────────────────────────────────
-const LATE_HOUR = 10;
+const LATE_START_HOUR = 10;
+const LATE_START_MINUTE = 30;
+const LATE_CUTOFF_HOUR = 11;
+const LATE_CUTOFF_MINUTE = 0;
 
 const fmtTime = (dt) => {
   if (!dt) return '—';
   return new Date(dt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 };
 
-const isPunchLate = (punchIn) => {
-  if (!punchIn) return false;
+const getLateInfo = (punchIn) => {
+  if (!punchIn) return { isLate: false, lateByMinutes: 0 };
   const d = new Date(punchIn);
-  return d.getHours() > LATE_HOUR || (d.getHours() === LATE_HOUR && d.getMinutes() > 0);
+  const minutesSinceMidnight = d.getHours() * 60 + d.getMinutes();
+  const startMinutes = LATE_START_HOUR * 60 + LATE_START_MINUTE;
+  const cutoffMinutes = LATE_CUTOFF_HOUR * 60 + LATE_CUTOFF_MINUTE;
+
+  if (minutesSinceMidnight <= cutoffMinutes) {
+    return { isLate: false, lateByMinutes: 0 };
+  }
+
+  return {
+    isLate: true,
+    lateByMinutes: Math.max(0, minutesSinceMidnight - startMinutes)
+  };
 };
 
 const calcWorkedTime = (record, now) => {
@@ -193,6 +257,14 @@ const calcWorkedTime = (record, now) => {
   const h = Math.floor(diffMs / 3600000);
   const m = Math.floor((diffMs % 3600000) / 60000);
   return `${h}h ${String(m).padStart(2, '0')}m`;
+};
+
+const fmtLateDuration = (mins) => {
+  const total = Math.max(0, Number(mins) || 0);
+  if (total < 60) return `${total} min`;
+  const h = Math.floor(total / 60);
+  const m = total % 60;
+  return m === 0 ? `${h}h` : `${h}h ${m}m`;
 };
 
 const Avatar = ({ name, bg, color, size = 36 }) => (
@@ -224,7 +296,13 @@ export default function Dashboard() {
   const [staffData, setStaffData]     = useState([]);
   const [activeCount, setActiveCount] = useState(0);
   const [todayPunchins, setTodayPunchins] = useState([]);
+  const [approvedLeaves, setApprovedLeaves] = useState([]);
+  const [pendingLeaves, setPendingLeaves] = useState([]);
   const [now, setNow]                 = useState(new Date());
+  const [showNotActiveModal, setShowNotActiveModal] = useState(false);
+  const [showAllAttendance, setShowAllAttendance] = useState(false);
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [showActiveModal, setShowActiveModal] = useState(false);
 
   // Live clock — tick every 30 s so active worked-times refresh
   useEffect(() => {
@@ -242,14 +320,18 @@ export default function Dashboard() {
     }
     const fetchData = async () => {
       try {
-        const [staffRes, activeRes, punchinsRes] = await Promise.all([
+        const [staffRes, activeRes, punchinsRes, approvedLeaveRes, pendingLeaveRes] = await Promise.all([
           api.get('/staff'),
           api.get('/attendance/admin/active'),
-          api.get('/attendance/admin/today-punchins')
+          api.get('/attendance/admin/today-punchins'),
+          api.get('/leaves/admin/pending', { params: { status: 'Approved' } }),
+          api.get('/leaves/admin/pending', { params: { status: 'Pending' } })
         ]);
         setStaffData(staffRes.data.data || []);
         setActiveCount(activeRes.data?.activeCount || 0);
         setTodayPunchins(punchinsRes.data?.data || []);
+        setApprovedLeaves(approvedLeaveRes.data?.data || []);
+        setPendingLeaves(pendingLeaveRes.data?.data || []);
       } catch (err) {
         console.error('Dashboard load error:', err);
       } finally {
@@ -274,11 +356,18 @@ export default function Dashboard() {
   // ── Compute Stats ────────────────────────────────────────────────
   const totalEmployees = staffData.length;
   const safeActive = Math.min(Math.max(activeCount, 0), totalEmployees);
-  const onLeave    = Math.min(staffData.filter(s => s.type === 'Employee').length, Math.ceil(totalEmployees * 0.07));
   const totalPresentToday = todayPunchins.length;
 
   const today        = new Date();
   const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const endOfToday   = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
+  const isLeaveOverlappingToday = (leave) => {
+    const start = new Date(leave.startDate);
+    const end = new Date(leave.endDate);
+    return start <= endOfToday && end >= startOfToday;
+  };
+  const approvedOnLeaveToday = approvedLeaves.filter(isLeaveOverlappingToday);
+  const onLeave = approvedOnLeaveToday.length;
 
   const recentJoiners = [...staffData]
     .sort((a, b) => new Date(b.joiningDate || b.createdAt || 0) - new Date(a.joiningDate || a.createdAt || 0))
@@ -295,8 +384,11 @@ export default function Dashboard() {
   )`;
 
   // Punch-in meta
-  const latePunchins  = todayPunchins.filter(r => isPunchLate(r.punchIn));
+  const latePunchins  = todayPunchins.filter(r => getLateInfo(r.punchIn).isLate);
   const validPunchins = todayPunchins.filter(r => r.punchIn);
+  const punchedInStaffIds = new Set(todayPunchins.map(r => String(r.staff?._id || '')));
+  const notActiveStaff = staffData.filter(s => !punchedInStaffIds.has(String(s._id)));
+  const notActiveCount = notActiveStaff.length;
 
   const avgLoginTime = (() => {
     if (!validPunchins.length) return null;
@@ -310,13 +402,18 @@ export default function Dashboard() {
     return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${ampm}`;
   })();
 
-  // Sort attendance: active first, then by punchIn desc
+  // Sort attendance: late first, then active, then by recent punch-in
   const sortedAttendance = [...todayPunchins].sort((a, b) => {
+    const aLate = getLateInfo(a.punchIn).isLate ? 1 : 0;
+    const bLate = getLateInfo(b.punchIn).isLate ? 1 : 0;
+    if (aLate !== bLate) return bLate - aLate;
+
     const aActive = !a.punchOut ? 1 : 0;
     const bActive = !b.punchOut ? 1 : 0;
     if (aActive !== bActive) return bActive - aActive;
-    return new Date(a.punchIn) - new Date(b.punchIn);
+    return new Date(b.punchIn) - new Date(a.punchIn);
   });
+  const activeAttendance = sortedAttendance.filter((r) => !r.punchOut);
 
   return (
     <div style={{ padding: '24px clamp(16px, 4vw, 32px)', maxWidth: 'var(--container-max)', margin: '0 auto' }}>
@@ -341,21 +438,19 @@ export default function Dashboard() {
           icon={UserCheck} title="Active Today" value={safeActive}
           subtitle="Currently punched in"
           iconBg="#dbeafe" iconColor="#1d4ed8"
-          onClick={() => navigate('/staff')}
+          onClick={() => setShowActiveModal(true)}
         />
         <StatCard
           icon={Calendar} title="On Leave Today" value={onLeave}
           subtitle="Approved leave today"
           iconBg="#fef3c7" iconColor="#d97706"
-          onClick={() => navigate('/leave-requests')}
+          onClick={() => setShowLeaveModal(true)}
         />
         <StatCard
-          icon={ClipboardList} title="Attendance Today" value={totalPresentToday}
-          subtitle={`${latePunchins.length} late arrival${latePunchins.length !== 1 ? 's' : ''}`}
-          iconBg="#f3e8ff" iconColor="#7e22ce"
-          onClick={() => {
-            document.getElementById('att-overview-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }}
+          icon={UserX} title="Not Active" value={notActiveCount}
+          subtitle="Not punched in today"
+          iconBg="#fef2f2" iconColor="#b91c1c"
+          onClick={() => setShowNotActiveModal(true)}
         />
       </div>
 
@@ -363,7 +458,7 @@ export default function Dashboard() {
       <div className="dash-grid" style={{ marginBottom: 22 }}>
 
         {/* Employee Overview Donut */}
-        <div className="panel">
+        <div className="panel dash-panel">
           <div className="panel-head">
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <Users size={17} color="var(--primary)" />
@@ -396,7 +491,7 @@ export default function Dashboard() {
             </div>
           </div>
           {avgLoginTime && (
-            <div className="avg-bar">
+            <div className="avg-bar" style={{ marginTop: 30 }}>
               <TrendingUp size={15} color="#15803d" />
               <span style={{ fontSize: 13, color: '#15803d' }}>
                 <span style={{ fontWeight: 500 }}>Avg Login Time Today:</span>
@@ -407,7 +502,7 @@ export default function Dashboard() {
         </div>
 
         {/* Attendance Overview — detailed table (replaces Today's Punch-ins) */}
-        <div className="panel" id="att-overview-panel">
+        <div className="panel dash-panel att-panel" id="att-overview-panel">
           <div className="panel-head">
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
               <ClipboardList size={17} color="var(--primary)" />
@@ -419,9 +514,17 @@ export default function Dashboard() {
                 </span>
               )}
             </div>
-            <span style={{ fontSize: 12, color: 'var(--text-muted)', flexShrink: 0 }}>
-              {todayPunchins.length} present today
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                {todayPunchins.length} present today
+              </span>
+              <button
+                onClick={() => setShowAllAttendance(true)}
+                style={{ background: 'none', border: 'none', color: 'var(--primary)', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}
+              >
+                View all →
+              </button>
+            </div>
           </div>
 
           {avgLoginTime && (
@@ -441,13 +544,13 @@ export default function Dashboard() {
             <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Status</div>
           </div>
 
-          <div className="scroll-list">
+          <div className="scroll-list att-scroll">
             {sortedAttendance.length === 0 ? (
               <div style={{ padding: 36, textAlign: 'center', color: 'var(--text-muted)', fontSize: 14 }}>
                 No punch-ins recorded today.
               </div>
             ) : sortedAttendance.map(record => {
-              const late   = isPunchLate(record.punchIn);
+              const { isLate: late, lateByMinutes } = getLateInfo(record.punchIn);
               const active = !record.punchOut;
               const worked = calcWorkedTime(record, now);
               const avatarBg    = late ? '#fff7ed' : active ? '#eff6ff' : '#f1f5f9';
@@ -467,7 +570,7 @@ export default function Dashboard() {
                   </div>
                   <div style={{ fontSize: 13, fontWeight: 600, color: late ? '#c2410c' : 'var(--text)' }}>
                     {fmtTime(record.punchIn)}
-                    {late && <div style={{ fontSize: 10, color: '#c2410c', fontWeight: 500 }}>Late</div>}
+                    {late && <div style={{ fontSize: 10, color: '#c2410c', fontWeight: 500 }}>Late by {fmtLateDuration(lateByMinutes)}</div>}
                   </div>
                   <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 4 }}>
                     {worked}
@@ -475,7 +578,10 @@ export default function Dashboard() {
                       <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: '#22c55e' }} />
                     )}
                   </div>
-                  <span className={`pill ${active ? 'pill-blue' : late ? 'pill-orange' : 'pill-green'}`}>
+                  <span
+                    className={`pill ${active ? 'pill-blue' : late ? 'pill-orange' : 'pill-green'}`}
+                    title={late ? `Late by ${fmtLateDuration(lateByMinutes)}` : undefined}
+                  >
                     {active ? 'Active' : late ? 'Late' : 'On Time'}
                   </span>
                 </div>
@@ -484,7 +590,7 @@ export default function Dashboard() {
           </div>
 
           {sortedAttendance.length > 0 && (
-            <div style={{ padding: '10px 22px', borderTop: '1px solid var(--border)', display: 'flex', gap: 20, flexWrap: 'wrap' }}>
+            <div style={{ padding: '8px 22px', borderTop: '1px solid var(--border)', display: 'flex', gap: 16, flexWrap: 'wrap' }}>
               <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Present: <strong style={{ color: 'var(--text)' }}>{totalPresentToday}</strong></span>
               <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Active: <strong style={{ color: '#1d4ed8' }}>{safeActive}</strong></span>
               {latePunchins.length > 0 && (
@@ -494,6 +600,78 @@ export default function Dashboard() {
           )}
         </div>
       </div>
+
+      {showAllAttendance && (
+        <div className="modal-backdrop" role="dialog" aria-modal="true">
+          <div className="modal-card">
+            <div className="modal-head">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <ClipboardList size={16} color="var(--primary)" />
+                <span style={{ fontWeight: 700, fontSize: 15, color: 'var(--text)' }}>All Punch-Ins</span>
+                <span className="pill pill-slate">{sortedAttendance.length} total</span>
+              </div>
+              <button
+                onClick={() => setShowAllAttendance(false)}
+                style={{ background: 'none', border: '1px solid var(--border)', color: 'var(--text-muted)', fontWeight: 600, fontSize: 12, cursor: 'pointer', padding: '6px 10px', borderRadius: 8 }}
+              >
+                Close
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="att-table-head">
+                <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Employee</div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Login</div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Worked</div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Status</div>
+              </div>
+              <div className="scroll-list modal-scroll">
+                {sortedAttendance.length === 0 ? (
+                  <div style={{ padding: 36, textAlign: 'center', color: 'var(--text-muted)', fontSize: 14 }}>
+                    No punch-ins recorded today.
+                  </div>
+                ) : sortedAttendance.map(record => {
+                  const { isLate: late, lateByMinutes } = getLateInfo(record.punchIn);
+                  const active = !record.punchOut;
+                  const worked = calcWorkedTime(record, now);
+                  const avatarBg    = late ? '#fff7ed' : active ? '#eff6ff' : '#f1f5f9';
+                  const avatarColor = late ? '#c2410c' : active ? '#1d4ed8' : '#475569';
+                  return (
+                    <div key={`modal-${record._id}`} className="att-row">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 9, minWidth: 0 }}>
+                        <Avatar name={record.staff?.fullName} bg={avatarBg} color={avatarColor} size={32} />
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {record.staff?.fullName || 'Unknown'}
+                          </div>
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                            {record.staff?.designation || 'Staff'}
+                          </div>
+                        </div>
+                      </div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: late ? '#c2410c' : 'var(--text)' }}>
+                        {fmtTime(record.punchIn)}
+                        {late && <div style={{ fontSize: 10, color: '#c2410c', fontWeight: 500 }}>Late by {lateByMinutes} min</div>}
+                      </div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                        {worked}
+                        {active && (
+                          <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: '#22c55e' }} />
+                        )}
+                      </div>
+                      <span
+                        className={`pill ${active ? 'pill-blue' : late ? 'pill-orange' : 'pill-green'}`}
+                        title={late ? `Late by ${fmtLateDuration(lateByMinutes)}` : undefined}
+                      >
+                        {active ? 'Active' : late ? 'Late' : 'On Time'}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Bottom Row ───────────────────────────────────────────── */}
       {/* Recent Joiners — full width */}
@@ -526,6 +704,199 @@ export default function Dashboard() {
           )}
         </div>
       </div>
+
+      {showNotActiveModal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 18 }}>
+          <div
+            onClick={() => setShowNotActiveModal(false)}
+            style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)' }}
+          />
+          <div className="panel" style={{ width: '100%', maxWidth: 760, maxHeight: '82vh', overflow: 'hidden', position: 'relative', zIndex: 1 }}>
+            <div className="panel-head">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <UserX size={17} color="#b91c1c" />
+                <span style={{ fontWeight: 700, fontSize: 15, color: 'var(--text)' }}>Not Active & Late Staff</span>
+              </div>
+              <button
+                onClick={() => setShowNotActiveModal(false)}
+                style={{ border: 'none', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer', display: 'inline-flex' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)', display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Not Active: <strong style={{ color: '#b91c1c' }}>{notActiveCount}</strong></span>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Late Punch-In: <strong style={{ color: '#c2410c' }}>{latePunchins.length}</strong></span>
+            </div>
+
+            <div style={{ maxHeight: '58vh', overflowY: 'auto', padding: '8px 0' }}>
+              <div style={{ padding: '0 20px 8px', fontSize: 12, fontWeight: 700, color: '#b91c1c', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Not Punched In Today
+              </div>
+              {notActiveStaff.length === 0 ? (
+                <div style={{ padding: '0 20px 14px', fontSize: 13, color: 'var(--text-muted)' }}>All staff have punched in today.</div>
+              ) : notActiveStaff.map(person => (
+                <div key={person._id} className="punch-row">
+                  <Avatar name={person.fullName} bg="#fef2f2" color="#b91c1c" size={30} />
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {person.fullName}
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                      {person.designation || 'Staff'} {person.employeeId ? `· ${person.employeeId}` : ''}
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              <div style={{ padding: '12px 20px 8px', fontSize: 12, fontWeight: 700, color: '#c2410c', textTransform: 'uppercase', letterSpacing: '0.05em', borderTop: '1px solid var(--border)' }}>
+                Late Punch-In Only
+              </div>
+              {latePunchins.length === 0 ? (
+                <div style={{ padding: '0 20px 12px', fontSize: 13, color: 'var(--text-muted)' }}>No late punch-ins today.</div>
+              ) : latePunchins.map(record => {
+                const { lateByMinutes } = getLateInfo(record.punchIn);
+                return (
+                  <div key={record._id} className="punch-row">
+                    <Avatar name={record.staff?.fullName} bg="#fff7ed" color="#c2410c" size={30} />
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {record.staff?.fullName || 'Unknown'}
+                      </div>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                        {fmtTime(record.punchIn)} · Late by {fmtLateDuration(lateByMinutes)}
+                      </div>
+                    </div>
+                    <span className="pill pill-orange">Late</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showLeaveModal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 18 }}>
+          <div
+            onClick={() => setShowLeaveModal(false)}
+            style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)' }}
+          />
+          <div className="panel" style={{ width: '100%', maxWidth: 820, maxHeight: '84vh', overflow: 'hidden', position: 'relative', zIndex: 1 }}>
+            <div className="panel-head">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Calendar size={17} color="#d97706" />
+                <span style={{ fontWeight: 700, fontSize: 15, color: 'var(--text)' }}>Leave Requests Overview</span>
+              </div>
+              <button
+                onClick={() => setShowLeaveModal(false)}
+                style={{ border: 'none', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer', display: 'inline-flex' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)', display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Approved (Today): <strong style={{ color: '#15803d' }}>{approvedOnLeaveToday.length}</strong></span>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Pending Approval: <strong style={{ color: '#c2410c' }}>{pendingLeaves.length}</strong></span>
+            </div>
+
+            <div style={{ maxHeight: '60vh', overflowY: 'auto', padding: '8px 0' }}>
+              <div style={{ padding: '0 20px 8px', fontSize: 12, fontWeight: 700, color: '#c2410c', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Pending Approval
+              </div>
+              {pendingLeaves.length === 0 ? (
+                <div style={{ padding: '0 20px 14px', fontSize: 13, color: 'var(--text-muted)' }}>No pending leave requests.</div>
+              ) : pendingLeaves.map((leave) => (
+                <div key={leave._id} className="punch-row">
+                  <Avatar name={leave.staff?.fullName} bg="#fff7ed" color="#c2410c" size={30} />
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {leave.staff?.fullName || 'Unknown'} {leave.staff?.employeeId ? `· ${leave.staff.employeeId}` : ''}
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                      {leave.type || 'Leave'} · {new Date(leave.startDate).toLocaleDateString('en-GB')} to {new Date(leave.endDate).toLocaleDateString('en-GB')}
+                    </div>
+                  </div>
+                  <span className="pill pill-orange">Pending</span>
+                </div>
+              ))}
+
+              <div style={{ padding: '12px 20px 8px', fontSize: 12, fontWeight: 700, color: '#15803d', textTransform: 'uppercase', letterSpacing: '0.05em', borderTop: '1px solid var(--border)' }}>
+                Approved Leave Requests
+              </div>
+              {approvedOnLeaveToday.length === 0 ? (
+                <div style={{ padding: '0 20px 12px', fontSize: 13, color: 'var(--text-muted)' }}>No approved leaves for today.</div>
+              ) : approvedOnLeaveToday.map((leave) => (
+                <div key={leave._id} className="punch-row">
+                  <Avatar name={leave.staff?.fullName} bg="#f0fdf4" color="#15803d" size={30} />
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {leave.staff?.fullName || 'Unknown'} {leave.staff?.employeeId ? `· ${leave.staff.employeeId}` : ''}
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                      {leave.type || 'Leave'} · {new Date(leave.startDate).toLocaleDateString('en-GB')} to {new Date(leave.endDate).toLocaleDateString('en-GB')}
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--text)', marginTop: 2 }}>
+                      Reason: {leave.reason || 'No reason provided'}
+                    </div>
+                  </div>
+                  <span className="pill pill-green">Approved</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showActiveModal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 18 }}>
+          <div
+            onClick={() => setShowActiveModal(false)}
+            style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)' }}
+          />
+          <div className="panel" style={{ width: '100%', maxWidth: 760, maxHeight: '82vh', overflow: 'hidden', position: 'relative', zIndex: 1 }}>
+            <div className="panel-head">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <UserCheck size={17} color="#1d4ed8" />
+                <span style={{ fontWeight: 700, fontSize: 15, color: 'var(--text)' }}>Active Staff Today</span>
+              </div>
+              <button
+                onClick={() => setShowActiveModal(false)}
+                style={{ border: 'none', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer', display: 'inline-flex' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)', display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Active Count: <strong style={{ color: '#1d4ed8' }}>{activeAttendance.length}</strong></span>
+            </div>
+
+            <div style={{ maxHeight: '58vh', overflowY: 'auto', padding: '8px 0' }}>
+              {activeAttendance.length === 0 ? (
+                <div style={{ padding: '20px', fontSize: 13, color: 'var(--text-muted)' }}>No active staff right now.</div>
+              ) : activeAttendance.map((record) => (
+                <div key={record._id} className="punch-row">
+                  <Avatar name={record.staff?.fullName} bg="#eff6ff" color="#1d4ed8" size={30} />
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {record.staff?.fullName || 'Unknown'} {record.staff?.employeeId ? `· ${record.staff.employeeId}` : ''}
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                      Punch-In: {fmtTime(record.punchIn)}
+                    </div>
+                  </div>
+                  <span className="pill pill-blue">
+                    {calcWorkedTime(record, now)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

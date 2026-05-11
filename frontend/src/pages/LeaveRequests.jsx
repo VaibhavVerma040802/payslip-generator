@@ -62,11 +62,18 @@ const fmtHours = h => {
   return `${hrs}h ${String(min).padStart(2,'0')}m`
 }
 
-const LATE_HOUR = 10
-const isLate = punchIn => {
-  if (!punchIn) return false
+const LATE_START_HOUR = 10
+const LATE_START_MINUTE = 30
+const LATE_CUTOFF_HOUR = 11
+const LATE_CUTOFF_MINUTE = 0
+const getLateInfo = punchIn => {
+  if (!punchIn) return { isLate: false, lateByMinutes: 0 }
   const d = new Date(punchIn)
-  return d.getHours() > LATE_HOUR || (d.getHours() === LATE_HOUR && d.getMinutes() > 0)
+  const mins = d.getHours() * 60 + d.getMinutes()
+  const start = LATE_START_HOUR * 60 + LATE_START_MINUTE
+  const cutoff = LATE_CUTOFF_HOUR * 60 + LATE_CUTOFF_MINUTE
+  if (mins <= cutoff) return { isLate: false, lateByMinutes: 0 }
+  return { isLate: true, lateByMinutes: Math.max(0, mins - start) }
 }
 
 const Avatar = ({ name, size = 38, bg = 'var(--primary)', color = '#fff' }) => (
@@ -279,6 +286,7 @@ function AttendanceTab() {
   const [records, setRecords] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch]   = useState('')
+  const [exportingStaffId, setExportingStaffId] = useState(null)
 
   const fetchAttendance = useCallback(async () => {
     try {
@@ -315,28 +323,59 @@ function AttendanceTab() {
   const totalRecords  = filtered.length
   const fullDays      = filtered.filter(r => r.workStatus === 'Full Day').length
   const halfDays      = filtered.filter(r => r.workStatus === 'Half Day').length
-  const lateArrivals  = filtered.filter(r => isLate(r.punchIn)).length
+  const lateArrivals  = filtered.filter(r => getLateInfo(r.punchIn).isLate).length
   const totalHrsAll   = filtered.reduce((s, r) => s + (r.totalHours || 0), 0)
   const avgHrs        = totalRecords ? totalHrsAll / totalRecords : 0
 
   // CSV export
   const exportCSV = () => {
-    const rows = [['Date','Employee','Employee ID','Designation','Login Time','Punch In Location','Punch Out','Punch Out Location','Hours Worked','Status','Late']]
-    filtered.forEach(r => {
+    const sortedForExport = [...filtered].sort((a, b) => new Date(a.date) - new Date(b.date))
+    const rows = [
+      ['Report Month', MONTHS[month - 1]],
+      ['Report Year', String(year)],
+      [],
+      [
+        'Year',
+        'Month',
+        'Date',
+        'Day',
+        'Employee',
+        'Employee ID',
+        'Designation',
+        'Punch In (Date Time)',
+        'Punch Out (Date Time)',
+        'Punch In Location',
+        'Punch Out Location',
+        'Hours Worked (Decimal)',
+        'Hours Worked (HH:MM)',
+        'Work Status',
+        'Record Status',
+        'Late'
+      ]
+    ]
+    sortedForExport.forEach(r => {
+      const d = new Date(r.date)
+      const punchInDT = r.punchIn ? new Date(r.punchIn).toLocaleString('en-GB') : 'N/A'
+      const punchOutDT = r.punchOut ? new Date(r.punchOut).toLocaleString('en-GB') : 'N/A'
       const locIn  = r.locationIn?.lat  ? `${r.locationIn.lat},${r.locationIn.lng}`   : 'N/A'
       const locOut = r.locationOut?.lat ? `${r.locationOut.lat},${r.locationOut.lng}` : 'N/A'
       rows.push([
-        fmtDate(r.date),
+        String(d.getFullYear()),
+        MONTHS[d.getMonth()],
+        d.toLocaleDateString('en-GB'),
+        d.toLocaleDateString('en-GB', { weekday: 'long' }),
         r.staff?.fullName || 'N/A',
         r.staff?.employeeId || 'N/A',
         r.staff?.designation || 'N/A',
-        fmtTime(r.punchIn),
+        punchInDT,
+        punchOutDT,
         locIn,
-        fmtTime(r.punchOut),
         locOut,
-        r.totalHours ? r.totalHours.toFixed(2) : '0',
-        r.workStatus || r.status || '—',
-        isLate(r.punchIn) ? 'Yes' : 'No'
+        r.totalHours ? r.totalHours.toFixed(2) : '0.00',
+        fmtHours(r.totalHours || 0),
+        r.workStatus || 'N/A',
+        r.status || 'N/A',
+        getLateInfo(r.punchIn).isLate ? 'Yes' : 'No'
       ])
     })
     const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n')
@@ -350,6 +389,72 @@ function AttendanceTab() {
   }
 
   const yearOptions = Array.from({ length: 4 }, (_, i) => now.getFullYear() - i)
+
+  const exportStaffCSV = async (staff) => {
+    if (!staff?._id) return
+    try {
+      setExportingStaffId(staff._id)
+      const res = await api.get(`/attendance/admin/staff/${staff._id}`)
+      const history = (res.data?.history || []).sort((a, b) => new Date(a.date) - new Date(b.date))
+      const rows = [
+        ['Employee', staff.fullName || 'N/A'],
+        ['Employee ID', staff.employeeId || 'N/A'],
+        ['Designation', staff.designation || 'N/A'],
+        [],
+        [
+          'Year',
+          'Month',
+          'Date',
+          'Day',
+          'Punch In (Date Time)',
+          'Punch Out (Date Time)',
+          'Punch In Location',
+          'Punch Out Location',
+          'Hours Worked (Decimal)',
+          'Hours Worked (HH:MM)',
+          'Work Status',
+          'Record Status',
+          'Late'
+        ]
+      ]
+
+      history.forEach(r => {
+        const d = new Date(r.date)
+        const punchInDT = r.punchIn ? new Date(r.punchIn).toLocaleString('en-GB') : 'N/A'
+        const punchOutDT = r.punchOut ? new Date(r.punchOut).toLocaleString('en-GB') : 'N/A'
+        const locIn = r.locationIn?.lat ? `${r.locationIn.lat},${r.locationIn.lng}` : 'N/A'
+        const locOut = r.locationOut?.lat ? `${r.locationOut.lat},${r.locationOut.lng}` : 'N/A'
+        rows.push([
+          String(d.getFullYear()),
+          MONTHS[d.getMonth()],
+          d.toLocaleDateString('en-GB'),
+          d.toLocaleDateString('en-GB', { weekday: 'long' }),
+          punchInDT,
+          punchOutDT,
+          locIn,
+          locOut,
+          r.totalHours ? r.totalHours.toFixed(2) : '0.00',
+          fmtHours(r.totalHours || 0),
+          r.workStatus || 'N/A',
+          r.status || 'N/A',
+          getLateInfo(r.punchIn).isLate ? 'Yes' : 'No'
+        ])
+      })
+
+      const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n')
+      const blob = new Blob([csv], { type: 'text/csv' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `Attendance_${(staff.fullName || 'staff').replace(/\s+/g, '_')}_All_Days.csv`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch {
+      toast.error('Failed to export staff attendance')
+    } finally {
+      setExportingStaffId(null)
+    }
+  }
 
   return (
     <div>
@@ -422,8 +527,8 @@ function AttendanceTab() {
       ) : (
         <div className="la-card">
           {/* Head */}
-          <div className="la-table-head" style={{ gridTemplateColumns:'40px 1.8fr 110px 90px 90px 90px 80px' }}>
-            {['','Employee','Date','Login','Punch Out','Worked','Status'].map((h, i) => (
+          <div className="la-table-head" style={{ gridTemplateColumns:'40px 1.7fr 110px 90px 90px 90px 80px 92px' }}>
+            {['','Employee','Date','Login','Punch Out','Worked','Status','Export'].map((h, i) => (
               <div key={i} style={{ fontSize:11, fontWeight:700, color:'var(--text-light)', textTransform:'uppercase', letterSpacing:'0.06em' }}>{h}</div>
             ))}
           </div>
@@ -432,14 +537,19 @@ function AttendanceTab() {
           <div style={{ maxHeight:500, overflowY:'auto' }}>
             <div style={{ '--scrollbar-w':'4px' }}>
               {filtered.map((record, idx) => {
-                const late   = isLate(record.punchIn)
-                const active = !record.punchOut
+                const lateInfo = getLateInfo(record.punchIn)
+                const late = lateInfo.isLate
+                const recordDate = new Date(record.date)
+                const active = !record.punchOut &&
+                  recordDate.getFullYear() === now.getFullYear() &&
+                  recordDate.getMonth() === now.getMonth() &&
+                  recordDate.getDate() === now.getDate()
                 const avatarBg = late ? '#fff7ed' : active ? '#eff6ff' : '#f0fdf4'
                 const avatarColor = late ? '#c2410c' : active ? '#1d4ed8' : '#15803d'
 
                 return (
                   <motion.div key={record._id} initial={{ opacity:0 }} animate={{ opacity:1 }}
-                    className="la-row" style={{ gridTemplateColumns:'40px 1.8fr 110px 90px 90px 90px 80px' }}>
+                    className="la-row" style={{ gridTemplateColumns:'40px 1.7fr 110px 90px 90px 90px 80px 92px' }}>
 
                     {/* Row number */}
                     <div style={{ fontSize:11, color:'var(--text-light)', fontWeight:500 }}>{idx + 1}</div>
@@ -517,7 +627,20 @@ function AttendanceTab() {
                     </div>
 
                     {/* Status */}
-                    <StatusPill status={record.status} workStatus={active ? 'Active' : record.workStatus} />
+                    <StatusPill status={record.status} workStatus={active ? 'Active' : (record.workStatus || record.status)} />
+
+                    {/* Export staff-wise */}
+                    <div>
+                      <button
+                        onClick={() => exportStaffCSV(record.staff)}
+                        disabled={exportingStaffId === record.staff?._id}
+                        className="la-export-btn"
+                        style={{ fontSize:11, padding:'4px 10px', minHeight: 28, width: '100%' }}
+                      >
+                        {exportingStaffId === record.staff?._id ? <Loader2 size={12} className="animate-spin" /> : <Download size={12} />}
+                        Export
+                      </button>
+                    </div>
                   </motion.div>
                 )
               })}

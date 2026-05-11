@@ -428,9 +428,9 @@ async function sendStaffProvisionEmail(staff, tempPassword, loginUrl) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// Send punch-out reminder email
+// Send punch-out reminder / overstay email
 // ─────────────────────────────────────────────────────────────
-async function sendPunchOutReminderEmail(staff, loginUrl) {
+async function sendPunchOutReminderEmail(staff, loginUrl, details = {}) {
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
     console.warn('⚠️ Email credentials missing — skipping punch-out reminder email.');
     return;
@@ -439,11 +439,19 @@ async function sendPunchOutReminderEmail(staff, loginUrl) {
   console.log(`✉️ Sending punch-out reminder email to: ${staff.email}`);
 
   const transporter = createSMTPTransporter();
+  const {
+    loginTime = 'N/A',
+    shiftDate = 'N/A',
+    duration = 'N/A',
+    workStatus = 'In Progress',
+    reason = 'Your shift has crossed the expected working window.',
+    autoClosed = false
+  } = details;
 
   const mailOptions = {
     from: `"PaySlip Pro" <${(process.env.EMAIL_FROM || process.env.EMAIL_USER || '').trim()}>`,
     to: staff.email,
-    subject: `⏰ Reminder: Please Punch Out for the Day`,
+    subject: autoClosed ? `⚠️ Shift Auto-Closed: Please Review Attendance` : `⏰ Reminder: Please Punch Out for the Day`,
     html: `
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -459,7 +467,7 @@ async function sendPunchOutReminderEmail(staff, loginUrl) {
           <tr><td height="6" bgcolor="#e11d48" style="font-size: 0; line-height: 0;">&nbsp;</td></tr>
           <tr>
             <td bgcolor="#1e3a5f" style="padding: 40px 45px; text-align: center;">
-              <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 800;">Action Required</h1>
+              <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 800;">${autoClosed ? 'Attendance Updated' : 'Action Required'}</h1>
               <p style="margin: 8px 0 0 0; color: #a8c0d6; font-size: 14px;">Shift Duration Alert</p>
             </td>
           </tr>
@@ -467,11 +475,31 @@ async function sendPunchOutReminderEmail(staff, loginUrl) {
             <td style="padding: 40px 45px;">
               <p style="margin: 0 0 20px 0; font-size: 18px; font-weight: 700; color: #374151;">Hi ${staff.fullName},</p>
               <p style="margin: 0 0 10px 0; font-size: 15px; color: #6b7280; line-height: 1.6;">
-                It looks like your current shift has been active for over 8.5 hours. If you have finished your workday, please remember to punch out.
+                ${reason}
               </p>
-              <p style="margin: 0 0 30px 0; font-size: 15px; color: #6b7280; line-height: 1.6;">
-                <strong>Note:</strong> Shifts exceeding 10 hours will be automatically closed and flagged for admin review.
-              </p>
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 18px 0 20px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px;">
+                <tr><td style="padding: 14px 16px; font-size: 13px; color: #111827;"><strong>Shift Date:</strong> ${shiftDate}</td></tr>
+                <tr><td style="padding: 0 16px 14px; font-size: 13px; color: #111827;"><strong>Login Time:</strong> ${loginTime}</td></tr>
+                <tr><td style="padding: 0 16px 14px; font-size: 13px; color: #111827;"><strong>Current Duration:</strong> ${duration}</td></tr>
+                <tr><td style="padding: 0 16px 14px; font-size: 13px; color: #111827;"><strong>Current Status:</strong> ${workStatus}</td></tr>
+              </table>
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 0 0 30px; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px;">
+                <tr>
+                  <td style="padding: 14px 16px; font-size: 13px; color: #7c2d12; line-height: 1.6;">
+                    <strong>Work Hours Policy</strong><br/>
+                    Start Time: 10:30 AM<br/>
+                    Half Day Threshold: Punch-in after 11:00 AM<br/>
+                    Full Day: 8.5+ hours logged<br/>
+                    Half Day: 4 to 7.9 hours logged<br/>
+                    LOP: Less than 4 hours<br/>
+                    Overtime: After 8.5h (Max 4h)
+                  </td>
+                </tr>
+              </table>
+              ${autoClosed ? `
+              <p style="margin: 0 0 30px 0; font-size: 14px; color: #6b7280; line-height: 1.6;">
+                Your shift has been auto-closed because it exceeded the maximum allowed duration. Please review your attendance and contact HR/Admin if correction is needed.
+              </p>` : `
               <table border="0" cellpadding="0" cellspacing="0" width="100%">
                 <tr>
                   <td align="center">
@@ -481,6 +509,7 @@ async function sendPunchOutReminderEmail(staff, loginUrl) {
                   </td>
                 </tr>
               </table>
+              `}
             </td>
           </tr>
           <tr>
