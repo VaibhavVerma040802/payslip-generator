@@ -492,7 +492,7 @@ async function sendPunchOutReminderEmail(staff, loginUrl, details = {}) {
                     Full Day: 8.5+ hours logged<br/>
                     Half Day: 4 to 7.9 hours logged<br/>
                     LOP: Less than 4 hours<br/>
-                    Overtime: After 8.5h (Max 4h)
+                    Overtime: After 8.5h (Max 1h)
                   </td>
                 </tr>
               </table>

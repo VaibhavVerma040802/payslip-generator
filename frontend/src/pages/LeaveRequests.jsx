@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from 'react'
 import {
   Calendar, Clock, Loader2, CheckCircle2, XCircle,
   Search, MessageSquare, Download, ChevronLeft, ChevronRight,
-  UserCheck, AlertTriangle, ClipboardList, TrendingUp, MapPin
+  UserCheck, AlertTriangle, ClipboardList, TrendingUp, MapPin,
+  Briefcase, Save, RotateCcw
 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -278,27 +279,55 @@ function LeaveTab() {
   )
 }
 
+// ─── helpers ─────────────────────────────────────────────────────────────────
+const toLocalDateStr = (d) => {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
 // ─── Attendance Tab ───────────────────────────────────────────────────────────
 function AttendanceTab() {
   const now   = new Date()
+
+  // day / month view
+  const [viewMode, setViewMode]     = useState('day')   // 'day' | 'month'
+  const [dayFilter, setDayFilter]   = useState('today') // 'today' | 'yesterday' | 'custom'
+  const [customDate, setCustomDate] = useState(toLocalDateStr(now))
+
+  // month view state
   const [month, setMonth]     = useState(now.getMonth() + 1)
   const [year, setYear]       = useState(now.getFullYear())
+
   const [records, setRecords] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch]   = useState('')
   const [exportingStaffId, setExportingStaffId] = useState(null)
 
+  const getSelectedDate = () => {
+    if (dayFilter === 'today')     return toLocalDateStr(now)
+    if (dayFilter === 'yesterday') { const d = new Date(now); d.setDate(d.getDate() - 1); return toLocalDateStr(d) }
+    return customDate
+  }
+
   const fetchAttendance = useCallback(async () => {
     try {
       setLoading(true)
-      const res = await api.get('/attendance/admin/monthly', { params: { month, year } })
-      setRecords(res.data.data || [])
+      if (viewMode === 'day') {
+        const res = await api.get('/attendance/admin/daily', { params: { date: getSelectedDate() } })
+        setRecords(res.data.data || [])
+      } else {
+        const res = await api.get('/attendance/admin/monthly', { params: { month, year } })
+        setRecords(res.data.data || [])
+      }
     } catch {
       toast.error('Failed to fetch attendance')
     } finally {
       setLoading(false)
     }
-  }, [month, year])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewMode, dayFilter, customDate, month, year])
 
   useEffect(() => { fetchAttendance() }, [fetchAttendance])
 
@@ -330,9 +359,9 @@ function AttendanceTab() {
   // CSV export
   const exportCSV = () => {
     const sortedForExport = [...filtered].sort((a, b) => new Date(a.date) - new Date(b.date))
+    const reportLabel = viewMode === 'day' ? getSelectedDate() : `${MONTHS[month - 1]} ${year}`
     const rows = [
-      ['Report Month', MONTHS[month - 1]],
-      ['Report Year', String(year)],
+      ['Report Date', reportLabel],
       [],
       [
         'Year',
@@ -383,7 +412,9 @@ function AttendanceTab() {
     const url  = URL.createObjectURL(blob)
     const a    = document.createElement('a')
     a.href     = url
-    a.download = `Attendance_${MONTHS[month - 1]}_${year}.csv`
+    a.download = viewMode === 'day'
+      ? `Attendance_${getSelectedDate()}.csv`
+      : `Attendance_${MONTHS[month - 1]}_${year}.csv`
     a.click()
     URL.revokeObjectURL(url)
   }
@@ -458,27 +489,70 @@ function AttendanceTab() {
 
   return (
     <div>
-      {/* Controls bar */}
-      <div style={{ display:'flex', gap:12, marginBottom:20, flexWrap:'wrap', alignItems:'center' }}>
-        {/* Month nav */}
-        <div style={{ display:'flex', alignItems:'center', gap:4, background:'var(--surface)', border:'1px solid var(--border)', borderRadius:8, padding:'3px 6px' }}>
-          <button onClick={prevMonth} style={{ border:'none', background:'none', cursor:'pointer', padding:'4px 6px', borderRadius:6, color:'var(--text)' }}>
-            <ChevronLeft size={16} />
+      {/* View mode toggle */}
+      <div style={{ display:'flex', gap:12, marginBottom:16, flexWrap:'wrap', alignItems:'center', justifyContent:'space-between' }}>
+        <div className="la-tabs" style={{ marginBottom:0 }}>
+          <button className={`la-tab${viewMode === 'day' ? ' active' : ''}`} onClick={() => setViewMode('day')}>
+            <Clock size={13} style={{ display:'inline', marginRight:5, verticalAlign:'middle' }} />
+            Day View
           </button>
-          <span style={{ fontSize:14, fontWeight:700, color:'var(--text)', minWidth:110, textAlign:'center' }}>
-            {MONTHS[month - 1]} {year}
-          </span>
-          <button onClick={nextMonth} disabled={isCurrentMonth}
-            style={{ border:'none', background:'none', cursor: isCurrentMonth ? 'default' : 'pointer', padding:'4px 6px', borderRadius:6, color: isCurrentMonth ? 'var(--text-light)' : 'var(--text)', opacity: isCurrentMonth ? 0.4 : 1 }}>
-            <ChevronRight size={16} />
+          <button className={`la-tab${viewMode === 'month' ? ' active' : ''}`} onClick={() => setViewMode('month')}>
+            <Calendar size={13} style={{ display:'inline', marginRight:5, verticalAlign:'middle' }} />
+            Month View
           </button>
         </div>
 
-        {/* Year select */}
-        <select className="la-month-select" value={year} onChange={e => setYear(Number(e.target.value))}>
-          {yearOptions.map(y => <option key={y} value={y}>{y}</option>)}
-        </select>
+        {/* Day filter quick buttons */}
+        {viewMode === 'day' && (
+          <div style={{ display:'flex', gap:6, alignItems:'center', flexWrap:'wrap' }}>
+            {[
+              { key:'today',     label:'Today' },
+              { key:'yesterday', label:'Yesterday' },
+              { key:'custom',    label:'Custom Date' },
+            ].map(({ key, label }) => (
+              <button key={key} className="la-filter-btn"
+                onClick={() => setDayFilter(key)}
+                style={{ background: dayFilter === key ? 'var(--primary)' : 'var(--surface)', color: dayFilter === key ? '#fff' : 'var(--text-muted)' }}>
+                {label}
+              </button>
+            ))}
+            {dayFilter === 'custom' && (
+              <input
+                type="date"
+                className="la-month-select"
+                value={customDate}
+                max={toLocalDateStr(now)}
+                onChange={e => setCustomDate(e.target.value)}
+                style={{ padding:'7px 10px', fontSize:13 }}
+              />
+            )}
+          </div>
+        )}
 
+        {/* Month view controls */}
+        {viewMode === 'month' && (
+          <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:4, background:'var(--surface)', border:'1px solid var(--border)', borderRadius:8, padding:'3px 6px' }}>
+              <button onClick={prevMonth} style={{ border:'none', background:'none', cursor:'pointer', padding:'4px 6px', borderRadius:6, color:'var(--text)' }}>
+                <ChevronLeft size={16} />
+              </button>
+              <span style={{ fontSize:14, fontWeight:700, color:'var(--text)', minWidth:110, textAlign:'center' }}>
+                {MONTHS[month - 1]} {year}
+              </span>
+              <button onClick={nextMonth} disabled={isCurrentMonth}
+                style={{ border:'none', background:'none', cursor: isCurrentMonth ? 'default' : 'pointer', padding:'4px 6px', borderRadius:6, color: isCurrentMonth ? 'var(--text-light)' : 'var(--text)', opacity: isCurrentMonth ? 0.4 : 1 }}>
+                <ChevronRight size={16} />
+              </button>
+            </div>
+            <select className="la-month-select" value={year} onChange={e => setYear(Number(e.target.value))}>
+              {yearOptions.map(y => <option key={y} value={y}>{y}</option>)}
+            </select>
+          </div>
+        )}
+      </div>
+
+      {/* Search + Export bar */}
+      <div style={{ display:'flex', gap:12, marginBottom:20, flexWrap:'wrap', alignItems:'center' }}>
         {/* Search */}
         <div className="la-search" style={{ flex:'1 1 200px' }}>
           <Search size={14} />
@@ -522,7 +596,11 @@ function AttendanceTab() {
         <div style={{ textAlign:'center', padding:64, background:'var(--surface)', borderRadius:12, border:'1px dashed var(--border)' }}>
           <ClipboardList size={40} color="var(--text-light)" style={{ marginBottom:12 }} />
           <div style={{ fontWeight:700, color:'var(--text)', marginBottom:6 }}>No attendance records</div>
-          <div style={{ color:'var(--text-muted)', fontSize:13 }}>No data found for {MONTHS[month - 1]} {year}.</div>
+          <div style={{ color:'var(--text-muted)', fontSize:13 }}>
+            {viewMode === 'day'
+              ? `No records found for ${dayFilter === 'today' ? 'today' : dayFilter === 'yesterday' ? 'yesterday' : customDate}.`
+              : `No data found for ${MONTHS[month - 1]} ${year}.`}
+          </div>
         </div>
       ) : (
         <div className="la-card">
@@ -664,6 +742,277 @@ function AttendanceTab() {
   )
 }
 
+// ─── Working Days Tab ─────────────────────────────────────────────────────────
+const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+const DAY_FULL   = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+
+function DayCheckboxes({ value, onChange, disabled }) {
+  const toggle = (d) => {
+    if (disabled) return
+    onChange(value.includes(d) ? value.filter(x => x !== d) : [...value, d].sort((a,b)=>a-b))
+  }
+  return (
+    <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
+      {DAY_LABELS.map((label, i) => {
+        const active = value.includes(i)
+        const isWeekend = i === 0 || i === 6
+        return (
+          <button key={i} type="button" onClick={() => toggle(i)} disabled={disabled}
+            style={{
+              padding:'5px 10px', borderRadius:7, border:'1.5px solid',
+              borderColor: active ? (isWeekend ? '#7c3aed' : 'var(--primary)') : 'var(--border)',
+              background: active ? (isWeekend ? '#f5f3ff' : '#eff6ff') : 'var(--surface)',
+              color: active ? (isWeekend ? '#6d28d9' : 'var(--primary)') : 'var(--text-muted)',
+              fontWeight: 700, fontSize: 12, cursor: disabled ? 'default' : 'pointer', transition:'all 0.15s'
+            }}>
+            {label}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+function WorkingDaysTab() {
+  const [defaultDays, setDefaultDays]     = useState([1,2,3,4,5])
+  const [editDefault, setEditDefault]     = useState([1,2,3,4,5])
+  const [staffList, setStaffList]         = useState([])
+  const [loading, setLoading]             = useState(true)
+  const [savingDefault, setSavingDefault] = useState(false)
+  const [savingStaff, setSavingStaff]     = useState(null)
+  const [search, setSearch]               = useState('')
+
+  // per-staff draft edits: { [staffId]: { workingDays, clientAssignment } }
+  const [drafts, setDrafts] = useState({})
+
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true)
+      const res = await api.get('/attendance/admin/working-days')
+      setDefaultDays(res.data.defaultWorkDays || [1,2,3,4,5])
+      setEditDefault(res.data.defaultWorkDays || [1,2,3,4,5])
+      const staff = res.data.staff || []
+      setStaffList(staff)
+      const d = {}
+      staff.forEach(s => {
+        d[s._id] = {
+          workingDays: s.workingDays && s.workingDays.length ? [...s.workingDays] : null,
+          clientAssignment: s.clientAssignment || ''
+        }
+      })
+      setDrafts(d)
+    } catch {
+      toast.error('Failed to load working days')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { fetchData() }, [fetchData])
+
+  const saveDefault = async () => {
+    try {
+      setSavingDefault(true)
+      await api.put('/attendance/admin/working-days/default', { workDays: editDefault })
+      setDefaultDays(editDefault)
+      toast.success('Default working days saved')
+    } catch {
+      toast.error('Failed to save default working days')
+    } finally {
+      setSavingDefault(false)
+    }
+  }
+
+  const saveStaff = async (staffId) => {
+    const draft = drafts[staffId]
+    if (!draft) return
+    const effectiveDays = draft.workingDays !== null ? draft.workingDays : defaultDays
+    try {
+      setSavingStaff(staffId)
+      await api.put(`/attendance/admin/working-days/staff/${staffId}`, {
+        workDays: effectiveDays,
+        clientAssignment: draft.clientAssignment
+      })
+      toast.success('Staff schedule updated')
+      // refresh to get saved values
+      const res = await api.get('/attendance/admin/working-days')
+      const updated = (res.data.staff || []).find(s => s._id === staffId)
+      if (updated) {
+        setStaffList(prev => prev.map(s => s._id === staffId ? updated : s))
+        setDrafts(prev => ({ ...prev, [staffId]: {
+          workingDays: updated.workingDays && updated.workingDays.length ? [...updated.workingDays] : null,
+          clientAssignment: updated.clientAssignment || ''
+        }}))
+      }
+    } catch {
+      toast.error('Failed to update staff schedule')
+    } finally {
+      setSavingStaff(null)
+    }
+  }
+
+  const resetStaff = (staffId) => {
+    const s = staffList.find(x => x._id === staffId)
+    if (!s) return
+    setDrafts(prev => ({ ...prev, [staffId]: {
+      workingDays: s.workingDays && s.workingDays.length ? [...s.workingDays] : null,
+      clientAssignment: s.clientAssignment || ''
+    }}))
+  }
+
+  const setDraftDays = (staffId, days) => setDrafts(prev => ({ ...prev, [staffId]: { ...prev[staffId], workingDays: days } }))
+  const setDraftClient = (staffId, val) => setDrafts(prev => ({ ...prev, [staffId]: { ...prev[staffId], clientAssignment: val } }))
+
+  const filtered = staffList.filter(s => {
+    const q = search.toLowerCase()
+    return !q || s.fullName?.toLowerCase().includes(q) || s.employeeId?.toLowerCase().includes(q)
+  })
+
+  const hasWeekend = (days) => days && (days.includes(0) || days.includes(6))
+
+  return (
+    <div>
+      {/* ── Company Default ────────────────────────── */}
+      <div className="la-card" style={{ marginBottom:24, padding:20 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:16 }}>
+          <div style={{ width:36, height:36, borderRadius:10, background:'#eff6ff', display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <Briefcase size={17} color="var(--primary)" />
+          </div>
+          <div>
+            <div style={{ fontWeight:700, fontSize:15, color:'var(--text)' }}>Company Default Working Days</div>
+            <div style={{ fontSize:12, color:'var(--text-muted)', marginTop:1 }}>Applies to all staff who don't have a custom schedule</div>
+          </div>
+        </div>
+
+        <div style={{ display:'flex', gap:12, alignItems:'center', flexWrap:'wrap' }}>
+          <DayCheckboxes value={editDefault} onChange={setEditDefault} />
+          <button className="la-export-btn" onClick={saveDefault} disabled={savingDefault}
+            style={{ display:'inline-flex', alignItems:'center', gap:6 }}>
+            {savingDefault ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+            Save Default
+          </button>
+        </div>
+
+        {/* Current saved summary */}
+        <div style={{ marginTop:12, fontSize:12, color:'var(--text-muted)' }}>
+          Current: <strong style={{ color:'var(--text)' }}>{defaultDays.map(d => DAY_FULL[d]).join(', ') || 'None'}</strong>
+        </div>
+      </div>
+
+      {/* ── Staff-wise ─────────────────────────────── */}
+      <div style={{ display:'flex', gap:12, marginBottom:16, alignItems:'center' }}>
+        <div style={{ flex:1, fontWeight:700, fontSize:15, color:'var(--text)' }}>Staff-wise Schedule</div>
+        <div className="la-search" style={{ width:240 }}>
+          <Search size={14} />
+          <input placeholder="Search staff…" value={search} onChange={e => setSearch(e.target.value)} />
+        </div>
+      </div>
+
+      {loading ? (
+        <div style={{ display:'flex', justifyContent:'center', padding:60 }}>
+          <Loader2 size={28} className="animate-spin" style={{ color:'var(--primary)' }} />
+        </div>
+      ) : filtered.length === 0 ? (
+        <div style={{ textAlign:'center', padding:60, background:'var(--surface)', borderRadius:12, border:'1px dashed var(--border)' }}>
+          <Briefcase size={36} color="var(--text-light)" style={{ marginBottom:10 }} />
+          <div style={{ fontWeight:700, color:'var(--text)', marginBottom:4 }}>No staff found</div>
+        </div>
+      ) : (
+        <div className="la-card">
+          {/* Head */}
+          <div className="la-table-head" style={{ gridTemplateColumns:'1.6fr 2fr 1.6fr 120px' }}>
+            {['Employee', 'Working Days', 'Client Assignment', 'Actions'].map(h => (
+              <div key={h} style={{ fontSize:11, fontWeight:700, color:'var(--text-light)', textTransform:'uppercase', letterSpacing:'0.06em' }}>{h}</div>
+            ))}
+          </div>
+
+          <AnimatePresence initial={false}>
+            {filtered.map(s => {
+              const draft = drafts[s._id] || { workingDays: null, clientAssignment: '' }
+              const isCustom = draft.workingDays !== null
+              const displayDays = isCustom ? draft.workingDays : editDefault
+              const weekendWork = hasWeekend(displayDays)
+              const isDirty = JSON.stringify(draft.workingDays) !== JSON.stringify(s.workingDays && s.workingDays.length ? s.workingDays : null)
+                || draft.clientAssignment !== (s.clientAssignment || '')
+
+              return (
+                <motion.div key={s._id} initial={{ opacity:0, y:4 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }}
+                  className="la-row" style={{ gridTemplateColumns:'1.6fr 2fr 1.6fr 120px', alignItems:'start', paddingTop:16, paddingBottom:16 }}>
+
+                  {/* Employee */}
+                  <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                    <Avatar name={s.fullName} size={36} />
+                    <div>
+                      <div style={{ fontSize:13, fontWeight:700, color:'var(--text)' }}>{s.fullName}</div>
+                      <div style={{ fontSize:11, color:'var(--text-muted)', marginTop:1 }}>{s.employeeId} · {s.designation || 'Staff'}</div>
+                      {!isCustom && (
+                        <span style={{ fontSize:10, color:'#1d4ed8', background:'#eff6ff', border:'1px solid #bfdbfe', borderRadius:5, padding:'1px 6px', marginTop:4, display:'inline-block' }}>
+                          Using Default
+                        </span>
+                      )}
+                      {weekendWork && (
+                        <span style={{ fontSize:10, color:'#6d28d9', background:'#f5f3ff', border:'1px solid #e9d5ff', borderRadius:5, padding:'1px 6px', marginTop:4, marginLeft:4, display:'inline-block' }}>
+                          Weekend Work
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Working days checkboxes */}
+                  <div>
+                    <DayCheckboxes
+                      value={displayDays}
+                      onChange={(days) => setDraftDays(s._id, days)}
+                    />
+                    {!isCustom && (
+                      <div style={{ fontSize:11, color:'var(--text-muted)', marginTop:6 }}>
+                        Click a day to create a custom schedule for this staff
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Client assignment */}
+                  <div>
+                    <input
+                      placeholder={weekendWork ? 'e.g. Acme Corp (optional)…' : 'N/A'}
+                      value={draft.clientAssignment}
+                      onChange={e => setDraftClient(s._id, e.target.value)}
+                      disabled={!weekendWork}
+                      className="la-month-select"
+                      style={{ width:'100%', fontSize:12, opacity: weekendWork ? 1 : 0.4 }}
+                    />
+                    {weekendWork && (
+                      <div style={{ fontSize:11, color:'var(--text-muted)', marginTop:4 }}>Shows on staff portal (optional)</div>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                    <button
+                      onClick={() => saveStaff(s._id)}
+                      disabled={savingStaff === s._id}
+                      className="la-export-btn"
+                      style={{ fontSize:11, padding:'5px 10px', justifyContent:'center' }}>
+                      {savingStaff === s._id ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />}
+                      Save
+                    </button>
+                    {isDirty && (
+                      <button onClick={() => resetStaff(s._id)}
+                        style={{ display:'inline-flex', alignItems:'center', justifyContent:'center', gap:4, padding:'5px 10px', fontSize:11, fontWeight:600, border:'1px solid var(--border)', borderRadius:7, background:'var(--surface)', color:'var(--text-muted)', cursor:'pointer' }}>
+                        <RotateCcw size={11} /> Reset
+                      </button>
+                    )}
+                  </div>
+                </motion.div>
+              )
+            })}
+          </AnimatePresence>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function LeaveRequests() {
   const [activeTab, setActiveTab] = useState('leave')
@@ -700,10 +1049,15 @@ export default function LeaveRequests() {
           <ClipboardList size={14} style={{ display:'inline', marginRight:6, verticalAlign:'middle' }} />
           Attendance
         </button>
+        <button className={`la-tab${activeTab === 'workingdays' ? ' active' : ''}`} onClick={() => setActiveTab('workingdays')}>
+          <Briefcase size={14} style={{ display:'inline', marginRight:6, verticalAlign:'middle' }} />
+          Working Days
+        </button>
       </div>
 
-      {activeTab === 'leave'      && <LeaveTab />}
-      {activeTab === 'attendance' && <AttendanceTab />}
+      {activeTab === 'leave'        && <LeaveTab />}
+      {activeTab === 'attendance'   && <AttendanceTab />}
+      {activeTab === 'workingdays'  && <WorkingDaysTab />}
     </div>
   )
 }

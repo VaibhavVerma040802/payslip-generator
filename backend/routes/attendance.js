@@ -2,10 +2,18 @@ const express = require('express');
 const router = express.Router();
 const Attendance = require('../models/Attendance');
 const Notification = require('../models/Notification');
+const Staff = require('../models/Staff');
+const User = require('../models/User');
 const { authStaff } = require('./staffPortal');
 const { auth: authAdmin } = require('./auth');
 const { logActivity } = require('../utils/logger');
 const { sendPunchOutReminderEmail } = require('../utils/emailService');
+
+// Returns the effective working days for a staff member (own override or admin default)
+const getEffectiveWorkDays = (staff) => {
+  if (staff.workingDays && staff.workingDays.length > 0) return staff.workingDays;
+  return staff.user?.defaultWorkDays || [1, 2, 3, 4, 5];
+};
 
 // Helper to get start of day in UTC for querying
 const getStartOfDay = (dateString = null) => {
@@ -69,6 +77,29 @@ router.get('/admin/monthly', authAdmin, async (req, res) => {
   }
 });
 
+// GET /api/attendance/admin/daily?date=YYYY-MM-DD — Records for a specific date across all staff
+router.get('/admin/daily', authAdmin, async (req, res) => {
+  try {
+    const targetDate = req.query.date ? new Date(req.query.date) : new Date();
+    targetDate.setUTCHours(0, 0, 0, 0);
+    const nextDate = new Date(targetDate);
+    nextDate.setUTCDate(targetDate.getUTCDate() + 1);
+
+    const records = await Attendance.find({
+      admin: req.user._id,
+      date: { $gte: targetDate, $lt: nextDate }
+    })
+      .populate('staff', 'fullName employeeId designation department')
+      .sort({ punchIn: -1 })
+      .lean();
+
+    res.json({ success: true, data: records });
+  } catch (err) {
+    console.error('Daily attendance error:', err);
+    res.status(500).json({ success: false, message: 'Failed to fetch daily attendance' });
+  }
+});
+
 // GET /api/attendance/admin/today-punchins — All today's punch-in records with staff details
 router.get('/admin/today-punchins', authAdmin, async (req, res) => {
   try {
@@ -94,14 +125,13 @@ router.post('/punch-in', authStaff, async (req, res) => {
     const { lat, lng } = req.body;
     const today = getStartOfDay();
     const now = new Date();
-    const dayOfWeek = now.getUTCDay(); // 0=Sun, 6=Sat
-    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+    const dayOfWeek = now.getUTCDay(); // 0=Sun … 6=Sat
 
-    // Block weekend punch-in unless staff is overtime-eligible
-    if (isWeekend && !req.staff.overtimeEligible) {
+    const effectiveWorkDays = getEffectiveWorkDays(req.staff);
+    if (!effectiveWorkDays.includes(dayOfWeek)) {
       return res.status(403).json({
         success: false,
-        message: 'Today is a weekend. You are not authorised to work on weekends. Please contact your administrator.'
+        message: 'Today is not a working day for you. Please contact your administrator.'
       });
     }
 
@@ -145,12 +175,12 @@ router.post('/punch-out', authStaff, async (req, res) => {
     const today = getStartOfDay();
     const now = new Date();
     const dayOfWeek = now.getUTCDay();
-    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
 
-    if (isWeekend && !req.staff.overtimeEligible) {
+    const effectiveWorkDays = getEffectiveWorkDays(req.staff);
+    if (!effectiveWorkDays.includes(dayOfWeek)) {
       return res.status(403).json({
         success: false,
-        message: 'Weekend punch-out is not permitted for your account.'
+        message: 'Today is not a working day for you. Please contact your administrator.'
       });
     }
 
@@ -173,8 +203,8 @@ router.post('/punch-out', authStaff, async (req, res) => {
     // Absent/LOP: < 4 hours
     // Half Day: 4 to 7.9 hours
     // Full Day: 8.5+ hours
-    // Overtime: Full Day + extra working (max 4h)
-    
+    // Overtime: Full Day + extra working (max 1h)
+
     let finalWorkStatus = attendance.workStatus; // Start with what was set at punch-in (Full Day or Half Day)
 
     if (attendance.totalHours < 4) {
@@ -182,7 +212,7 @@ router.post('/punch-out', authStaff, async (req, res) => {
     } else if (attendance.totalHours >= 4 && attendance.totalHours < 8.0) {
       finalWorkStatus = 'Half Day';
     } else if (attendance.totalHours >= 8.5) {
-      // If they punched in before 11:00 AM, they stay Full Day. 
+      // If they punched in before 11:00 AM, they stay Full Day.
       // If they punched in after 11:00 AM, they stay Half Day (already set at punch-in).
       if (attendance.workStatus === 'Full Day') {
         finalWorkStatus = 'Full Day';
@@ -194,17 +224,17 @@ router.post('/punch-out', authStaff, async (req, res) => {
 
     attendance.workStatus = finalWorkStatus;
 
-    // Overtime Calculation: starts after 8.5h, max 4h (12.5h total cap)
+    // Overtime Calculation: starts after 8.5h, max 1h (9.5h total cap)
     if (attendance.totalHours > 8.5) {
       let ot = attendance.totalHours - 8.5;
-      attendance.overtimeHours = parseFloat(Math.min(ot, 4.0).toFixed(2));
+      attendance.overtimeHours = parseFloat(Math.min(ot, 1.0).toFixed(2));
     } else {
       attendance.overtimeHours = 0;
     }
 
-    attendance.status = attendance.totalHours > 12.5 ? 'flagged' : 'complete';
-    if (attendance.totalHours > 12.5) {
-      attendance.notes = `System: Shift duration (${attendance.totalHours}h) exceeds the 12.5h limit (Full Day + 4h OT). Flagged for review.`;
+    attendance.status = attendance.totalHours > 9.5 ? 'flagged' : 'complete';
+    if (attendance.totalHours > 9.5) {
+      attendance.notes = `System: Shift duration (${attendance.totalHours}h) exceeds the 9.5h limit (Full Day + 1h OT). Flagged for review.`;
     }
 
     await attendance.save();
@@ -372,7 +402,7 @@ router.put('/admin/:id', authAdmin, async (req, res) => {
       
       if (attendance.totalHours > 8.5) {
         let ot = attendance.totalHours - 8.5;
-        attendance.overtimeHours = parseFloat(Math.min(ot, 4.0).toFixed(2));
+        attendance.overtimeHours = parseFloat(Math.min(ot, 1.0).toFixed(2));
       } else {
         attendance.overtimeHours = 0;
       }
@@ -386,6 +416,55 @@ router.put('/admin/:id', authAdmin, async (req, res) => {
     res.json({ success: true, message: 'Record updated', attendance });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Failed to update record' });
+  }
+});
+
+// ─── Working Days Management ──────────────────────────────────────────────────
+
+// GET /api/attendance/admin/working-days — Admin default + all staff overrides
+router.get('/admin/working-days', authAdmin, async (req, res) => {
+  try {
+    const adminUser = await User.findById(req.user._id).select('defaultWorkDays').lean();
+    const staffList = await Staff.find({ user: req.user._id })
+      .select('fullName employeeId designation workingDays clientAssignment')
+      .sort({ fullName: 1 })
+      .lean();
+    res.json({ success: true, defaultWorkDays: adminUser.defaultWorkDays || [1,2,3,4,5], staff: staffList });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to fetch working days' });
+  }
+});
+
+// PUT /api/attendance/admin/working-days/default — Update company-wide default working days
+router.put('/admin/working-days/default', authAdmin, async (req, res) => {
+  try {
+    const { workDays } = req.body; // e.g. [1,2,3,4,5]
+    if (!Array.isArray(workDays) || workDays.some(d => typeof d !== 'number' || d < 0 || d > 6)) {
+      return res.status(400).json({ success: false, message: 'workDays must be an array of integers 0–6' });
+    }
+    await User.findByIdAndUpdate(req.user._id, { defaultWorkDays: workDays });
+    res.json({ success: true, message: 'Default working days updated' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to update default working days' });
+  }
+});
+
+// PUT /api/attendance/admin/working-days/staff/:staffId — Update a staff member's working days override
+router.put('/admin/working-days/staff/:staffId', authAdmin, async (req, res) => {
+  try {
+    const { workDays, clientAssignment } = req.body;
+    if (!Array.isArray(workDays) || workDays.some(d => typeof d !== 'number' || d < 0 || d > 6)) {
+      return res.status(400).json({ success: false, message: 'workDays must be an array of integers 0–6' });
+    }
+    const staff = await Staff.findOne({ _id: req.params.staffId, user: req.user._id });
+    if (!staff) return res.status(404).json({ success: false, message: 'Staff not found' });
+
+    staff.workingDays = workDays;
+    staff.clientAssignment = clientAssignment || '';
+    await staff.save();
+    res.json({ success: true, message: 'Staff working days updated', staff });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to update staff working days' });
   }
 });
 
@@ -443,11 +522,10 @@ router.post('/admin/force-punch-out', authAdmin, async (req, res) => {
     let modifiedCount = 0;
     for (const shift of staleShifts) {
       if (shift.punchIn) {
-        // Set punch out to 10 hours after punch in
-        shift.punchOut = new Date(shift.punchIn.getTime() + 10 * 60 * 60 * 1000);
-        shift.totalHours = 10;
-        // If > 8.5, then OT is 1.5
-        shift.overtimeHours = 1.5; 
+        // Set punch out to 9.5 hours after punch in (Full Day + 1h OT cap)
+        shift.punchOut = new Date(shift.punchIn.getTime() + 9.5 * 60 * 60 * 1000);
+        shift.totalHours = 9.5;
+        shift.overtimeHours = 1.0;
         shift.workStatus = 'Full Day';
       }
       shift.status = 'flagged';
@@ -469,104 +547,13 @@ router.post('/admin/force-punch-out', authAdmin, async (req, res) => {
 // ─────────────────────────────────────────────────────────────
 // CRON JOBS / BACKGROUND TASKS
 // ─────────────────────────────────────────────────────────────
+const { runShiftCheck } = require('../utils/cronJobs');
 
-// GET /api/attendance/cron/check-shifts
-// Called by Vercel Cron periodically (e.g., every hour)
+// GET /api/attendance/cron/check-shifts  (called by Vercel Cron every hour)
 router.get('/cron/check-shifts', async (req, res) => {
   try {
-    // 1. Force punch-out shifts > 10 hours
-    const tenHoursAgo = new Date(Date.now() - 10 * 60 * 60 * 1000);
-    const overdueShifts = await Attendance.find({
-      status: 'incomplete',
-      punchOut: { $exists: false },
-      punchIn: { $lte: tenHoursAgo }
-    }).populate('staff');
-
-    for (const shift of overdueShifts) {
-      const shiftDurationAtClose = formatDuration(shift.punchIn, new Date());
-      shift.punchOut = new Date(shift.punchIn.getTime() + 10 * 60 * 60 * 1000);
-      shift.totalHours = 10;
-      shift.overtimeHours = 1.5;
-      shift.workStatus = 'Full Day';
-      shift.status = 'flagged';
-      shift.notes = (shift.notes ? shift.notes + ' | ' : '') + 'System: Auto-closed after 10 hours maximum duration.';
-      await shift.save();
-
-      // Notify Staff about the auto-close
-      if (shift.staff) {
-        const notif = new Notification({
-          admin: shift.admin,
-          staff: shift.staff._id,
-          recipientType: 'staff',
-          type: 'ATTENDANCE_ALERT',
-          referenceId: shift._id,
-          message: `Your shift on ${shift.date.toLocaleDateString()} was automatically closed after 10 hours. Please review your attendance.`
-        });
-        await notif.save();
-
-        // Email only for OT-enabled staff with active portal login identity
-        if (shift.staff.overtimeEligible && shift.staff.email) {
-          const loginUrl = process.env.FRONTEND_URL || 'https://payslip-gen-rouge.vercel.app';
-          await sendPunchOutReminderEmail(shift.staff, loginUrl, {
-            loginTime: new Date(shift.punchIn).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }),
-            shiftDate: new Date(shift.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
-            duration: shiftDurationAtClose,
-            workStatus: 'Auto Closed / Flagged',
-            reason: 'Your shift remained punched-in for too long and crossed the 10-hour auto-close limit.',
-            autoClosed: true
-          }).catch(console.error);
-        }
-      }
-    }
-
-    // 2. Remind shifts > 8.5 hours but < 10 hours
-    const eightHalfHoursAgo = new Date(Date.now() - 8.5 * 60 * 60 * 1000);
-    const reminderShifts = await Attendance.find({
-      status: 'incomplete',
-      punchOut: { $exists: false },
-      punchIn: { $gt: tenHoursAgo, $lte: eightHalfHoursAgo }
-    }).populate('staff');
-
-    for (const shift of reminderShifts) {
-      if (!shift.staff?.overtimeEligible) continue;
-
-      // Check if we already reminded them for this shift
-      const existingReminder = await Notification.findOne({
-        staff: shift.staff._id,
-        referenceId: shift._id,
-        type: 'ATTENDANCE_ALERT'
-      });
-
-      if (!existingReminder && shift.staff && shift.staff.email) {
-        // Send email
-        const loginUrl = process.env.FRONTEND_URL || 'https://payslip-gen-rouge.vercel.app';
-        await sendPunchOutReminderEmail(shift.staff, loginUrl, {
-          loginTime: new Date(shift.punchIn).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }),
-          shiftDate: new Date(shift.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
-          duration: formatDuration(shift.punchIn, new Date()),
-          workStatus: 'Punched In',
-          reason: 'You are still punched in after 8.5+ hours. Please punch out if your workday is complete.'
-        }).catch(console.error);
-
-        // Create notification
-        const notif = new Notification({
-          admin: shift.admin,
-          staff: shift.staff._id,
-          recipientType: 'staff',
-          type: 'ATTENDANCE_ALERT',
-          referenceId: shift._id,
-          message: `Reminder: You have been punched in for over 8.5 hours. Please punch out if your workday is complete.`
-        });
-        await notif.save();
-      }
-    }
-
-    res.json({ 
-      success: true, 
-      message: 'Cron executed successfully', 
-      autoClosed: overdueShifts.length,
-      remindersSent: reminderShifts.length 
-    });
+    const result = await runShiftCheck();
+    res.json({ success: true, message: 'Cron executed successfully', ...result });
   } catch (err) {
     console.error('Cron job error:', err);
     res.status(500).json({ success: false, message: 'Cron job failed' });

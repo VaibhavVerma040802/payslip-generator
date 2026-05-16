@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { LogIn, LogOut, Clock, Calendar as CalendarIcon, AlertCircle, Loader2, Timer, Coffee } from 'lucide-react'
+import { LogIn, LogOut, Clock, Calendar as CalendarIcon, AlertCircle, Loader2, Timer, Coffee, Briefcase } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import api from '../../api'
 import { motion } from 'framer-motion'
@@ -69,10 +69,17 @@ export default function PortalDashboard() {
   const hour = currentTime.getHours()
   const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening'
   const dayOfWeek = new Date().getDay()
-  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
   const isPunchedIn = Boolean(activeShift && !activeShift.punchOut)
-  const isOvertimeEligible = staffUser?.overtimeEligible || false
-  const isOffDay = isWeekend && !isOvertimeEligible
+
+  // Effective working days: staff override → admin default → Mon-Fri fallback
+  const effectiveWorkDays = (staffUser?.workingDays && staffUser.workingDays.length)
+    ? staffUser.workingDays
+    : (staffUser?.defaultWorkDays || [1, 2, 3, 4, 5])
+
+  const isWorkDay = effectiveWorkDays.includes(dayOfWeek)
+  const isOffDay  = !isWorkDay
+  const isWeekendWork = !isOffDay && (dayOfWeek === 0 || dayOfWeek === 6) // Sat/Sun but assigned working
+  const clientName = staffUser?.clientAssignment || ''
 
   if (loading) return (
     <div style={{ display: 'flex', justifyContent: 'center', padding: 100 }}>
@@ -90,14 +97,31 @@ export default function PortalDashboard() {
         </p>
       </header>
 
-      {/* Weekend Banner */}
+      {/* Off-day Banner */}
       {isOffDay && (
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
           style={{ marginBottom: 24, padding: '20px 24px', borderRadius: 14, background: 'var(--primary)', display: 'flex', alignItems: 'center', gap: 18, color: 'white' }}>
           <Coffee size={36} style={{ flexShrink: 0 }} />
           <div>
-            <div style={{ fontSize: 17, fontWeight: 800, marginBottom: 3 }}>{dayOfWeek === 0 ? 'Sunday' : 'Saturday'} — Your Day Off 🎉</div>
+            <div style={{ fontSize: 17, fontWeight: 800, marginBottom: 3 }}>
+              {['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][dayOfWeek]} — Your Day Off 🎉
+            </div>
             <div style={{ fontSize: 13, opacity: 0.85 }}>Attendance tracking is paused. Relax and recharge!</div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Weekend Work Banner */}
+      {isWeekendWork && (
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+          style={{ marginBottom: 24, padding: '20px 24px', borderRadius: 14, background: '#4f46e5', display: 'flex', alignItems: 'center', gap: 18, color: 'white' }}>
+          <Briefcase size={36} style={{ flexShrink: 0 }} />
+          <div>
+            <div style={{ fontSize: 17, fontWeight: 800, marginBottom: 3 }}>
+              {dayOfWeek === 6 ? 'Saturday' : 'Sunday'} — Working Day
+              {clientName && <span style={{ fontWeight: 500, fontSize: 14, marginLeft: 10, opacity: 0.88 }}>· {clientName}</span>}
+            </div>
+            <div style={{ fontSize: 13, opacity: 0.85 }}>You're scheduled to work today. Punch in when you're ready!</div>
           </div>
         </motion.div>
       )}
@@ -186,7 +210,7 @@ export default function PortalDashboard() {
                 ['Full Day', '8.5+ hours logged'],
                 ['Half Day', '4 to 7.9 hours logged'],
                 ['LOP', 'Less than 4 hours'],
-                ['Overtime', 'After 8.5h (Max 4h)'],
+                ['Overtime', 'After 8.5h (Max 1h)'],
               ].map(([k, v]) => (
                 <div key={k} style={{ fontSize: 12, color: 'var(--text-muted)' }}>
                   <span style={{ fontWeight: 600, color: 'var(--text)' }}>{k}:</span> {v}

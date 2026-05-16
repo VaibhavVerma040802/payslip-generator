@@ -4,7 +4,7 @@ import {
   LayoutDashboard, PlusCircle, List, Menu,
   Settings, User, Users,
   Sun, Moon, ChevronLeft, ChevronRight, Send, Download, Bell, CalendarDays, Activity,
-  LogOut, UserPlus, AlertTriangle, Loader2, FileText, UserCheck, CheckCheck
+  LogOut, UserPlus, AlertTriangle, Loader2, FileText, UserCheck, CheckCheck, Headphones
 } from 'lucide-react'
 import api from '../api'
 import { toast } from 'react-hot-toast'
@@ -19,6 +19,7 @@ const navItems = [
   { to: '/payslips', label: 'All Payslips', icon: List },
   { to: '/staff', label: 'Staff Management', icon: Users },
   { to: '/leave-requests', label: 'Leave & Attendance', icon: CalendarDays },
+  { to: '/staff-support', label: 'Staff Support', icon: Headphones },
   { to: '/audit-logs', label: 'Audit Logs', icon: Activity },
   { to: '/profile', label: 'Company Profile', icon: Settings },
 ]

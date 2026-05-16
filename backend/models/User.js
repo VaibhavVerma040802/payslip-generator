@@ -45,6 +45,10 @@ const userSchema = new mongoose.Schema({
   verificationExpires: Date,
   resetPasswordToken: String,
   resetPasswordExpires: Date,
+  defaultWorkDays: {
+    type: [Number],
+    default: [1, 2, 3, 4, 5], // 0=Sun 1=Mon … 6=Sat; default Mon–Fri
+  },
   createdAt: {
     type: Date,
     default: Date.now,

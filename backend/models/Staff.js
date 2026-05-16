@@ -58,6 +58,15 @@ const staffSchema = new mongoose.Schema(
       type: Number,
       default: 1
     },
+    // Working days override (null = inherit admin defaultWorkDays)
+    workingDays: {
+      type: [Number],
+      default: undefined,
+    },
+    clientAssignment: {
+      type: String,
+      default: '',
+    },
     // Portal Authentication Fields
     portalPassword: {
       type: String,

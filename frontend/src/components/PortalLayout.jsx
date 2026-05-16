@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react'
 import { Outlet, NavLink, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard, LogOut, User, Clock,
-  CalendarDays, Menu, ChevronLeft, ChevronRight, Sun, Moon, Monitor, FileText, Bell, Loader2, CheckCheck, AlertTriangle
+  CalendarDays, Menu, ChevronLeft, ChevronRight, Sun, Moon, Monitor, FileText, Bell, Loader2, CheckCheck, AlertTriangle, Headphones
 } from 'lucide-react'
+import { toast } from 'react-hot-toast'
 import { useStaffPortal } from '../context/StaffPortalContext'
 import { useTheme } from '../context/ThemeContext'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -40,6 +41,12 @@ export default function PortalLayout() {
   const [showNotif, setShowNotif] = useState(false)
   const [notifLoading, setNotifLoading] = useState(false)
   const [deferredPrompt, setDeferredPrompt] = useState(null)
+
+  // Support request state
+  const [showSupportModal, setShowSupportModal] = useState(false)
+  const [supportRequestType, setSupportRequestType] = useState('')
+  const [supportMessage, setSupportMessage] = useState('')
+  const [supportSubmitting, setSupportSubmitting] = useState(false)
 
   useEffect(() => {
     setSidebarOpen(!window.matchMedia('(max-width: 1024px)').matches)
@@ -84,6 +91,25 @@ export default function PortalLayout() {
   useEffect(() => {
     if (staffUser) fetchNotifications()
   }, [staffUser])
+
+  const handleSupportSubmit = async () => {
+    if (!supportRequestType) {
+      toast.error('Please select an issue type')
+      return
+    }
+    setSupportSubmitting(true)
+    try {
+      await api.post('/support', { requestType: supportRequestType, message: supportMessage })
+      toast.success('Support request submitted.')
+      setShowSupportModal(false)
+      setSupportRequestType('')
+      setSupportMessage('')
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to submit request')
+    } finally {
+      setSupportSubmitting(false)
+    }
+  }
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e) => {
@@ -486,6 +512,160 @@ export default function PortalLayout() {
           </AnimatePresence>
         </div>
       </main>
+
+      {/* Floating Support Button */}
+      <AnimatePresence>
+        {staffUser && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.7, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.7, y: 20 }}
+            onClick={() => setShowSupportModal(true)}
+            title="Staff Support"
+            style={{
+              position: 'fixed', bottom: 28, right: 28,
+              width: 56, height: 56, borderRadius: '50%',
+              background: '#7c3aed',
+              color: 'white', border: 'none', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 8px 24px rgba(124,58,237,0.4)',
+              zIndex: 300,
+              transition: 'background 0.2s'
+            }}
+          >
+            <Headphones size={24} />
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      {/* Support Modal */}
+      <AnimatePresence>
+        {showSupportModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{ position: 'fixed', inset: 0, zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+          >
+            <div
+              style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)' }}
+              onClick={() => setShowSupportModal(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.93, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.93, y: 16 }}
+              style={{
+                background: 'var(--surface)', borderRadius: 18,
+                width: '100%', maxWidth: 480,
+                position: 'relative', zIndex: 1,
+                boxShadow: '0 25px 50px -12px rgba(0,0,0,0.3)',
+                overflow: 'hidden'
+              }}
+            >
+              {/* Modal Header */}
+              <div style={{ padding: '24px 28px 20px', borderBottom: '1px solid var(--border)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6 }}>
+                  <div style={{ width: 42, height: 42, borderRadius: 12, background: '#ede9fe', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Headphones size={22} color="#7c3aed" />
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 800, fontSize: 17, color: 'var(--text)' }}>Staff Support</div>
+                    <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 2 }}>Raise any issue — we'll get back to you shortly</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Body */}
+              <div style={{ padding: '20px 28px' }}>
+                {/* Quick-select chips */}
+                <div style={{ marginBottom: 18 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Issue Type</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                    {[
+                      { type: 'Attendance / Punch Issue', emoji: '⏱️' },
+                      { type: 'Leave Request Issue', emoji: '📅' },
+                      { type: 'Payslip / Salary Issue', emoji: '💰' },
+                      { type: 'IT / Technical Problem', emoji: '💻' },
+                      { type: 'HR / Policy Query', emoji: '📋' },
+                      { type: 'Other', emoji: '💬' }
+                    ].map(({ type, emoji }) => (
+                      <button
+                        key={type}
+                        onClick={() => setSupportRequestType(type)}
+                        style={{
+                          padding: '11px 14px',
+                          borderRadius: 10,
+                          border: supportRequestType === type ? '2px solid #7c3aed' : '1.5px solid var(--border)',
+                          background: supportRequestType === type ? '#ede9fe' : 'var(--bg)',
+                          color: supportRequestType === type ? '#7c3aed' : 'var(--text)',
+                          fontWeight: supportRequestType === type ? 700 : 500,
+                          fontSize: 13,
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                          transition: 'all 0.15s',
+                          display: 'flex', alignItems: 'center', gap: 8
+                        }}
+                      >
+                        <span style={{ fontSize: 16 }}>{emoji}</span>
+                        {type}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Additional details textarea */}
+                <div style={{ marginBottom: 4 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Additional Details <span style={{ fontWeight: 400, textTransform: 'none' }}>(optional)</span></div>
+                  <textarea
+                    value={supportMessage}
+                    onChange={(e) => setSupportMessage(e.target.value)}
+                    placeholder="Describe what happened..."
+                    rows={3}
+                    style={{
+                      width: '100%', padding: '10px 14px',
+                      borderRadius: 10, border: '1.5px solid var(--border)',
+                      background: 'var(--bg)', color: 'var(--text)',
+                      fontSize: 13, resize: 'vertical',
+                      fontFamily: 'inherit', outline: 'none',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div style={{ padding: '16px 28px 24px', display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+                <button
+                  onClick={() => { setShowSupportModal(false); setSupportRequestType(''); setSupportMessage('') }}
+                  style={{
+                    padding: '10px 22px', borderRadius: 10,
+                    border: '1px solid var(--border)', background: 'var(--surface)',
+                    color: 'var(--text)', fontWeight: 600, cursor: 'pointer', fontSize: 13
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSupportSubmit}
+                  disabled={supportSubmitting || !supportRequestType}
+                  style={{
+                    padding: '10px 22px', borderRadius: 10,
+                    border: 'none',
+                    background: supportSubmitting || !supportRequestType ? '#c4b5fd' : '#7c3aed',
+                    color: 'white', fontWeight: 700, cursor: supportSubmitting || !supportRequestType ? 'not-allowed' : 'pointer',
+                    fontSize: 13, display: 'flex', alignItems: 'center', gap: 8,
+                    transition: 'background 0.2s'
+                  }}
+                >
+                  {supportSubmitting && <Loader2 size={15} style={{ animation: 'spin 1s linear infinite' }} />}
+                  Submit
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

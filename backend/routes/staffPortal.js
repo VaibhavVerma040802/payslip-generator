@@ -19,7 +19,7 @@ const authStaff = async (req, res, next) => {
       throw new Error('Invalid token audience');
     }
 
-    const staff = await Staff.findById(decoded.id).populate('user', 'companyName companyLogo');
+    const staff = await Staff.findById(decoded.id).populate('user', 'companyName companyLogo defaultWorkDays');
     if (!staff || !staff.isPortalEnabled) throw new Error('Access denied');
 
     req.staff = staff;
@@ -228,6 +228,9 @@ router.get('/me', authStaff, async (req, res) => {
       joiningDate: req.staff.joiningDate,
       pfNumber: req.staff.pfNumber,
       overtimeEligible: req.staff.overtimeEligible || false,
+      workingDays: req.staff.workingDays && req.staff.workingDays.length ? req.staff.workingDays : null,
+      clientAssignment: req.staff.clientAssignment || '',
+      defaultWorkDays: req.staff.user?.defaultWorkDays || [1, 2, 3, 4, 5],
       financials: req.staff.financials,
       salaryDetails: req.staff.salaryDetails,
       leaveBalance: req.staff.leaveBalance,

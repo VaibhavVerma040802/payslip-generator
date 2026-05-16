@@ -11,6 +11,7 @@ const attendanceRoutes = require('./routes/attendance');
 const activitiesRoutes = require('./routes/activities');
 const leavesRoutes = require('./routes/leaves');
 const notificationsRoutes = require('./routes/notifications');
+const supportRoutes = require('./routes/support');
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -29,6 +30,7 @@ app.use('/api/attendance', attendanceRoutes);
 app.use('/api/activities', activitiesRoutes);
 app.use('/api/leaves', leavesRoutes);
 app.use('/api/notifications', notificationsRoutes);
+app.use('/api/support', supportRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -65,17 +67,30 @@ app.use((err, req, res, next) => {
 
 // Connect to MongoDB then start server
 const MONGO_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/payslip_generator';
+const { runShiftCheck } = require('./utils/cronJobs');
 
 mongoose
   .connect(MONGO_URI)
   .then(() => {
     console.log('✅ Connected to MongoDB');
-    // Vercel handles starting the server internally, so we only listen on a port if NOT on Vercel
     if (!process.env.VERCEL) {
       app.listen(PORT, () => {
         console.log(`🚀 Server running → http://localhost:${PORT}`);
         console.log(`📋 API Health   → http://localhost:${PORT}/api/health`);
       });
+
+      // In development Vercel crons don't fire, so run the shift-check locally every hour
+      const ONE_HOUR = 60 * 60 * 1000;
+      setInterval(async () => {
+        console.log('⏰ [local cron] Running shift check...');
+        try {
+          const r = await runShiftCheck();
+          console.log(`✅ [local cron] autoClosed=${r.autoClosed} remindersSent=${r.remindersSent}`);
+        } catch (err) {
+          console.error('❌ [local cron] Shift check failed:', err.message);
+        }
+      }, ONE_HOUR);
+      console.log('⏰ Local shift-check cron scheduled (every 1 hour)');
     }
   })
   .catch((err) => {
